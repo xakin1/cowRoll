@@ -21,6 +21,7 @@ defmodule DiceRoller do
     roll + roll_dices(number_of_dices - 1, number_of_face)
   end
 
+  # de un input con formato 1d6 sacamos un valor entero aleatorio entre 1 y 6
   @spec roll_dice(any()) ::
           {:error, <<_::96, _::_*64>>} | {:ok, non_neg_integer() | {:error, <<_::112>>}}
   def roll_dice(input) do
