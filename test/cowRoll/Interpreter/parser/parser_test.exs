@@ -3,13 +3,42 @@ defmodule CowRoll.ParserTest do
   use ExUnit.Case
 
   describe "string/1" do
-    test "returns :ok when attackRoll is defined" do
+    test "number minus number" do
       # Uso del analizador léxico en otro módulo
-      input = "1d5"
+      input = "5 - 5"
       tokens = Parser.parse(input)
 
       assert tokens ==
-               {:ok, {:dice, "1d5"}}
+               {:ok, {:minus, {:number, 5}, {:number, 5}}}
+    end
+
+    test "plus dice with a number" do
+      # Uso del analizador léxico en otro módulo
+      input = "5 + 1d5"
+      tokens = Parser.parse(input)
+
+      assert tokens ==
+               {:ok, {:plus, {:number, 5}, {:dice, "1d5"}}}
+    end
+
+    test "mult dice with a parentesis number" do
+      # Uso del analizador léxico en otro módulo
+      input = "(5 + 3) * 1d5"
+      tokens = Parser.parse(input)
+
+      assert tokens ==
+               {:ok, {:mult, {:plus, {:number, 5}, {:number, 3}}, {:dice, "1d5"}}}
+    end
+
+    test "div dice and multi a number with a parentesis" do
+      # Uso del analizador léxico en otro módulo
+      input = "(5 + 3) * 1d5 / 3"
+      tokens = Parser.parse(input)
+
+      assert tokens ==
+               {:ok,
+                {:mult, {:plus, {:number, 5}, {:number, 3}},
+                 {:divi, {:dice, "1d5"}, {:number, 3}}}}
     end
   end
 end
