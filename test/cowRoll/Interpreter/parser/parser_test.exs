@@ -5,16 +5,11 @@ defmodule CowRoll.ParserTest do
   describe "string/1" do
     test "returns :ok when attackRoll is defined" do
       # Uso del analizador léxico en otro módulo
-      input = "forward 5\ndown 1\ndown 100"
+      input = "1d5"
       tokens = Parser.parse(input)
 
       assert tokens ==
-               {:ok,
-                [
-                  {{:move, :forward}, {:number, 5}},
-                  {{:move, :down}, {:number, 1}},
-                  {{:move, :down}, {:number, 100}}
-                ]}
+               {:ok, {:dice, "1d5"}}
     end
   end
 end

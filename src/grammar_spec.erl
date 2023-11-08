@@ -188,21 +188,15 @@ yeccpars2(0=S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_0(S, Cat, Ss, Stack, T, Ts, Tzr);
 %% yeccpars2(1=S, Cat, Ss, Stack, T, Ts, Tzr) ->
 %%  yeccpars2_1(S, Cat, Ss, Stack, T, Ts, Tzr);
-%% yeccpars2(2=S, Cat, Ss, Stack, T, Ts, Tzr) ->
-%%  yeccpars2_2(S, Cat, Ss, Stack, T, Ts, Tzr);
-yeccpars2(3=S, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_3(S, Cat, Ss, Stack, T, Ts, Tzr);
-yeccpars2(4=S, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_4(S, Cat, Ss, Stack, T, Ts, Tzr);
-%% yeccpars2(5=S, Cat, Ss, Stack, T, Ts, Tzr) ->
-%%  yeccpars2_5(S, Cat, Ss, Stack, T, Ts, Tzr);
+yeccpars2(2=S, Cat, Ss, Stack, T, Ts, Tzr) ->
+ yeccpars2_2(S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccpars2(Other, _, _, _, _, _, _) ->
  erlang:error({yecc_bug,"1.4",{missing_state_in_action_table, Other}}).
 
 -dialyzer({nowarn_function, yeccpars2_0/7}).
 -compile({nowarn_unused_function,  yeccpars2_0/7}).
-yeccpars2_0(S, 'move', Ss, Stack, T, Ts, Tzr) ->
- yeccpars1(S, 3, Ss, Stack, T, Ts, Tzr);
+yeccpars2_0(S, 'dice', Ss, Stack, T, Ts, Tzr) ->
+ yeccpars1(S, 2, Ss, Stack, T, Ts, Tzr);
 yeccpars2_0(_, _, _, _, T, _, _) ->
  yeccerror(T).
 
@@ -215,75 +209,23 @@ yeccpars2_1(_, _, _, _, T, _, _) ->
 
 -dialyzer({nowarn_function, yeccpars2_2/7}).
 -compile({nowarn_unused_function,  yeccpars2_2/7}).
-yeccpars2_2(S, 'move', Ss, Stack, T, Ts, Tzr) ->
- yeccpars1(S, 3, Ss, Stack, T, Ts, Tzr);
 yeccpars2_2(_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  NewStack = yeccpars2_2_(Stack),
- yeccgoto_command_list(hd(Ss), Cat, Ss, NewStack, T, Ts, Tzr).
+ yeccgoto_dice_expr(hd(Ss), Cat, Ss, NewStack, T, Ts, Tzr).
 
--dialyzer({nowarn_function, yeccpars2_3/7}).
--compile({nowarn_unused_function,  yeccpars2_3/7}).
-yeccpars2_3(S, 'number', Ss, Stack, T, Ts, Tzr) ->
- yeccpars1(S, 4, Ss, Stack, T, Ts, Tzr);
-yeccpars2_3(_, _, _, _, T, _, _) ->
- yeccerror(T).
-
--dialyzer({nowarn_function, yeccpars2_4/7}).
--compile({nowarn_unused_function,  yeccpars2_4/7}).
-yeccpars2_4(_S, Cat, Ss, Stack, T, Ts, Tzr) ->
- [_|Nss] = Ss,
- NewStack = yeccpars2_4_(Stack),
- yeccgoto_command(hd(Nss), Cat, Nss, NewStack, T, Ts, Tzr).
-
--dialyzer({nowarn_function, yeccpars2_5/7}).
--compile({nowarn_unused_function,  yeccpars2_5/7}).
-yeccpars2_5(_S, Cat, Ss, Stack, T, Ts, Tzr) ->
- [_|Nss] = Ss,
- NewStack = yeccpars2_5_(Stack),
- yeccgoto_command_list(hd(Nss), Cat, Nss, NewStack, T, Ts, Tzr).
-
--dialyzer({nowarn_function, yeccgoto_command/7}).
--compile({nowarn_unused_function,  yeccgoto_command/7}).
-yeccgoto_command(0, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_2(2, Cat, Ss, Stack, T, Ts, Tzr);
-yeccgoto_command(2, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_2(2, Cat, Ss, Stack, T, Ts, Tzr).
-
--dialyzer({nowarn_function, yeccgoto_command_list/7}).
--compile({nowarn_unused_function,  yeccgoto_command_list/7}).
-yeccgoto_command_list(0, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_1(1, Cat, Ss, Stack, T, Ts, Tzr);
-yeccgoto_command_list(2=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_5(_S, Cat, Ss, Stack, T, Ts, Tzr).
+-dialyzer({nowarn_function, yeccgoto_dice_expr/7}).
+-compile({nowarn_unused_function,  yeccgoto_dice_expr/7}).
+yeccgoto_dice_expr(0, Cat, Ss, Stack, T, Ts, Tzr) ->
+ yeccpars2_1(1, Cat, Ss, Stack, T, Ts, Tzr).
 
 -compile({inline,yeccpars2_2_/1}).
 -dialyzer({nowarn_function, yeccpars2_2_/1}).
 -compile({nowarn_unused_function,  yeccpars2_2_/1}).
--file("src/parser/grammar_spec.yrl", 2).
+-file("src/parser/grammar_spec.yrl", 6).
 yeccpars2_2_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
-                          [___1]
-  end | __Stack].
-
--compile({inline,yeccpars2_4_/1}).
--dialyzer({nowarn_function, yeccpars2_4_/1}).
--compile({nowarn_unused_function,  yeccpars2_4_/1}).
--file("src/parser/grammar_spec.yrl", 1).
-yeccpars2_4_(__Stack0) ->
- [___2,___1 | __Stack] = __Stack0,
- [begin
-                              {___1, ___2}
-  end | __Stack].
-
--compile({inline,yeccpars2_5_/1}).
--dialyzer({nowarn_function, yeccpars2_5_/1}).
--compile({nowarn_unused_function,  yeccpars2_5_/1}).
--file("src/parser/grammar_spec.yrl", 3).
-yeccpars2_5_(__Stack0) ->
- [___2,___1 | __Stack] = __Stack0,
- [begin
-                                       [___1 | ___2]
+                    ___1
   end | __Stack].
 
 

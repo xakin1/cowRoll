@@ -5,10 +5,13 @@ defmodule CowRoll.InterpreterTest do
   describe "string/1" do
     test "returns :ok when attackRoll is defined" do
       # Uso del analizador léxico en otro módulo
-      input = "forward 5\ndown 1\ndown 100"
-      tokens = Interpreter.eval_input(input)
+      input = "1d6"
 
-      assert tokens == {5, 101}
+      for _ <- 1..100 do
+        {{:ok, dice}} = Interpreter.eval_input(input)
+
+        assert dice > 0 && dice <= 6
+      end
     end
   end
 end
