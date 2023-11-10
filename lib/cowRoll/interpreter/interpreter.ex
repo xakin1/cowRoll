@@ -54,6 +54,12 @@ defmodule Interpreter do
   def eval({:equal, left_expression, right_expression}),
     do: eval(left_expression) == eval(right_expression)
 
+  def eval({:and_operation, left_expression, right_expression}),
+    do: eval(left_expression) and eval(right_expression)
+
+  def eval({:or_operation, left_expression, right_expression}),
+    do: eval(left_expression) or eval(right_expression)
+
   def eval({:mult, left_expression, right_expression}),
     do: eval(left_expression) * eval(right_expression)
 

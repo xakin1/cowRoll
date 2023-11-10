@@ -8,6 +8,8 @@ THEN          = then
 ELSE          = else
 TRUE          = true
 FALSE         = false
+AND           = and
+OR            = or
 Rules.
 
 {WHITESPACE} : skip_token.
@@ -27,11 +29,7 @@ Rules.
 \/      : {token, {'/', TokenLine}}.
 \^      : {token, {'^', TokenLine}}.
 \%      : {token, {'%', TokenLine}}.
-\>      : {token, {'>', TokenLine}}.
-\>=     : {token, {'>=', TokenLine}}.
-\<      : {token, {'<', TokenLine}}.
-\<=     : {token, {'<=', TokenLine}}.
-\==     : {token, {'==', TokenLine}}.
+
 
 %% conditional operators
 {IF}    : {token, {'if', TokenLine}}.
@@ -39,7 +37,16 @@ Rules.
 {ELSE}  : {token, {'else', TokenLine}}.
 {TRUE}  : {token, {boolean, true}}.
 {FALSE} : {token, {boolean, false}}.
+{AND}   : {token, {'and', TokenLine}}.
+{OR}    : {token, {'or', TokenLine}}.
 
+\>      : {token, {'>', TokenLine}}.
+\>=     : {token, {'>=', TokenLine}}.
+\<      : {token, {'<', TokenLine}}.
+\<=     : {token, {'<=', TokenLine}}.
+\==     : {token, {'==', TokenLine}}.
+\<=     : {token, {'<=', TokenLine}}.
+\==     : {token, {'==', TokenLine}}.
 Erlang code.
 
 to_string(TokenChars) ->

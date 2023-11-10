@@ -1,7 +1,7 @@
 Nonterminals
     term  expr factor if_then_else code function boolean_expression. 
     
-Terminals 'if' 'then' 'else'  boolean number dice '+' '>' '>=' '<' '<=' '==' '-' '%' '*' '/' '//' '(' ')' '^'.
+Terminals 'if' 'then' 'else'  boolean number dice 'and' 'or' '+' '>' '>=' '<' '<=' '==' '-' '%' '*' '/' '//' '(' ')' '^'.
 
 Rootsymbol
     function.
@@ -13,7 +13,7 @@ code -> if_then_else : '$1'.
 
 code -> expr 'else' code : {else, '$1', '$3'}.
 
-if_then_else -> 'if' boolean_expression 'then' code : {if_then_else, '$2', '$4'}.
+if_then_else -> 'if' expr 'then' code : {if_then_else, '$2', '$4'}.
 
 expr -> expr '+' term : {plus, '$1', '$3'}.
 expr -> expr '-' term : {minus, '$1', '$3'}.
@@ -33,9 +33,11 @@ factor -> '-' factor : {negative, '$2'}.
 factor -> number : '$1'.
 factor -> dice : '$1'.
 
-boolean_expression -> boolean : '$1'.
+factor -> boolean : '$1'.
 boolean_expression -> expr '>' term : {stric_more, '$1', '$3'}.
 boolean_expression -> expr '>=' term : {more_equal, '$1', '$3'}.
 boolean_expression -> expr '<' term : {stric_less, '$1', '$3'}.
 boolean_expression -> expr '<=' term : {less_equal, '$1', '$3'}.
 boolean_expression -> expr '==' term : {equal, '$1', '$3'}.
+boolean_expression -> expr 'and' term : {and_operation, '$1', '$3'}.
+boolean_expression -> expr 'or' term : {or_operation, '$1', '$3'}.

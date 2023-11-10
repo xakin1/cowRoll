@@ -310,5 +310,36 @@ defmodule CowRoll.InterpreterTest do
       result = Interpreter.eval_input("5 == 5")
       assert true == result
     end
+
+    test "test and" do
+      result = Interpreter.eval_input("false and false")
+      assert false == result
+      result = Interpreter.eval_input("false and true")
+      assert false == result
+      result = Interpreter.eval_input("true and false")
+      assert false == result
+      result = Interpreter.eval_input("true and true")
+      assert true == result
+    end
+
+    test "test or" do
+      result = Interpreter.eval_input("false or false")
+      assert false == result
+      result = Interpreter.eval_input("false or true")
+      assert true == result
+      result = Interpreter.eval_input("true or false")
+      assert true == result
+      result = Interpreter.eval_input("true or true")
+      assert true == result
+    end
+
+    test "test if with boolean operation" do
+      result = Interpreter.eval_input("if (5 == 1) then true else false")
+      assert false == result
+      result = Interpreter.eval_input("if (5 > 1) then true else false")
+      assert true == result
+      result = Interpreter.eval_input("if (6*(5 - 5) > 1) then true else false")
+      assert false == result
+    end
   end
 end
