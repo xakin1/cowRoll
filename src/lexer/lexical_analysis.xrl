@@ -10,6 +10,7 @@ TRUE          = true
 FALSE         = false
 AND           = and
 OR            = or
+NOT           = not
 Rules.
 
 {WHITESPACE} : skip_token.
@@ -39,6 +40,7 @@ Rules.
 {FALSE} : {token, {boolean, false}}.
 {AND}   : {token, {'and', TokenLine}}.
 {OR}    : {token, {'or', TokenLine}}.
+{NOT}   : {token, {'not', TokenLine}}.
 
 \>      : {token, {'>', TokenLine}}.
 \>=     : {token, {'>=', TokenLine}}.

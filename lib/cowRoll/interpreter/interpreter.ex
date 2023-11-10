@@ -33,6 +33,8 @@ defmodule Interpreter do
 
   def eval({:negative, expresion}), do: -eval(expresion)
 
+  def eval({:not_operation, expresion}), do: not eval(expresion)
+
   def eval({:plus, left_expression, right_expression}),
     do: eval(left_expression) + eval(right_expression)
 

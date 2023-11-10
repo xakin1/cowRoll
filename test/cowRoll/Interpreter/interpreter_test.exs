@@ -333,6 +333,16 @@ defmodule CowRoll.InterpreterTest do
       assert true == result
     end
 
+    test "test not" do
+      result = Interpreter.eval_input("not false")
+      assert true == result
+    end
+
+    test "test not with operation" do
+      result = Interpreter.eval_input("not (false or true)")
+      assert false == result
+    end
+
     test "test if with boolean operation" do
       result = Interpreter.eval_input("if (5 == 1) then true else false")
       assert false == result
