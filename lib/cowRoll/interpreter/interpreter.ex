@@ -42,6 +42,18 @@ defmodule Interpreter do
   def eval({:stric_more, left_expression, right_expression}),
     do: eval(left_expression) > eval(right_expression)
 
+  def eval({:more_equal, left_expression, right_expression}),
+    do: eval(left_expression) >= eval(right_expression)
+
+  def eval({:stric_less, left_expression, right_expression}),
+    do: eval(left_expression) < eval(right_expression)
+
+  def eval({:less_equal, left_expression, right_expression}),
+    do: eval(left_expression) <= eval(right_expression)
+
+  def eval({:equal, left_expression, right_expression}),
+    do: eval(left_expression) == eval(right_expression)
+
   def eval({:mult, left_expression, right_expression}),
     do: eval(left_expression) * eval(right_expression)
 
