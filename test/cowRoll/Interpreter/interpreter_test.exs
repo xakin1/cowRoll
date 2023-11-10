@@ -241,5 +241,23 @@ defmodule CowRoll.InterpreterTest do
 
       assert result == 0
     end
+
+    test "nested if should return 6" do
+      result = Interpreter.eval_input("if true then if true  then 2+4 else 0 else 0")
+
+      assert result == 6
+    end
+
+    test "nested else should return 1" do
+      result = Interpreter.eval_input("if false then 2+4 else if false then 0 else 1")
+
+      assert result == 1
+    end
+
+    test "nested else with operation should return 1" do
+      result = Interpreter.eval_input("if false then 2+4 else if false then 0 else 2-1")
+
+      assert result == 1
+    end
   end
 end

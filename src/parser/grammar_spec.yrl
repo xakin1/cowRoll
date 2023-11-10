@@ -1,16 +1,21 @@
 Nonterminals
-    term  expr factor else_clause function boolean_expression. 
+    term  expr factor if_then_else code function boolean_expression. 
     
 Terminals 'if' 'then' 'else'  boolean number dice '+' '-' '%' '*' '/' '//' '(' ')' '^'.
 
 Rootsymbol
     function.
 
-function -> 'if' boolean_expression 'then' expr else_clause : {if_then_else, '$2', '$4', '$5'}.
-function -> expr : '$1'.
+function -> code : '$1'.
 
-else_clause -> 'else' term : '$2'.
-else_clause ->  '$empty' : nil.
+
+
+code -> expr : '$1'.
+code -> if_then_else : '$1'.
+
+code -> expr 'else' code : {else, '$1', '$3'}.
+
+if_then_else -> 'if' boolean_expression 'then' code : {if_then_else, '$2', '$4'}.
 
 
 expr -> expr '+' term : {plus, '$1', '$3'}.
@@ -29,4 +34,5 @@ factor -> '-' factor : {negative, '$2'}.
 
 factor -> number : '$1'.
 factor -> dice : '$1'.
+
 boolean_expression -> boolean : '$1'.

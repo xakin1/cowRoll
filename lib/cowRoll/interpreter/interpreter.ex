@@ -59,11 +59,20 @@ defmodule Interpreter do
   def eval({:pow, left_expression, right_expression}),
     do: Integer.pow(eval(left_expression), eval(right_expression))
 
-  def eval({:if_then_else, condition, then_expression, else_expression}) do
-    if eval(condition) do
-      eval(then_expression)
-    else
-      eval(else_expression)
+  def eval({:else, code}),
+    do: eval(code)
+
+  def eval({:if_then_else, condition, then_expression}) do
+    case then_expression do
+      {:else, expression, else_expression} ->
+        if eval(condition) do
+          eval(expression)
+        else
+          eval(else_expression)
+        end
+
+      _ ->
+        if eval(condition), do: eval(then_expression)
     end
   end
 end
