@@ -259,5 +259,15 @@ defmodule CowRoll.InterpreterTest do
 
       assert result == 1
     end
+
+    test "nempty body should return fail" do
+      try do
+        Interpreter.eval_input("if true then else if false then 0 else 2-1")
+        assert false
+      rescue
+        _ ->
+          assert true
+      end
+    end
   end
 end
