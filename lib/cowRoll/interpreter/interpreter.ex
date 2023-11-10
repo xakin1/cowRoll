@@ -31,18 +31,29 @@ defmodule Interpreter do
 
   def eval({:negative, expresion}), do: -eval(expresion)
 
-  def eval({:mult, expresion_izquierda, expresion_derecha}),
-    do: eval(expresion_izquierda) * eval(expresion_derecha)
+  def eval({:mult, left_expression, right_expression}),
+    do: eval(left_expression) * eval(right_expression)
 
-  def eval({:pow, expresion_izquierda, expresion_derecha}),
-    do: Integer.pow(eval(expresion_izquierda), eval(expresion_derecha))
+  def eval({:pow, left_expression, right_expression}),
+    do: Integer.pow(eval(left_expression), eval(right_expression))
 
-  def eval({:plus, expresion_izquierda, expresion_derecha}),
-    do: eval(expresion_izquierda) + eval(expresion_derecha)
+  def eval({:plus, left_expression, right_expression}),
+    do: eval(left_expression) + eval(right_expression)
 
-  def eval({:minus, expresion_izquierda, expresion_derecha}),
-    do: eval(expresion_izquierda) - eval(expresion_derecha)
+  def eval({:minus, left_expression, right_expression}),
+    do: eval(left_expression) - eval(right_expression)
 
-  def eval({:divi, expresion_izquierda, expresion_derecha}),
-    do: div(eval(expresion_izquierda), eval(expresion_derecha))
+  def eval({:divi, left_expression, right_expression}),
+    do: div(eval(left_expression), eval(right_expression))
+
+  def eval({:mod, left_expression, right_expression}),
+    do: Integer.mod(eval(left_expression), eval(right_expression))
+
+  def eval({:round_div, left_expression, right_expression}) do
+    evaluated_left_expression = eval(left_expression)
+    evaluated_right_expression = eval(right_expression)
+
+    div(evaluated_left_expression, evaluated_right_expression) +
+      rem(evaluated_left_expression, evaluated_right_expression)
+  end
 end

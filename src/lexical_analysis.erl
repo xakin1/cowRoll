@@ -12,7 +12,7 @@
 -export([format_error/1]).
 
 %% User code. This is placed here to allow extra attributes.
--file("src/lexer/lexical_analysis.xrl", 23).
+-file("src/lexer/lexical_analysis.xrl", 25).
 
 to_string(TokenChars) ->
 
@@ -378,58 +378,66 @@ tab_size() -> 8.
 %% input.
 
 -file("src/lexical_analysis.erl", 346).
-yystate() -> 10.
+yystate() -> 12.
 
-yystate(11, Ics, Line, Col, Tlen, _, _) ->
+yystate(13, Ics, Line, Col, Tlen, _, _) ->
     {0,Tlen,Ics,Line,Col};
-yystate(10, [94|Ics], Line, Col, Tlen, Action, Alen) ->
-    yystate(8, Ics, Line, Col, Tlen+1, Action, Alen);
-yystate(10, [47|Ics], Line, Col, Tlen, Action, Alen) ->
-    yystate(0, Ics, Line, Col, Tlen+1, Action, Alen);
-yystate(10, [45|Ics], Line, Col, Tlen, Action, Alen) ->
+yystate(12, [94|Ics], Line, Col, Tlen, Action, Alen) ->
+    yystate(10, Ics, Line, Col, Tlen+1, Action, Alen);
+yystate(12, [47|Ics], Line, Col, Tlen, Action, Alen) ->
+    yystate(2, Ics, Line, Col, Tlen+1, Action, Alen);
+yystate(12, [45|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(1, Ics, Line, Col, Tlen+1, Action, Alen);
-yystate(10, [43|Ics], Line, Col, Tlen, Action, Alen) ->
+yystate(12, [43|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(3, Ics, Line, Col, Tlen+1, Action, Alen);
-yystate(10, [42|Ics], Line, Col, Tlen, Action, Alen) ->
+yystate(12, [42|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(5, Ics, Line, Col, Tlen+1, Action, Alen);
-yystate(10, [41|Ics], Line, Col, Tlen, Action, Alen) ->
+yystate(12, [41|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(7, Ics, Line, Col, Tlen+1, Action, Alen);
-yystate(10, [40|Ics], Line, Col, Tlen, Action, Alen) ->
+yystate(12, [40|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(9, Ics, Line, Col, Tlen+1, Action, Alen);
-yystate(10, [32|Ics], Line, Col, Tlen, Action, Alen) ->
+yystate(12, [37|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(11, Ics, Line, Col, Tlen+1, Action, Alen);
-yystate(10, [9|Ics], Line, Col, Tlen, Action, Alen) ->
-    yystate(11, Ics, Line, Col, Tlen+1, Action, Alen);
-yystate(10, [10|Ics], Line, _, Tlen, Action, Alen) ->
-    yystate(11, Ics, Line+1, 1, Tlen+1, Action, Alen);
-yystate(10, [C|Ics], Line, Col, Tlen, Action, Alen) when C >= 48, C =< 57 ->
-    yystate(6, Ics, Line, Col, Tlen+1, Action, Alen);
-yystate(10, Ics, Line, Col, Tlen, Action, Alen) ->
-    {Action,Alen,Tlen,Ics,Line,Col,10};
+yystate(12, [32|Ics], Line, Col, Tlen, Action, Alen) ->
+    yystate(13, Ics, Line, Col, Tlen+1, Action, Alen);
+yystate(12, [9|Ics], Line, Col, Tlen, Action, Alen) ->
+    yystate(13, Ics, Line, Col, Tlen+1, Action, Alen);
+yystate(12, [10|Ics], Line, _, Tlen, Action, Alen) ->
+    yystate(13, Ics, Line+1, 1, Tlen+1, Action, Alen);
+yystate(12, [C|Ics], Line, Col, Tlen, Action, Alen) when C >= 48, C =< 57 ->
+    yystate(8, Ics, Line, Col, Tlen+1, Action, Alen);
+yystate(12, Ics, Line, Col, Tlen, Action, Alen) ->
+    {Action,Alen,Tlen,Ics,Line,Col,12};
+yystate(11, Ics, Line, Col, Tlen, _, _) ->
+    {11,Tlen,Ics,Line,Col};
+yystate(10, Ics, Line, Col, Tlen, _, _) ->
+    {10,Tlen,Ics,Line,Col};
 yystate(9, Ics, Line, Col, Tlen, _, _) ->
     {3,Tlen,Ics,Line,Col};
+yystate(8, [100|Ics], Line, Col, Tlen, _, _) ->
+    yystate(6, Ics, Line, Col, Tlen+1, 2, Tlen);
+yystate(8, [C|Ics], Line, Col, Tlen, _, _) when C >= 48, C =< 57 ->
+    yystate(8, Ics, Line, Col, Tlen+1, 2, Tlen);
 yystate(8, Ics, Line, Col, Tlen, _, _) ->
-    {9,Tlen,Ics,Line,Col};
+    {2,Tlen,Ics,Line,Col,8};
 yystate(7, Ics, Line, Col, Tlen, _, _) ->
     {4,Tlen,Ics,Line,Col};
-yystate(6, [100|Ics], Line, Col, Tlen, _, _) ->
-    yystate(4, Ics, Line, Col, Tlen+1, 2, Tlen);
-yystate(6, [C|Ics], Line, Col, Tlen, _, _) when C >= 48, C =< 57 ->
-    yystate(6, Ics, Line, Col, Tlen+1, 2, Tlen);
-yystate(6, Ics, Line, Col, Tlen, _, _) ->
-    {2,Tlen,Ics,Line,Col,6};
+yystate(6, [C|Ics], Line, Col, Tlen, Action, Alen) when C >= 48, C =< 57 ->
+    yystate(4, Ics, Line, Col, Tlen+1, Action, Alen);
+yystate(6, Ics, Line, Col, Tlen, Action, Alen) ->
+    {Action,Alen,Tlen,Ics,Line,Col,6};
 yystate(5, Ics, Line, Col, Tlen, _, _) ->
     {7,Tlen,Ics,Line,Col};
-yystate(4, [C|Ics], Line, Col, Tlen, Action, Alen) when C >= 48, C =< 57 ->
-    yystate(2, Ics, Line, Col, Tlen+1, Action, Alen);
-yystate(4, Ics, Line, Col, Tlen, Action, Alen) ->
-    {Action,Alen,Tlen,Ics,Line,Col,4};
+yystate(4, [C|Ics], Line, Col, Tlen, _, _) when C >= 48, C =< 57 ->
+    yystate(4, Ics, Line, Col, Tlen+1, 1, Tlen);
+yystate(4, Ics, Line, Col, Tlen, _, _) ->
+    {1,Tlen,Ics,Line,Col,4};
 yystate(3, Ics, Line, Col, Tlen, _, _) ->
     {5,Tlen,Ics,Line,Col};
-yystate(2, [C|Ics], Line, Col, Tlen, _, _) when C >= 48, C =< 57 ->
-    yystate(2, Ics, Line, Col, Tlen+1, 1, Tlen);
+yystate(2, [47|Ics], Line, Col, Tlen, _, _) ->
+    yystate(0, Ics, Line, Col, Tlen+1, 9, Tlen);
 yystate(2, Ics, Line, Col, Tlen, _, _) ->
-    {1,Tlen,Ics,Line,Col,2};
+    {9,Tlen,Ics,Line,Col,2};
 yystate(1, Ics, Line, Col, Tlen, _, _) ->
     {6,Tlen,Ics,Line,Col};
 yystate(0, Ics, Line, Col, Tlen, _, _) ->
@@ -463,6 +471,10 @@ yyaction(8, _, _, TokenLine, _) ->
     yyaction_8(TokenLine);
 yyaction(9, _, _, TokenLine, _) ->
     yyaction_9(TokenLine);
+yyaction(10, _, _, TokenLine, _) ->
+    yyaction_10(TokenLine);
+yyaction(11, _, _, TokenLine, _) ->
+    yyaction_11(TokenLine);
 yyaction(_, _, _, _, _) -> error.
 
 -compile({inline,yyaction_0/0}).
@@ -508,10 +520,20 @@ yyaction_7(TokenLine) ->
 -compile({inline,yyaction_8/1}).
 -file("src/lexer/lexical_analysis.xrl", 19).
 yyaction_8(TokenLine) ->
-     { token, { '/', TokenLine } } .
+     { token, { '//', TokenLine } } .
 
 -compile({inline,yyaction_9/1}).
 -file("src/lexer/lexical_analysis.xrl", 20).
 yyaction_9(TokenLine) ->
+     { token, { '/', TokenLine } } .
+
+-compile({inline,yyaction_10/1}).
+-file("src/lexer/lexical_analysis.xrl", 21).
+yyaction_10(TokenLine) ->
      { token, { '^', TokenLine } } .
+
+-compile({inline,yyaction_11/1}).
+-file("src/lexer/lexical_analysis.xrl", 22).
+yyaction_11(TokenLine) ->
+     { token, { '%', TokenLine } } .
 -file("/home/xaquin/.asdf/installs/erlang/26.1/lib/parsetools-2.5/include/leexinc.hrl", 344).

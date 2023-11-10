@@ -1,7 +1,7 @@
 Nonterminals
     term  expr factor. 
     
-Terminals number dice '+' '-' '*' '/' '(' ')' '^'.
+Terminals number dice '+' '-' '%' '*' '/' '//' '(' ')' '^'.
 
 Rootsymbol
     expr.
@@ -13,6 +13,8 @@ expr -> term : '$1'.
 
 term -> factor '*' term : {mult, '$1', '$3'}.
 term -> factor '/' term : {divi, '$1', '$3'}.
+term -> factor '//' term : {round_div, '$1', '$3'}.
+term -> factor '%' term : {mod, '$1', '$3'}.
 term -> factor '^' term : {pow, '$1', '$3'}.
 term -> factor : '$1'.
 
