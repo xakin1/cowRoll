@@ -20,7 +20,6 @@ defmodule Interpreter do
     eval(ast)
   end
 
-  @spec eval({:dice, any()} | {:number, any()}) :: any()
   def eval({:number, number}), do: number
 
   def eval({:dice, dice}) do
@@ -30,8 +29,13 @@ defmodule Interpreter do
     end
   end
 
+  def eval({:negative, expresion}), do: -eval(expresion)
+
   def eval({:mult, expresion_izquierda, expresion_derecha}),
     do: eval(expresion_izquierda) * eval(expresion_derecha)
+
+  def eval({:pow, expresion_izquierda, expresion_derecha}),
+    do: Integer.pow(eval(expresion_izquierda), eval(expresion_derecha))
 
   def eval({:plus, expresion_izquierda, expresion_derecha}),
     do: eval(expresion_izquierda) + eval(expresion_derecha)
