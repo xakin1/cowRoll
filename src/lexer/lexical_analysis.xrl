@@ -27,6 +27,7 @@ Rules.
 \/      : {token, {'/', TokenLine}}.
 \^      : {token, {'^', TokenLine}}.
 \%      : {token, {'%', TokenLine}}.
+\>      : {token, {'>', TokenLine}}.
 
 %% conditional operators
 {IF}    : {token, {'if', TokenLine}}.

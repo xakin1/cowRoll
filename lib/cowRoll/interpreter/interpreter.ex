@@ -39,6 +39,9 @@ defmodule Interpreter do
   def eval({:minus, left_expression, right_expression}),
     do: eval(left_expression) - eval(right_expression)
 
+  def eval({:stric_more, left_expression, right_expression}),
+    do: eval(left_expression) > eval(right_expression)
+
   def eval({:mult, left_expression, right_expression}),
     do: eval(left_expression) * eval(right_expression)
 

@@ -269,5 +269,15 @@ defmodule CowRoll.InterpreterTest do
           assert true
       end
     end
+
+    test "more should return true" do
+      result = Interpreter.eval_input("3 > 2")
+      assert true == result
+    end
+
+    test "more with expression should return true" do
+      result = Interpreter.eval_input("3 + 9 > (2 - 1d6)")
+      assert true == result
+    end
   end
 end
