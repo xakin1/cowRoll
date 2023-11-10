@@ -22,6 +22,8 @@ defmodule Interpreter do
 
   def eval({:number, number}), do: number
 
+  def eval({:boolean, bool}), do: bool
+
   def eval({:dice, dice}) do
     case(roll_dice(dice)) do
       {:ok, dice} -> dice
@@ -31,23 +33,17 @@ defmodule Interpreter do
 
   def eval({:negative, expresion}), do: -eval(expresion)
 
-  def eval({:mult, left_expression, right_expression}),
-    do: eval(left_expression) * eval(right_expression)
-
-  def eval({:pow, left_expression, right_expression}),
-    do: Integer.pow(eval(left_expression), eval(right_expression))
-
   def eval({:plus, left_expression, right_expression}),
     do: eval(left_expression) + eval(right_expression)
 
   def eval({:minus, left_expression, right_expression}),
     do: eval(left_expression) - eval(right_expression)
 
+  def eval({:mult, left_expression, right_expression}),
+    do: eval(left_expression) * eval(right_expression)
+
   def eval({:divi, left_expression, right_expression}),
     do: div(eval(left_expression), eval(right_expression))
-
-  def eval({:mod, left_expression, right_expression}),
-    do: Integer.mod(eval(left_expression), eval(right_expression))
 
   def eval({:round_div, left_expression, right_expression}) do
     evaluated_left_expression = eval(left_expression)
@@ -55,5 +51,19 @@ defmodule Interpreter do
 
     div(evaluated_left_expression, evaluated_right_expression) +
       rem(evaluated_left_expression, evaluated_right_expression)
+  end
+
+  def eval({:mod, left_expression, right_expression}),
+    do: Integer.mod(eval(left_expression), eval(right_expression))
+
+  def eval({:pow, left_expression, right_expression}),
+    do: Integer.pow(eval(left_expression), eval(right_expression))
+
+  def eval({:if_then_else, condition, then_expression, else_expression}) do
+    if eval(condition) do
+      eval(then_expression)
+    else
+      eval(else_expression)
+    end
   end
 end
