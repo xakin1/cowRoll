@@ -1,7 +1,7 @@
 Nonterminals
     term  expr factor if_then_else code function boolean_expression. 
     
-Terminals 'if' 'then' 'else'  boolean number dice 'and' 'or' 'not' '+' '>' '>=' '<' '<=' '==' '-' '%' '*' '/' '//' '(' ')' '^'.
+Terminals 'if' 'then' 'else'  boolean number dice 'and' 'or' 'not' '+' '>' '>=' '<' '<=' '==' '!=' '-' '%' '*' '/' '//' '(' ')' '^'.
 
 Rootsymbol
     function.
@@ -40,5 +40,6 @@ boolean_expression -> expr '>=' term : {more_equal, '$1', '$3'}.
 boolean_expression -> expr '<' term : {stric_less, '$1', '$3'}.
 boolean_expression -> expr '<=' term : {less_equal, '$1', '$3'}.
 boolean_expression -> expr '==' term : {equal, '$1', '$3'}.
+boolean_expression -> expr '!=' term : {not_equal, '$1', '$3'}.
 boolean_expression -> expr 'and' term : {and_operation, '$1', '$3'}.
 boolean_expression -> expr 'or' term : {or_operation, '$1', '$3'}.

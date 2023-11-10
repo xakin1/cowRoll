@@ -343,6 +343,17 @@ defmodule CowRoll.InterpreterTest do
       assert false == result
     end
 
+    test "test not equal" do
+      result = Interpreter.eval_input("5 != 6")
+      assert true == result
+
+      result = Interpreter.eval_input("true != true")
+      assert false == result
+
+      result = Interpreter.eval_input("true != (5<6)")
+      assert false == result
+    end
+
     test "test if with boolean operation" do
       result = Interpreter.eval_input("if (5 == 1) then true else false")
       assert false == result

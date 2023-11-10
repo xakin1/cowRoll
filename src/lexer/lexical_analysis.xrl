@@ -47,8 +47,7 @@ Rules.
 \<      : {token, {'<', TokenLine}}.
 \<=     : {token, {'<=', TokenLine}}.
 \==     : {token, {'==', TokenLine}}.
-\<=     : {token, {'<=', TokenLine}}.
-\==     : {token, {'==', TokenLine}}.
+\!=     : {token, {'!=', TokenLine}}.
 Erlang code.
 
 to_string(TokenChars) ->
