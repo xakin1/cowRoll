@@ -34,6 +34,7 @@ defmodule CowRoll.MixProject do
     [
       {:phoenix, "~> 1.7.7"},
       {:phoenix_live_dashboard, "~> 0.8.0"},
+      {:nimble_parsec, "~> 1.4"},
       {:swoosh, "~> 1.3"},
       {:poison, "~> 5.0"},
       {:finch, "~> 0.13"},

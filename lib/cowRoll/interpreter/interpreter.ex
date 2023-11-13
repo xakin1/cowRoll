@@ -1,6 +1,4 @@
 defmodule Interpreter do
-  use Parser
-
   @spec eval_input(any()) :: any()
   def eval_input(input) do
     {:ok, ast} = Parser.parse(input)
