@@ -11,6 +11,9 @@ FALSE         = false
 AND           = and
 OR            = or
 NOT           = not
+LEFT_PARENTHESIS = \(
+RIGHT_PARENTHESIS = \)
+NOT_DEFINED   = .
 Rules.
 
 {WHITESPACE} : skip_token.
@@ -19,8 +22,8 @@ Rules.
 {NUMBER}     : {token, {number, list_to_integer(TokenChars)}}.
 
 %% open/close parens
-\(      : {token, {'(', TokenLine}}.
-\)      : {token, {')', TokenLine}}.
+{LEFT_PARENTHESIS}     : {token, {'(', TokenLine}}.
+{RIGHT_PARENTHESIS}    : {token, {')', TokenLine}}.
 
 %% arithmetic operators
 \+      : {token, {'+', TokenLine}}.
@@ -48,6 +51,12 @@ Rules.
 \<=     : {token, {'<=', TokenLine}}.
 \==     : {token, {'==', TokenLine}}.
 \!=     : {token, {'!=', TokenLine}}.
+\'.\'  : {token, {string, to_string(TokenChars)}}.
+%%%'
+\".\"  : {token, {string, to_string(TokenChars)}}.
+%"
+{NOT_DEFINED} : {token, {not_defined, to_string(TokenChars)}}.
+
 Erlang code.
 
 to_string(TokenChars) ->

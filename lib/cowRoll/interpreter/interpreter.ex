@@ -24,6 +24,10 @@ defmodule Interpreter do
 
   def eval({:boolean, bool}), do: bool
 
+  def eval({:string, string}), do: string
+
+  def eval({:not_defined, unknow}), do: throw({:error, unknow <> " is not defined"})
+
   def eval({:dice, dice}) do
     case(roll_dice(dice)) do
       {:ok, dice} -> dice
@@ -68,8 +72,29 @@ defmodule Interpreter do
   def eval({:mult, left_expression, right_expression}),
     do: eval(left_expression) * eval(right_expression)
 
-  def eval({:divi, left_expression, right_expression}),
-    do: div(eval(left_expression), eval(right_expression))
+  def eval({:divi, left_expression, right_expression}) do
+    try do
+      dividend = eval(left_expression)
+      divider = eval(right_expression)
+
+      case {dividend, divider} do
+        {_, 0} ->
+          {:error, "Error: division by 0"}
+
+        {dividend, _} when not is_integer(dividend) ->
+          {:error, "Error: dividend must be an integer"}
+
+        {_, divider} when not is_integer(divider) ->
+          {:error, "Error: divider must be an integer"}
+
+        {dividend, divider} ->
+          div(dividend, divider)
+      end
+    catch
+      {:error, error} -> {:error, error}
+      _ -> {:error, "Aritmetic error: Unknow error"}
+    end
+  end
 
   def eval({:round_div, left_expression, right_expression}) do
     evaluated_left_expression = eval(left_expression)

@@ -3,13 +3,37 @@ defmodule CowRoll.InterpreterTest do
   use ExUnit.Case
 
   describe "errors on interpreter" do
-    test "div should return an (ArithmeticError) bad argument in arithmetic expression" do
+    test "div should return an division by 0" do
       try do
-        Interpreter.eval_input("5/0")
-        assert false
+        {:error, error} = Interpreter.eval_input("5/0")
+        assert error == "Error: division by 0"
+      rescue
+        _ ->
+          assert false
+      end
+    end
+
+    test "div should return must be an integer" do
+      try do
+        {:error, error} = Interpreter.eval_input("5/true")
+        assert error == "Error: divider must be an integer"
+        {:error, error} = Interpreter.eval_input("5/'a'")
+        assert error == "Error: divider must be an integer"
       rescue
         error ->
-          assert error == %ArithmeticError{message: "bad argument in arithmetic expression"}
+          IO.puts(error)
+          assert false
+      end
+    end
+
+    test "div should return parenthesis error" do
+      try do
+        {:error, error} = Interpreter.eval_input("5/(3+4")
+        assert error == "Error: divider must be an integer"
+      rescue
+        error ->
+          IO.puts(error)
+          assert false
       end
     end
 

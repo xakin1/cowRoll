@@ -10,6 +10,19 @@ defmodule Parser do
   """
   def parse(input) do
     {:ok, tokens, _} = input |> to_charlist |> :lexical_analysis.string()
-    :grammar_spec.parse(tokens)
+
+    case :grammar_spec.parse(tokens) do
+      {:error, {_, :grammar_spec, [~c"syntax error before: ", []]}} ->
+        throw({:error, "missing statement"})
+
+      {:error, {_, :grammar_spec, [~c"syntax error before: ", ~c"')'"]}} ->
+        throw({:error, "missing left parenthesis"})
+
+      {:ok, {:error, error}} ->
+        throw({:error, to_string(error)})
+
+      input_parsed ->
+        input_parsed
+    end
   end
 end
