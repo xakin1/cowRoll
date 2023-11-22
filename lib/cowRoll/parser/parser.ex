@@ -2,8 +2,8 @@ defmodule Parser do
   import NimbleParsec
 
   # expr   := term + expr | term - expr | term
-  # term   := factor * term | factor / term |factor
-  # factor := ( expr ) | integer
+  # termn := factor * term | factor / term | factor and term | factor or term | factor
+  # factor := ( expr ) | not boolean | - number | integer | boolean
   # integer    := 0 | 1 | 2 | ...
   # boolean    := "true" | "false"
 
@@ -104,7 +104,7 @@ defmodule Parser do
 
   grouping = repeat(ignore(whitespace)) |> ignore(lparen) |> parsec(:expr) |> ignore(rparen)
 
-  # factor := ( expr ) | integer | boolean
+  # factor := ( expr ) | not boolean | - number | integer | boolean
 
   defcombinatorp(
     :factor,
@@ -121,7 +121,7 @@ defmodule Parser do
     )
   )
 
-  # Termin := factor * term | factor / term | factor or term | factor and term | factor
+  # Termin := factor * term | factor / term | factor and term | factor or term | factor
 
   defcombinatorp(
     :term,
