@@ -55,7 +55,7 @@ defmodule CowRoll.ParserTest do
     end
 
     test "two semantic error should return error missing right parenthesis" do
-      input = "if (x>5"
+      input = "if ((x>5)"
 
       try do
         Parser.parse(input)
