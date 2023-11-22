@@ -1,67 +1,83 @@
 defmodule Parser do
   import NimbleParsec
 
-  integer =
-    integer(min: 1)
-
-  boolean = choice([string("false"), string("true")])
+  # expr   := term + expr | term - expr | term
+  # term   := factor * term | factor / term |factor
+  # factor := ( expr ) | integer
+  # integer    := 0 | 1 | 2 | ...
 
   whitespace = choice([string(" "), string("\n"), string("\t")])
 
-  arithmetical_two_terms_operators =
-    choice([string("-"), string("+"), string("/"), string("*"), string("^")])
+  integer =
+    repeat(ignore(whitespace))
+    |> integer(min: 1)
 
-  arithmetical_one_term_operators =
-    choice([string("-"), string("+")])
+  factor =
+    empty()
+    |> choice(
+      [
+        repeat(ignore(whitespace))
+        |> ignore(ascii_char([?(]))
+        |> repeat(ignore(whitespace))
+        |> concat(parsec(:expr))
+        |> repeat(ignore(whitespace))
+        |> ignore(ascii_char([?)])),
+        integer
+      ],
+      gen_weights: [1, 1]
+    )
 
-  boolean_two_terms_operators =
-    choice([
-      string("and"),
-      string("or"),
-      string(">"),
-      string(">="),
-      string("<"),
-      string("<="),
-      string("=="),
-      string("!=")
-    ])
+  # Recursive definitions require using defparsec with the parsec combinator
 
-  boolean_one_terms_operators = string("!")
-
-  arithmetical_two_terms_operations =
-    integer
-    |> repeat(ignore(whitespace))
-    |> concat(arithmetical_two_terms_operators)
-    |> repeat(ignore(whitespace))
-    |> concat(integer)
-
-  arithmetical_one_term_operations =
-    arithmetical_one_term_operators
-    |> repeat(ignore(whitespace))
-    |> concat(integer)
-
-  boolean_two_terms_operations =
-    boolean
-    |> repeat(ignore(whitespace))
-    |> concat(boolean_two_terms_operators)
-    |> repeat(ignore(whitespace))
-    |> concat(boolean)
-
-  boolean_one_term_operations =
-    boolean_one_terms_operators
-    |> repeat(ignore(whitespace))
-    |> concat(boolean)
-
-  code =
-    choice([
-      arithmetical_two_terms_operations,
-      arithmetical_one_term_operations,
-      boolean_two_terms_operations,
-      boolean_one_term_operations
-    ])
-
-  defparsec(
-    :parse,
-    code
+  defcombinatorp(
+    :term,
+    empty()
+    |> choice(
+      [
+        factor
+        |> repeat(ignore(whitespace))
+        |> ignore(ascii_char([?*]))
+        |> repeat(ignore(whitespace))
+        |> concat(parsec(:term))
+        |> repeat(ignore(whitespace))
+        |> tag(:mult),
+        factor
+        |> repeat(ignore(whitespace))
+        |> ignore(ascii_char([?/]))
+        |> repeat(ignore(whitespace))
+        |> concat(parsec(:term))
+        |> repeat(ignore(whitespace))
+        |> tag(:div),
+        factor
+      ],
+      gen_weights: [1, 1, 3]
+    )
   )
+
+  defcombinatorp(
+    :expr,
+    empty()
+    |> choice(
+      [
+        parsec(:term)
+        |> repeat(ignore(whitespace))
+        |> ignore(ascii_char([?+]))
+        |> repeat(ignore(whitespace))
+        |> concat(parsec(:expr))
+        |> repeat(ignore(whitespace))
+        |> tag(:plus),
+        parsec(:term)
+        |> repeat(ignore(whitespace))
+        |> ignore(ascii_char([?-]))
+        |> repeat(ignore(whitespace))
+        |> concat(parsec(:expr))
+        |> repeat(ignore(whitespace))
+        |> tag(:minus),
+        parsec(:term)
+      ],
+      gen_weights: [1, 1, 3]
+    )
+  )
+
+  defparsec(:parse, parsec(:expr))
 end
