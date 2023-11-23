@@ -326,4 +326,7 @@ defmodule CowRoll.ParserTest do
              ]
            ]
   end
+
+  describe "detect gramatical errors correctly" do
+  end
 end
