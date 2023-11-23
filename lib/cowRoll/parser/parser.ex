@@ -104,7 +104,53 @@ defmodule Parser do
 
   grouping = repeat(ignore(whitespace)) |> ignore(lparen) |> parsec(:expr) |> ignore(rparen)
 
-  # factor := ( expr ) | not boolean | - number | integer | boolean
+  # conditionals
+
+  defcombinatorp(
+    :condition,
+    empty()
+    |> parsec(:expr)
+    |> tag(:condition)
+  )
+
+  defcombinatorp(
+    :then_expr,
+    empty()
+    |> parsec(:expr)
+    |> tag(:then_expr)
+  )
+
+  defcombinatorp(
+    :else_expr,
+    empty()
+    |> parsec(:expr)
+    |> tag(:else_expr)
+  )
+
+  # if statement
+
+  if_then =
+    repeat(ignore(whitespace))
+    |> ignore(string("if"))
+    |> repeat(ignore(whitespace))
+    |> concat(parsec(:condition))
+    |> repeat(ignore(whitespace))
+    |> ignore(string("then"))
+    |> repeat(ignore(whitespace))
+    |> concat(parsec(:then_expr))
+    |> tag(:if_then)
+
+  if_then_else =
+    if_then
+    |> repeat(ignore(whitespace))
+    |> ignore(string("else"))
+    |> repeat(ignore(whitespace))
+    |> concat(parsec(:else_expr))
+    |> tag(:if_then_else)
+
+  if_statement = choice([if_then_else, if_then])
+
+  # factor := ( expr ) | not boolean | - number | integer | boolean | if expr then expr else expr
 
   defcombinatorp(
     :factor,
@@ -115,9 +161,10 @@ defmodule Parser do
         not_,
         negation,
         integer,
-        boolean
+        boolean,
+        if_statement
       ],
-      gen_weights: [1, 1, 1, 2, 2]
+      gen_weights: [1, 1, 1, 2, 2, 3]
     )
   )
 
