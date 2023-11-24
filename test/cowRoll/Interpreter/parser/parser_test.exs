@@ -302,31 +302,42 @@ defmodule CowRoll.ParserTest do
   end
 
   describe "detect conditionals correctly" do
-    input = "if 1+2/3 then 2"
+    input = "if false or (3>5) then 2"
     {_, token, _, _, _, _} = Parser.parse(input)
 
     assert token == [
              if_then: [
-               {:condition, [plus: [number: [1], div: [number: [2], number: [3]]]]},
-               {:then_expr, [number: [2]]}
+               condition: [or: [boolean: [false], stric_more: [number: [3], number: [5]]]],
+               then_expr: [number: [2]]
              ]
            ]
 
-    input = "if 1+2/3 then 2 else 3"
+    input = "if (3>6) and (4==4) then 2 else 3"
     {_, token, _, _, _, _} = Parser.parse(input)
 
     assert token == [
              if_then_else: [
-               {:if_then,
-                [
-                  {:condition, [plus: [number: [1], div: [number: [2], number: [3]]]]},
-                  {:then_expr, [number: [2]]}
-                ]},
-               {:else_expr, [number: [3]]}
+               if_then: [
+                 condition: [
+                   and: [
+                     stric_more: [number: [3], number: [6]],
+                     equal: [number: [4], number: [4]]
+                   ]
+                 ],
+                 then_expr: [number: [2]]
+               ],
+               else_expr: [number: [3]]
              ]
            ]
   end
 
   describe "detect gramatical errors correctly" do
+    test "check left parenthesis" do
+      # Uso del analizador léxico en otro módulo
+      input = "((1+2"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [number: [1]]
+    end
   end
 end

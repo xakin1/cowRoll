@@ -8,10 +8,17 @@ defmodule Parser do
   # boolean    := "true" | "false"
 
   # general
+  whitespace = choice([string(" "), string("\n"), string("\t")])
+
   lparen = ascii_char([?(]) |> label("(")
   rparen = ascii_char([?)]) |> label(")")
 
-  whitespace = choice([string(" "), string("\n"), string("\t")])
+  grouping =
+    repeat(ignore(whitespace))
+    |> ignore(lparen)
+    |> parsec(:expr)
+    |> ignore(rparen)
+    |> label("parenthesis")
 
   # arithmetic
   number =
@@ -110,19 +117,72 @@ defmodule Parser do
     |> tag(:or)
     |> label("or")
 
-  grouping =
-    repeat(ignore(whitespace))
-    |> ignore(lparen)
-    |> parsec(:expr)
-    |> ignore(rparen)
-    |> label("parenthesis")
+  stric_more =
+    parsec(:factor)
+    |> repeat(ignore(whitespace))
+    |> ignore(string(">"))
+    |> repeat(ignore(whitespace))
+    |> concat(parsec(:term))
+    |> repeat(ignore(whitespace))
+    |> tag(:stric_more)
+    |> label(">")
+
+  more_equal =
+    parsec(:factor)
+    |> repeat(ignore(whitespace))
+    |> ignore(string(">="))
+    |> repeat(ignore(whitespace))
+    |> concat(parsec(:term))
+    |> repeat(ignore(whitespace))
+    |> tag(:more_equal)
+    |> label(">=")
+
+  stric_less =
+    parsec(:factor)
+    |> repeat(ignore(whitespace))
+    |> ignore(string("<"))
+    |> repeat(ignore(whitespace))
+    |> concat(parsec(:term))
+    |> repeat(ignore(whitespace))
+    |> tag(:stric_less)
+    |> label("<")
+
+  less_equal =
+    parsec(:factor)
+    |> repeat(ignore(whitespace))
+    |> ignore(string("<="))
+    |> repeat(ignore(whitespace))
+    |> concat(parsec(:term))
+    |> repeat(ignore(whitespace))
+    |> tag(:less_equal)
+    |> label("<=")
+
+  equal =
+    parsec(:factor)
+    |> repeat(ignore(whitespace))
+    |> ignore(string("=="))
+    |> repeat(ignore(whitespace))
+    |> concat(parsec(:term))
+    |> repeat(ignore(whitespace))
+    |> tag(:equal)
+    |> label("==")
+
+  not_equal =
+    parsec(:factor)
+    |> repeat(ignore(whitespace))
+    |> ignore(string("!="))
+    |> repeat(ignore(whitespace))
+    |> concat(parsec(:term))
+    |> repeat(ignore(whitespace))
+    |> tag(:not_equal)
+    |> label("!=")
 
   # conditionals
 
   defcombinatorp(
     :condition,
     empty()
-    |> parsec(:expr)
+    |> parsec(:boolean_expression)
     |> tag(:condition)
     |> label("condition")
   )
@@ -192,11 +252,9 @@ defmodule Parser do
       [
         mult,
         div,
-        and_,
-        or_,
         parsec(:factor)
       ],
-      gen_weights: [1, 1, 1, 1, 3]
+      gen_weights: [1, 1, 3]
     )
   )
 
@@ -209,9 +267,29 @@ defmodule Parser do
       [
         plus,
         minus,
+        parsec(:boolean_expression),
         parsec(:term)
       ],
-      gen_weights: [1, 1, 3]
+      gen_weights: [1, 1, 2, 2]
+    )
+  )
+
+  defcombinatorp(
+    :boolean_expression,
+    empty()
+    |> choice(
+      [
+        stric_more,
+        more_equal,
+        stric_less,
+        less_equal,
+        equal,
+        not_equal,
+        and_,
+        or_,
+        boolean
+      ],
+      gen_weights: [1, 1, 1, 1, 1, 1, 1, 1, 2]
     )
   )
 
