@@ -1,11 +1,28 @@
 defmodule Parser do
   import NimbleParsec
 
-  # expr   := term + expr | term - expr | term
-  # termn := factor * term | factor / term | factor and term | factor or term | factor
-  # factor := ( expr ) | not boolean | - number | number | boolean
-  # number    := 0 | 1 | 2 | ...
-  # boolean    := "true" | "false"
+  # code                ::= numeric_expression | boolean_expression | if_statement
+
+  # expression          ::= numeric_expression | boolean_expression | term
+  # term                ::= numeric_term | boolean_term | factor
+  # factor              ::= numeric_factor | boolean_factor
+
+  # if_statement        ::= if_then | if_then_else
+  # if_then             ::= 'if' boolean_expression 'then' code
+  # if_then_else        ::= 'if' boolean_expression 'then' code 'else' code
+
+  # numeric_expression  ::= numeric_term ( ( '+' | '-' ) numeric_term )*
+  # numeric_term        ::= numeric_factor ( ( '*' | '/' ) numeric_factor )*
+  # numeric_factor      ::= '-'* ( '(' numeric_expression ')' | number )
+
+  # boolean_expression  ::= boolean_term ( ( 'or' | 'and' ) boolean_expression )*
+  # boolean_term        ::= compare_numbers | compare_booleans | compare_terms | boolean_factor
+  # compare_numbers     ::= numeric_expression ( '>' | '>=' | '<' | '<=' | '!=' | '==' ) numeric_expression
+  # compare_terms       ::= factor ( '!=' | '==' ) term
+  # boolean_factor      ::= 'not'* ( '(' boolean_expression ')' | boolean )
+
+  # boolean             ::= 'true' | 'false'
+  # number              ::= '1' | '2' | '3' | '...'
 
   # general
   whitespace = choice([string(" "), string("\n"), string("\t")])
@@ -13,10 +30,10 @@ defmodule Parser do
   lparen = ascii_char([?(]) |> label("(")
   rparen = ascii_char([?)]) |> label(")")
 
-  grouping =
+  numeric_grouping =
     repeat(ignore(whitespace))
     |> ignore(lparen)
-    |> parsec(:expr)
+    |> parsec(:numeric_expression)
     |> ignore(rparen)
     |> label("parenthesis")
 
@@ -31,47 +48,47 @@ defmodule Parser do
     repeat(ignore(whitespace))
     |> ignore(ascii_char([?-]))
     |> repeat(ignore(whitespace))
-    |> concat(parsec(:factor))
+    |> concat(parsec(:numeric_factor))
     |> repeat(ignore(whitespace))
     |> tag(:negation)
     |> label("negation")
 
   plus =
-    parsec(:term)
+    parsec(:numeric_term)
     |> repeat(ignore(whitespace))
     |> ignore(ascii_char([?+]))
     |> repeat(ignore(whitespace))
-    |> concat(parsec(:expr))
+    |> concat(parsec(:numeric_expression))
     |> repeat(ignore(whitespace))
     |> tag(:plus)
     |> label("plus")
 
   minus =
-    parsec(:term)
+    parsec(:numeric_term)
     |> repeat(ignore(whitespace))
     |> ignore(ascii_char([?-]))
     |> repeat(ignore(whitespace))
-    |> concat(parsec(:expr))
+    |> concat(parsec(:numeric_expression))
     |> repeat(ignore(whitespace))
     |> tag(:minus)
     |> label("minus")
 
   mult =
-    parsec(:factor)
+    parsec(:numeric_factor)
     |> repeat(ignore(whitespace))
     |> ignore(ascii_char([?*]))
     |> repeat(ignore(whitespace))
-    |> concat(parsec(:term))
+    |> concat(parsec(:numeric_term))
     |> repeat(ignore(whitespace))
     |> tag(:mult)
     |> label("mult")
 
   div =
-    parsec(:factor)
+    parsec(:numeric_factor)
     |> repeat(ignore(whitespace))
     |> ignore(ascii_char([?/]))
     |> repeat(ignore(whitespace))
-    |> concat(parsec(:term))
+    |> concat(parsec(:numeric_term))
     |> repeat(ignore(whitespace))
     |> tag(:div)
     |> label("div")
@@ -86,6 +103,13 @@ defmodule Parser do
     |> replace(false)
     |> label("false")
 
+  boolean_grouping =
+    repeat(ignore(whitespace))
+    |> ignore(lparen)
+    |> parsec(:boolean_expression)
+    |> ignore(rparen)
+    |> label("parenthesis")
+
   boolean = choice([true_, false_]) |> tag(:boolean) |> label("boolean")
 
   not_ =
@@ -98,107 +122,72 @@ defmodule Parser do
     |> label("not")
 
   and_ =
-    parsec(:factor)
+    parsec(:boolean_term)
     |> repeat(ignore(whitespace))
     |> ignore(string("and"))
     |> repeat(ignore(whitespace))
-    |> concat(parsec(:term))
+    |> concat(parsec(:boolean_expression))
     |> repeat(ignore(whitespace))
     |> tag(:and)
     |> label("and")
 
   or_ =
-    parsec(:factor)
+    parsec(:boolean_term)
     |> repeat(ignore(whitespace))
     |> ignore(string("or"))
     |> repeat(ignore(whitespace))
-    |> concat(parsec(:term))
+    |> concat(parsec(:boolean_expression))
     |> repeat(ignore(whitespace))
     |> tag(:or)
     |> label("or")
 
   stric_more =
-    parsec(:factor)
+    parsec(:numeric_expression)
     |> repeat(ignore(whitespace))
     |> ignore(string(">"))
-    |> repeat(ignore(whitespace))
-    |> concat(parsec(:term))
-    |> repeat(ignore(whitespace))
+    |> parsec(:numeric_expression)
     |> tag(:stric_more)
     |> label(">")
 
   more_equal =
-    parsec(:factor)
+    parsec(:numeric_expression)
     |> repeat(ignore(whitespace))
     |> ignore(string(">="))
-    |> repeat(ignore(whitespace))
-    |> concat(parsec(:term))
-    |> repeat(ignore(whitespace))
+    |> parsec(:numeric_expression)
     |> tag(:more_equal)
     |> label(">=")
 
   stric_less =
-    parsec(:factor)
+    parsec(:numeric_expression)
     |> repeat(ignore(whitespace))
     |> ignore(string("<"))
-    |> repeat(ignore(whitespace))
-    |> concat(parsec(:term))
-    |> repeat(ignore(whitespace))
+    |> parsec(:numeric_expression)
     |> tag(:stric_less)
     |> label("<")
 
   less_equal =
-    parsec(:factor)
+    parsec(:numeric_expression)
     |> repeat(ignore(whitespace))
     |> ignore(string("<="))
-    |> repeat(ignore(whitespace))
-    |> concat(parsec(:term))
-    |> repeat(ignore(whitespace))
+    |> parsec(:numeric_expression)
     |> tag(:less_equal)
     |> label("<=")
 
   equal =
-    parsec(:factor)
+    ignore(string("=="))
     |> repeat(ignore(whitespace))
-    |> ignore(string("=="))
-    |> repeat(ignore(whitespace))
-    |> concat(parsec(:term))
+    |> concat(parsec(:factor))
     |> repeat(ignore(whitespace))
     |> tag(:equal)
     |> label("==")
 
   not_equal =
-    parsec(:factor)
+    ignore(string("!="))
     |> repeat(ignore(whitespace))
-    |> ignore(string("!="))
-    |> repeat(ignore(whitespace))
-    |> concat(parsec(:term))
+    |> concat(parsec(:factor))
     |> repeat(ignore(whitespace))
     |> tag(:not_equal)
     |> label("!=")
-
-  # conditionals
-
-  defcombinatorp(
-    :condition,
-    empty()
-    |> parsec(:boolean_expression)
-    |> tag(:condition)
-    |> label("condition")
-  )
-
-  defcombinatorp(
-    :then_expr,
-    empty()
-    |> parsec(:expr)
-    |> tag(:then_expr)
-    |> label("then expresion")
-  )
-
-  defcombinatorp(
-    :else_expr,
-    empty() |> parsec(:expr) |> tag(:else_expr) |> label("else expresion")
-  )
 
   # if statement
 
@@ -225,28 +214,102 @@ defmodule Parser do
 
   if_statement = choice([if_then_else, if_then]) |> label("if statement")
 
-  # factor := ( expr ) | not boolean | - number | number | boolean | if expr then expr else expr
+  # code
+  defcombinatorp(
+    :code,
+    empty()
+    |> choice(
+      [
+        parsec(:boolean_expression),
+        parsec(:numeric_expression),
+        if_statement
+      ],
+      gen_weights: [1, 1, 1]
+    )
+  )
 
+  # expresion
+  defcombinatorp(
+    :expression,
+    empty()
+    |> choice(
+      [
+        parsec(:numeric_expression),
+        parsec(:boolean_expression),
+        parsec(:term)
+      ],
+      gen_weights: [1, 1, 2]
+    )
+  )
+
+  # term
+  defcombinatorp(
+    :term,
+    empty()
+    |> choice(
+      [
+        parsec(:numeric_term),
+        parsec(:boolean_term),
+        parsec(:factor)
+      ],
+      gen_weights: [1, 1, 2]
+    )
+  )
+
+  # factor
   defcombinatorp(
     :factor,
     empty()
     |> choice(
       [
-        grouping,
-        not_,
-        negation,
-        number,
-        boolean,
-        if_statement
+        parsec(:numeric_factor),
+        parsec(:boolean_factor)
       ],
-      gen_weights: [1, 2, 2, 3, 3, 4]
+      gen_weights: [1, 1]
     )
   )
 
-  # Termin := factor * term | factor / term | factor and term | factor or term | factor
+  # conditionals
+
+  # condition
+  defcombinatorp(
+    :condition,
+    empty()
+    |> parsec(:boolean_expression)
+    |> tag(:condition)
+    |> label("condition")
+  )
+
+  # then_expresion
+  defcombinatorp(
+    :then_expr,
+    empty()
+    |> parsec(:code)
+    |> tag(:then_expr)
+    |> label("then expresion")
+  )
+
+  # else_expresion
+  defcombinatorp(
+    :else_expr,
+    empty() |> parsec(:code) |> tag(:else_expr) |> label("else expresion")
+  )
 
   defcombinatorp(
-    :term,
+    :numeric_factor,
+    empty()
+    |> choice(
+      [
+        numeric_grouping,
+        negation,
+        number
+      ],
+      gen_weights: [1, 2, 3]
+    )
+  )
+
+  defcombinatorp(
+    :numeric_term,
     empty()
     |> choice(
       [
@@ -258,50 +321,92 @@ defmodule Parser do
     )
   )
 
-  # expr := term + expr | term - expr | term
-
   defcombinatorp(
-    :expr,
+    :numeric_expression,
     empty()
     |> choice(
       [
         plus,
         minus,
-        parsec(:boolean_expression),
-        parsec(:term)
+        parsec(:numeric_term)
       ],
-      gen_weights: [1, 1, 2, 2]
+      gen_weights: [1, 1, 2]
+    )
+  )
+
+  # boolean expresion
+  defcombinatorp(
+    :boolean_expression,
+    empty()
+    |> choice(
+      [
+        and_,
+        or_,
+        parsec(:boolean_term)
+      ],
+      gen_weights: [1, 1, 2]
     )
   )
 
   defcombinatorp(
-    :boolean_expression,
+    :boolean_term,
+    empty()
+    |> choice(
+      [
+        parsec(:compare_numbers),
+        parsec(:compare_terms),
+        parsec(:boolean_factor)
+      ],
+      gen_weights: [1, 1, 2]
+    )
+  )
+
+  defcombinatorp(
+    :compare_numbers,
     empty()
     |> choice(
       [
         stric_more,
         more_equal,
         stric_less,
-        less_equal,
-        equal,
-        not_equal,
-        and_,
-        or_,
-        boolean
+        less_equal
       ],
-      gen_weights: [1, 1, 1, 1, 1, 1, 1, 1, 2]
+      gen_weights: [1, 1, 1, 1]
     )
   )
 
-  defp fold_infixl(acc) do
-    acc
-    |> Enum.reverse()
-    |> Enum.chunk_every(2)
-    |> List.foldr([], fn
-      [l], [] -> l
-      [r, op], l -> {op, [l, r]}
-    end)
-  end
+  defcombinator(
+    :left_term_compere_numbers,
+    repeat(ignore(whitespace))
+    |> parsec(:numeric_expression)
+  )
 
-  defparsec(:parse, parsec(:expr))
+  defcombinatorp(
+    :compare_terms,
+    empty()
+    |> parsec(:term)
+    |> repeat(ignore(whitespace))
+    |> choice(
+      [
+        equal,
+        not_equal
+      ],
+      gen_weights: [1, 1]
+    )
+  )
+
+  defcombinatorp(
+    :boolean_factor,
+    empty()
+    |> choice(
+      [
+        boolean_grouping,
+        not_,
+        boolean
+      ],
+      gen_weights: [1, 2, 3]
+    )
+  )
+
+  defparsec(:parse, parsec(:code))
 end

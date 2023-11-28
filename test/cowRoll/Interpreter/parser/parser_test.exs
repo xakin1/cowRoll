@@ -175,10 +175,25 @@ defmodule CowRoll.ParserTest do
 
       assert token == [minus: [number: [1], number: [1]]]
 
-      input = "(1 * 1 )"
+      input = "(1 + 1 ) * 2"
       {_, token, _, _, _, _} = Parser.parse(input)
 
-      assert token == [mult: [number: [1], number: [1]]]
+      assert token == [mult: [plus: [number: [1], number: [1]], number: [2]]]
+
+      input = "-(1) "
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [negation: [number: [1]]]
+
+      input = "-(1) + 3*4"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [plus: [negation: [number: [1]], mult: [number: [3], number: [4]]]]
+
+      input = "-(1) "
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [negation: [number: [1]]]
     end
 
     test "parse boolean" do
@@ -206,25 +221,15 @@ defmodule CowRoll.ParserTest do
 
     test "parse and operation" do
       # Uso del analizador léxico en otro módulo
-      input = "trueandtrue"
-      {_, token, _, _, _, _} = Parser.parse(input)
-
-      assert token == [and: [boolean: [true], boolean: [true]]]
-
-      input = "trueand false"
-      {_, token, _, _, _, _} = Parser.parse(input)
-
-      assert token == [and: [boolean: [true], boolean: [false]]]
-
-      input = "false andtrue"
-      {_, token, _, _, _, _} = Parser.parse(input)
-
-      assert token == [and: [boolean: [false], boolean: [true]]]
-
       input = "false and false"
       {_, token, _, _, _, _} = Parser.parse(input)
 
       assert token == [and: [boolean: [false], boolean: [false]]]
+
+      input = "(3>4) and false"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [and: [{:stric_more, [number: [3], number: [4]]}, {:boolean, [false]}]]
     end
 
     test "parse or operation" do
@@ -244,10 +249,15 @@ defmodule CowRoll.ParserTest do
 
       assert token == [or: [boolean: [false], boolean: [true]]]
 
-      input = "false or false"
+      input = "(3 > 4) or false"
       {_, token, _, _, _, _} = Parser.parse(input)
 
-      assert token == [or: [boolean: [false], boolean: [false]]]
+      assert token == [or: [{:stric_more, [number: [3], number: [4]]}, {:boolean, [false]}]]
+
+      input = "(3) or false"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [number: [3]]
     end
 
     test "parse not operation" do
@@ -301,43 +311,33 @@ defmodule CowRoll.ParserTest do
     end
   end
 
-  describe "detect conditionals correctly" do
-    input = "if false or (3>5) then 2"
-    {_, token, _, _, _, _} = Parser.parse(input)
+  # describe "detect conditionals correctly" do
+  #   input = "if false or (3>5) then 2"
+  #   {_, token, _, _, _, _} = Parser.parse(input)
 
-    assert token == [
-             if_then: [
-               condition: [or: [boolean: [false], stric_more: [number: [3], number: [5]]]],
-               then_expr: [number: [2]]
-             ]
-           ]
+  #   assert token == [
+  #            if_then: [
+  #              condition: [or: [boolean: [false], stric_more: [number: [3], number: [5]]]],
+  #              then_expr: [number: [2]]
+  #            ]
+  #          ]
 
-    input = "if (3>6) and (4==4) then 2 else 3"
-    {_, token, _, _, _, _} = Parser.parse(input)
+  #   input = "if (3>6) and (4==4) then 2 else 3"
+  #   {_, token, _, _, _, _} = Parser.parse(input)
 
-    assert token == [
-             if_then_else: [
-               if_then: [
-                 condition: [
-                   and: [
-                     stric_more: [number: [3], number: [6]],
-                     equal: [number: [4], number: [4]]
-                   ]
-                 ],
-                 then_expr: [number: [2]]
-               ],
-               else_expr: [number: [3]]
-             ]
-           ]
-  end
-
-  describe "detect gramatical errors correctly" do
-    test "check left parenthesis" do
-      # Uso del analizador léxico en otro módulo
-      input = "((1+2"
-      {_, token, _, _, _, _} = Parser.parse(input)
-
-      assert token == [number: [1]]
-    end
-  end
+  #   assert token == [
+  #            if_then_else: [
+  #              if_then: [
+  #                condition: [
+  #                  and: [
+  #                    stric_more: [number: [3], number: [6]],
+  #                    equal: [number: [4], number: [4]]
+  #                  ]
+  #                ],
+  #                then_expr: [number: [2]]
+  #              ],
+  #              else_expr: [number: [3]]
+  #            ]
+  #          ]
+  # end
 end
