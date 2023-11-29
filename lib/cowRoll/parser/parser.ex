@@ -293,7 +293,7 @@ defmodule Parser do
   # then_expression
   defcombinatorp(
     :then_expression,
-    number
+    parsec(:expression)
     |> tag(:then_expression)
     |> label("then expression")
   )
