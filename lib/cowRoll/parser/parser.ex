@@ -1,28 +1,26 @@
 defmodule Parser do
   import NimbleParsec
 
-  # code                ::= numeric_expression | boolean_expression | if_statement
+  #   <code>                ::= <numeric_expression> | <boolean_expression> | <if_statement>
 
-  # expression          ::= numeric_expression | boolean_expression | term
-  # term                ::= numeric_term | boolean_term | factor
-  # factor              ::= numeric_factor | boolean_factor
+  #   <expression>          ::= <numeric_expression> | <boolean_expression> | <term>
+  #   <term>                ::=  <numeric_term> | <boolean_term> | <factor>
+  #   <factor>              ::=  <numeric_factor> | <boolean_factor>
 
-  # if_statement        ::= if_then | if_then_else
-  # if_then             ::= 'if' boolean_expression 'then' code
-  # if_then_else        ::= 'if' boolean_expression 'then' code 'else' code
+  # <if_statement>        ::= "if" <boolean_expression> "then" <expression> ("else" <expression>)?
 
-  # numeric_expression  ::= numeric_term ( ( '+' | '-' ) numeric_term )*
-  # numeric_term        ::= numeric_factor ( ( '*' | '/' ) numeric_factor )*
-  # numeric_factor      ::= '-'* ( '(' numeric_expression ')' | number )
+  # <numeric_expression>  ::= <numeric_term> ( ( "+" | "-" ) <numeric_term> )*
+  #   <numeric_term>        ::=  <numeric_factor> ( ( "*" | "/" )  <numeric_factor>)*
+  #   <numeric_factor>      ::= "-"* ( "(" <numeric_expression>")" | <number> )
 
-  # boolean_expression  ::= boolean_term ( ( 'or' | 'and' ) boolean_expression )*
-  # boolean_term        ::= compare_numbers | compare_booleans | compare_terms | boolean_factor
-  # compare_numbers     ::= numeric_expression ( '>' | '>=' | '<' | '<=' | '!=' | '==' ) numeric_expression
-  # compare_terms       ::= factor ( '!=' | '==' ) term
-  # boolean_factor      ::= 'not'* ( '(' boolean_expression ')' | boolean )
+  #   <boolean_expression>  ::= <boolean_term> ( ( "or" | "and" ) <boolean_expression> )*
+  #   <boolean_term>        ::= <compare_numbers> | <compare_terms>  | <boolean_factor>
+  #   <compare_numbers>     ::= <numeric_expression>( ">" | ">=" | "<" | "<=" | "!=" | "==" ) <numeric_expression>
+  #   <compare_terms>       ::= <factor> ( "!=" | "==" ) <term>
+  #   <boolean_factor>      ::= "not"* <factor> | "(" <boolean_expression> ")" | <boolean>
 
-  # boolean             ::= 'true' | 'false'
-  # number              ::= '1' | '2' | '3' | '...'
+  #   <boolean>             ::= "true" | "false"
+  #   <number>              ::= "1" | "2" | "3" | "..."
 
   # general
   whitespace = choice([string(" "), string("\n"), string("\t")])
@@ -142,34 +140,42 @@ defmodule Parser do
     |> label("or")
 
   stric_more =
-    parsec(:numeric_expression)
+    parsec(:numeric_term)
     |> repeat(ignore(whitespace))
     |> ignore(string(">"))
+    |> repeat(ignore(whitespace))
     |> parsec(:numeric_expression)
+    |> repeat(ignore(whitespace))
     |> tag(:stric_more)
     |> label(">")
 
   more_equal =
-    parsec(:numeric_expression)
+    parsec(:numeric_term)
     |> repeat(ignore(whitespace))
     |> ignore(string(">="))
+    |> repeat(ignore(whitespace))
     |> parsec(:numeric_expression)
+    |> repeat(ignore(whitespace))
     |> tag(:more_equal)
     |> label(">=")
 
   stric_less =
-    parsec(:numeric_expression)
+    parsec(:numeric_term)
     |> repeat(ignore(whitespace))
     |> ignore(string("<"))
+    |> repeat(ignore(whitespace))
     |> parsec(:numeric_expression)
+    |> repeat(ignore(whitespace))
     |> tag(:stric_less)
     |> label("<")
 
   less_equal =
-    parsec(:numeric_expression)
+    parsec(:numeric_term)
     |> repeat(ignore(whitespace))
     |> ignore(string("<="))
+    |> repeat(ignore(whitespace))
     |> parsec(:numeric_expression)
+    |> repeat(ignore(whitespace))
     |> tag(:less_equal)
     |> label("<=")
 
@@ -191,54 +197,59 @@ defmodule Parser do
 
   # if statement
 
-  if_then =
+  if_statement =
     repeat(ignore(whitespace))
-    |> ignore(string("if"))
+    |> string("if")
     |> repeat(ignore(whitespace))
-    |> concat(parsec(:condition))
+    |> parsec(:condition)
     |> repeat(ignore(whitespace))
-    |> ignore(string("then"))
+    |> string("then")
     |> repeat(ignore(whitespace))
-    |> concat(parsec(:then_expr))
-    |> tag(:if_then)
-    |> label("if then")
-
-  if_then_else =
-    if_then
-    |> repeat(ignore(whitespace))
-    |> ignore(string("else"))
-    |> repeat(ignore(whitespace))
-    |> concat(parsec(:else_expr))
-    |> tag(:if_then_else)
-    |> label("if then else")
-
-  if_statement = choice([if_then_else, if_then]) |> label("if statement")
+    |> parsec(:then_expression)
+    |> optional(
+      repeat(ignore(whitespace))
+      |> ignore(string("else"))
+      |> repeat(ignore(whitespace))
+      |> concat(parsec(:else_expression))
+    )
+    |> tag(:if_statement)
+    |> label("if statement")
 
   # code
+  # defcombinatorp(
+  #   :code,
+  #   empty()
+  #   |> choice(
+  #     [
+  #       parsec(:expression),
+  #       if_statement
+  #     ],
+  #     gen_weights: [1, 1, 1]
+  #   )
+  # )
+
   defcombinatorp(
     :code,
     empty()
     |> choice(
       [
-        parsec(:boolean_expression),
-        parsec(:numeric_expression),
-        if_statement
+        if_statement,
+        parsec(:expression)
       ],
-      gen_weights: [1, 1, 1]
+      gen_weights: [1, 2]
     )
   )
 
-  # expresion
+  # expression
   defcombinatorp(
     :expression,
     empty()
     |> choice(
       [
-        parsec(:numeric_expression),
         parsec(:boolean_expression),
-        parsec(:term)
+        parsec(:numeric_expression)
       ],
-      gen_weights: [1, 1, 2]
+      gen_weights: [1, 2]
     )
   )
 
@@ -274,25 +285,23 @@ defmodule Parser do
   # condition
   defcombinatorp(
     :condition,
-    empty()
-    |> parsec(:boolean_expression)
+    parsec(:boolean_expression)
     |> tag(:condition)
     |> label("condition")
   )
 
-  # then_expresion
+  # then_expression
   defcombinatorp(
-    :then_expr,
-    empty()
-    |> parsec(:code)
-    |> tag(:then_expr)
-    |> label("then expresion")
+    :then_expression,
+    number
+    |> tag(:then_expression)
+    |> label("then expression")
   )
 
-  # else_expresion
+  # else_expression
   defcombinatorp(
-    :else_expr,
-    empty() |> parsec(:code) |> tag(:else_expr) |> label("else expresion")
+    :else_expression,
+    empty() |> parsec(:numeric_expression) |> tag(:else_expression) |> label("else expression")
   )
 
   defcombinatorp(
@@ -334,7 +343,7 @@ defmodule Parser do
     )
   )
 
-  # boolean expresion
+  # boolean expression
   defcombinatorp(
     :boolean_expression,
     empty()
@@ -342,9 +351,13 @@ defmodule Parser do
       [
         and_,
         or_,
+        stric_more,
+        more_equal,
+        stric_less,
+        less_equal,
         parsec(:boolean_term)
       ],
-      gen_weights: [1, 1, 2]
+      gen_weights: [1, 1, 1, 1, 1, 1, 2]
     )
   )
 
@@ -353,32 +366,11 @@ defmodule Parser do
     empty()
     |> choice(
       [
-        parsec(:compare_numbers),
         parsec(:compare_terms),
         parsec(:boolean_factor)
       ],
-      gen_weights: [1, 1, 2]
+      gen_weights: [1, 2]
     )
-  )
-
-  defcombinatorp(
-    :compare_numbers,
-    empty()
-    |> choice(
-      [
-        stric_more,
-        more_equal,
-        stric_less,
-        less_equal
-      ],
-      gen_weights: [1, 1, 1, 1]
-    )
-  )
-
-  defcombinator(
-    :left_term_compere_numbers,
-    repeat(ignore(whitespace))
-    |> parsec(:numeric_expression)
   )
 
   defcombinatorp(

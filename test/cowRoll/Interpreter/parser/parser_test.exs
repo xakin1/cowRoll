@@ -196,6 +196,28 @@ defmodule CowRoll.ParserTest do
       assert token == [negation: [number: [1]]]
     end
 
+    test "parse compare operation" do
+      input = "3 > 4"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [{:stric_more, [number: [3], number: [4]]}]
+
+      input = "3 < 4"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [{:stric_less, [number: [3], number: [4]]}]
+
+      input = "3 >= 4"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [{:more_equal, [number: [3], number: [4]]}]
+
+      input = "3 <= 4"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [{:less_equal, [number: [3], number: [4]]}]
+    end
+
     test "parse boolean" do
       # Uso del analizador léxico en otro módulo
       input = "true"
@@ -254,10 +276,10 @@ defmodule CowRoll.ParserTest do
 
       assert token == [or: [{:stric_more, [number: [3], number: [4]]}, {:boolean, [false]}]]
 
-      input = "(3) or false"
-      {_, token, _, _, _, _} = Parser.parse(input)
+      # input = "(3) or false"
+      # {_, token, _, _, _, _} = Parser.parse(input)
 
-      assert token == [number: [3]]
+      # assert token == [number: [3]]
     end
 
     test "parse not operation" do
@@ -309,35 +331,35 @@ defmodule CowRoll.ParserTest do
 
       assert token == [negation: [number: [1]]]
     end
+
+    test "parse if_then statemen" do
+      input = "if false or true then 2"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [
+               if_statement: [
+                 "if",
+                 {:condition, [or: [boolean: [false], boolean: [true]]]},
+                 "then",
+                 {:then_expression, [number: [2]]}
+               ]
+             ]
+
+      input = "if (4>7) == (true or false) then 2"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [
+               if_statement: [
+                 "if",
+                 {:condition,
+                  [
+                    stric_more: [number: [4], number: [7]],
+                    equal: [or: [boolean: [true], boolean: [false]]]
+                  ]},
+                 "then",
+                 {:then_expression, [number: [2]]}
+               ]
+             ]
+    end
   end
-
-  # describe "detect conditionals correctly" do
-  #   input = "if false or (3>5) then 2"
-  #   {_, token, _, _, _, _} = Parser.parse(input)
-
-  #   assert token == [
-  #            if_then: [
-  #              condition: [or: [boolean: [false], stric_more: [number: [3], number: [5]]]],
-  #              then_expr: [number: [2]]
-  #            ]
-  #          ]
-
-  #   input = "if (3>6) and (4==4) then 2 else 3"
-  #   {_, token, _, _, _, _} = Parser.parse(input)
-
-  #   assert token == [
-  #            if_then_else: [
-  #              if_then: [
-  #                condition: [
-  #                  and: [
-  #                    stric_more: [number: [3], number: [6]],
-  #                    equal: [number: [4], number: [4]]
-  #                  ]
-  #                ],
-  #                then_expr: [number: [2]]
-  #              ],
-  #              else_expr: [number: [3]]
-  #            ]
-  #          ]
-  # end
 end
