@@ -398,6 +398,24 @@ defmodule CowRoll.ParserTest do
                   ]}
                ]
              ]
+
+      input = "if (4>7) == (true or false) then 2 else (4+(5*3))*5"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [
+               if_statement: [
+                 "if",
+                 {:condition,
+                  [
+                    stric_more: [number: [4], number: [7]],
+                    equal: [or: [boolean: [true], boolean: [false]]]
+                  ]},
+                 "then",
+                 {:then_expression, [number: [2]]},
+                 {:else_expression,
+                  [mult: [plus: [number: [4], mult: [number: [5], number: [3]]], number: [5]]]}
+               ]
+             ]
     end
   end
 end
