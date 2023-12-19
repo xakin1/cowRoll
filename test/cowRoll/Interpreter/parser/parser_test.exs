@@ -96,6 +96,396 @@ defmodule CowRoll.ParserTest do
   end
 
   describe "string/1" do
+    test "parse integer" do
+      # Uso del analizador léxico en otro módulo
+      input = "1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:number, 1}
+
+      input = "1 "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:number, 1}
+
+      input = " 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:number, 1}
+
+      input = " 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:number, 1}
+    end
+
+    test "parse dice" do
+      # Uso del analizador léxico en otro módulo
+      input = "1d5"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:dice, "1d5"}
+    end
+
+    test "parse plus operation" do
+      # Uso del analizador léxico en otro módulo
+      input = "1+1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:plus, {:number, 1}, {:number, 1}}
+
+      input = "1+ 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:plus, {:number, 1}, {:number, 1}}
+
+      input = "1 +1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:plus, {:number, 1}, {:number, 1}}
+
+      input = "1 + 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:plus, {:number, 1}, {:number, 1}}
+
+      input = " 1 + 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:plus, {:number, 1}, {:number, 1}}
+
+      input = " 1 + 1 "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:plus, {:number, 1}, {:number, 1}}
+
+      input = " 1 + 1d5"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:plus, {:number, 1}, {:dice, "1d5"}}
+    end
+
+    test "parse minus operation" do
+      # Uso del analizador léxico en otro módulo
+      input = "1-1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:minus, {:number, 1}, {:number, 1}}
+
+      input = "1- 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:minus, {:number, 1}, {:number, 1}}
+
+      input = "1 -1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:minus, {:number, 1}, {:number, 1}}
+
+      input = "1 - 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:minus, {:number, 1}, {:number, 1}}
+
+      input = " 1 - 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:minus, {:number, 1}, {:number, 1}}
+
+      input = " 1 - 1 "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:minus, {:number, 1}, {:number, 1}}
+    end
+
+    test "parse mult operation" do
+      # Uso del analizador léxico en otro módulo
+      input = "1*1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:mult, {:number, 1}, {:number, 1}}
+
+      input = "1* 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:mult, {:number, 1}, {:number, 1}}
+
+      input = "1 *1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:mult, {:number, 1}, {:number, 1}}
+
+      input = "1 * 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:mult, {:number, 1}, {:number, 1}}
+
+      input = " 1 * 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:mult, {:number, 1}, {:number, 1}}
+
+      input = " 1 * 1 "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:mult, {:number, 1}, {:number, 1}}
+    end
+
+    test "parse div operation" do
+      # Uso del analizador léxico en otro módulo
+      input = "1/1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:divi, {:number, 1}, {:number, 1}}
+
+      input = "1/ 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:divi, {:number, 1}, {:number, 1}}
+
+      input = "1 /1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:divi, {:number, 1}, {:number, 1}}
+
+      input = "1 / 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:divi, {:number, 1}, {:number, 1}}
+
+      input = " 1 / 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:divi, {:number, 1}, {:number, 1}}
+
+      input = " 1 / 1 "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:divi, {:number, 1}, {:number, 1}}
+    end
+
+    test "parse parenthesis" do
+      # Uso del analizador léxico en otro módulo
+      input = "(1/1)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:divi, {:number, 1}, {:number, 1}}
+
+      input = "(1+1)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:plus, {:number, 1}, {:number, 1}}
+
+      input = "(1-1)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:minus, {:number, 1}, {:number, 1}}
+
+      input = "(1+1) * 2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:mult, {:plus, {:number, 1}, {:number, 1}}, {:number, 2}}
+
+      input = "-(1) "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:negative, {:number, 1}}
+
+      input = "-(1) + 3*4"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:plus, {:negative, {:number, 1}}, {:mult, {:number, 3}, {:number, 4}}}
+
+      input = "(-1) "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:negative, {:number, 1}}
+
+      input = "(3>4) "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:stric_more, {:number, 3}, {:number, 4}}
+
+      input = "(false) "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:boolean, false}
+
+      input = "(false or true) "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:or_operation, {:boolean, false}, {:boolean, true}}
+    end
+
+    test "parse compare operation" do
+      input = "3 > 4"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:stric_more, {:number, 3}, {:number, 4}}
+
+      input = "3 < 4"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:stric_less, {:number, 3}, {:number, 4}}
+
+      input = "3 >= 4"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:more_equal, {:number, 3}, {:number, 4}}
+
+      input = "3 <= 4"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:less_equal, {:number, 3}, {:number, 4}}
+    end
+
+    test "parse boolean" do
+      # Uso del analizador léxico en otro módulo
+      input = "true"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:boolean, true}
+
+      input = "false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:boolean, false}
+    end
+
+    test "parse and operation" do
+      # Uso del analizador léxico en otro módulo
+      input = "false and false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:and_operation, {:boolean, false}, {:boolean, false}}
+
+      input = "(3>4) and false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:and_operation, {:stric_more, {:number, 3}, {:number, 4}}, {:boolean, false}}
+    end
+
+    test "parse or operation" do
+      input = "true or true"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:or_operation, {:boolean, true}, {:boolean, true}}
+
+      input = "trueortrue"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:or_operation, {:boolean, true}, {:boolean, true}}
+
+      input = "trueor false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:or_operation, {:boolean, true}, {:boolean, false}}
+
+      input = "false ortrue"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:or_operation, {:boolean, false}, {:boolean, true}}
+
+      input = "(3 > 4) or false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:or_operation, {:stric_more, {:number, 3}, {:number, 4}}, {:boolean, false}}
+
+      input = "(4>7) == (true or false)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:equal, {:stric_more, {:number, 4}, {:number, 7}},
+                {:or_operation, {:boolean, true}, {:boolean, false}}}
+
+      # input = "(3) or false"
+      # {:ok, token} = Parser.parse(input)
+
+      # assert token == {:number, 3}}
+    end
+
+    test "parse not operation" do
+      # Uso del analizador léxico en otro módulo
+      input = "not true"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:not_operation, {:boolean, true}}
+
+      input = "not false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:not_operation, {:boolean, false}}
+
+      input = " nottrue"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:not_operation, {:boolean, true}}
+    end
+
+    test "parse negative operation" do
+      input = "- 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:negative, {:number, 1}}
+
+      input = "-1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:negative, {:number, 1}}
+
+      input = " - 1 "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:negative, {:number, 1}}
+
+      input = " - 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:negative, {:number, 1}}
+
+      input = "- 1 "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:negative, {:number, 1}}
+    end
+
+    test "parse if_then statemen" do
+      input = "if false then 2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:if_then_else, {:condition, {:boolean, false}}, {:then_expression, {:number, 2}}}
+
+      input = "if false or true then 2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:if_then_else, {:condition, {:or_operation, {:boolean, false}, {:boolean, true}}},
+                {:then_expression, {:number, 2}}}
+
+      input = "if (4>7) == (true or false) then 2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:if_then_else,
+                {:condition,
+                 {:equal, {:stric_more, {:number, 4}, {:number, 7}},
+                  {:or_operation, {:boolean, true}, {:boolean, false}}}},
+                {:then_expression, {:number, 2}}}
+
+      input = "if (4>7) == (true or false) then 2 else 3+5"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:if_then_else,
+                {:condition,
+                 {:equal, {:stric_more, {:number, 4}, {:number, 7}},
+                  {:or_operation, {:boolean, true}, {:boolean, false}}}},
+                {:else, {:number, 2}, {:else_expression, {:plus, {:number, 3}, {:number, 5}}}}}
+    end
+
     test "number minus number" do
       # Uso del analizador léxico en otro módulo
       input = "5 - 5"
