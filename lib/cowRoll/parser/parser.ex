@@ -29,8 +29,7 @@ defmodule Parser do
   rparen = ascii_char([?)]) |> label(")")
 
   numeric_grouping =
-    repeat(ignore(whitespace))
-    |> ignore(lparen)
+    ignore(lparen)
     |> parsec(:numeric_expression)
     |> ignore(rparen)
     |> label("parenthesis")
@@ -47,7 +46,6 @@ defmodule Parser do
     |> ignore(ascii_char([?-]))
     |> repeat(ignore(whitespace))
     |> concat(parsec(:numeric_factor))
-    |> repeat(ignore(whitespace))
     |> tag(:negation)
     |> label("negation")
 
@@ -57,7 +55,6 @@ defmodule Parser do
     |> ignore(ascii_char([?+]))
     |> repeat(ignore(whitespace))
     |> concat(parsec(:numeric_expression))
-    |> repeat(ignore(whitespace))
     |> tag(:plus)
     |> label("plus")
 
@@ -67,7 +64,6 @@ defmodule Parser do
     |> ignore(ascii_char([?-]))
     |> repeat(ignore(whitespace))
     |> concat(parsec(:numeric_expression))
-    |> repeat(ignore(whitespace))
     |> tag(:minus)
     |> label("minus")
 
@@ -77,7 +73,6 @@ defmodule Parser do
     |> ignore(ascii_char([?*]))
     |> repeat(ignore(whitespace))
     |> concat(parsec(:numeric_term))
-    |> repeat(ignore(whitespace))
     |> tag(:mult)
     |> label("mult")
 
@@ -87,35 +82,30 @@ defmodule Parser do
     |> ignore(ascii_char([?/]))
     |> repeat(ignore(whitespace))
     |> concat(parsec(:numeric_term))
-    |> repeat(ignore(whitespace))
     |> tag(:div)
     |> label("div")
 
   # boolean
-  true_ =
-    repeat(ignore(whitespace)) |> string("true") |> replace(true) |> label("true")
+  true_ = string("true") |> replace(true) |> label("true")
 
   false_ =
-    repeat(ignore(whitespace))
-    |> string("false")
+    string("false")
     |> replace(false)
     |> label("false")
 
   boolean_grouping =
-    repeat(ignore(whitespace))
-    |> ignore(lparen)
+    ignore(lparen)
     |> parsec(:boolean_expression)
     |> ignore(rparen)
     |> label("parenthesis")
 
-  boolean = choice([true_, false_]) |> tag(:boolean) |> label("boolean")
+  boolean =
+    repeat(ignore(whitespace)) |> choice([true_, false_]) |> tag(:boolean) |> label("boolean")
 
   not_ =
-    repeat(ignore(whitespace))
-    |> ignore(string("not"))
+    ignore(string("not"))
     |> repeat(ignore(whitespace))
     |> concat(parsec(:factor))
-    |> repeat(ignore(whitespace))
     |> tag(:not)
     |> label("not")
 
@@ -125,7 +115,6 @@ defmodule Parser do
     |> ignore(string("and"))
     |> repeat(ignore(whitespace))
     |> concat(parsec(:boolean_expression))
-    |> repeat(ignore(whitespace))
     |> tag(:and)
     |> label("and")
 
@@ -135,7 +124,6 @@ defmodule Parser do
     |> ignore(string("or"))
     |> repeat(ignore(whitespace))
     |> concat(parsec(:boolean_expression))
-    |> repeat(ignore(whitespace))
     |> tag(:or)
     |> label("or")
 
@@ -145,7 +133,6 @@ defmodule Parser do
     |> ignore(string(">"))
     |> repeat(ignore(whitespace))
     |> parsec(:numeric_expression)
-    |> repeat(ignore(whitespace))
     |> tag(:stric_more)
     |> label(">")
 
@@ -155,7 +142,6 @@ defmodule Parser do
     |> ignore(string(">="))
     |> repeat(ignore(whitespace))
     |> parsec(:numeric_expression)
-    |> repeat(ignore(whitespace))
     |> tag(:more_equal)
     |> label(">=")
 
@@ -165,7 +151,6 @@ defmodule Parser do
     |> ignore(string("<"))
     |> repeat(ignore(whitespace))
     |> parsec(:numeric_expression)
-    |> repeat(ignore(whitespace))
     |> tag(:stric_less)
     |> label("<")
 
@@ -175,41 +160,41 @@ defmodule Parser do
     |> ignore(string("<="))
     |> repeat(ignore(whitespace))
     |> parsec(:numeric_expression)
-    |> repeat(ignore(whitespace))
     |> tag(:less_equal)
     |> label("<=")
 
   equal =
-    ignore(string("=="))
+    parsec(:factor)
     |> repeat(ignore(whitespace))
-    |> concat(parsec(:factor))
+    |> ignore(string("=="))
     |> repeat(ignore(whitespace))
+    |> concat(parsec(:expression))
     |> tag(:equal)
     |> label("==")
 
   not_equal =
-    ignore(string("!="))
+    parsec(:factor)
     |> repeat(ignore(whitespace))
-    |> concat(parsec(:factor))
+    |> ignore(string("!="))
     |> repeat(ignore(whitespace))
+    |> concat(parsec(:expression))
     |> tag(:not_equal)
     |> label("!=")
 
   # if statement
 
   if_statement =
-    repeat(ignore(whitespace))
-    |> string("if")
+    string("if")
     |> repeat(ignore(whitespace))
     |> parsec(:condition)
     |> repeat(ignore(whitespace))
     |> string("then")
-    |> repeat(ignore(whitespace))
+    |> ignore(whitespace)
     |> parsec(:then_expression)
     |> optional(
       repeat(ignore(whitespace))
       |> ignore(string("else"))
-      |> repeat(ignore(whitespace))
+      |> ignore(whitespace)
       |> concat(parsec(:else_expression))
     )
     |> tag(:if_statement)
@@ -246,10 +231,12 @@ defmodule Parser do
     empty()
     |> choice(
       [
+        parsec(:compare_terms),
         parsec(:boolean_expression),
-        parsec(:numeric_expression)
+        parsec(:numeric_expression),
+        parsec(:term)
       ],
-      gen_weights: [1, 2]
+      gen_weights: [1, 2, 3, 4]
     )
   )
 
@@ -285,7 +272,14 @@ defmodule Parser do
   # condition
   defcombinatorp(
     :condition,
-    parsec(:boolean_expression)
+    empty()
+    |> choice(
+      [
+        parsec(:compare_terms),
+        parsec(:boolean_expression)
+      ],
+      gen_weights: [1, 2]
+    )
     |> tag(:condition)
     |> label("condition")
   )
@@ -351,13 +345,9 @@ defmodule Parser do
       [
         and_,
         or_,
-        stric_more,
-        more_equal,
-        stric_less,
-        less_equal,
         parsec(:boolean_term)
       ],
-      gen_weights: [1, 1, 1, 1, 1, 1, 2]
+      gen_weights: [1, 1, 2]
     )
   )
 
@@ -366,18 +356,19 @@ defmodule Parser do
     empty()
     |> choice(
       [
-        parsec(:compare_terms),
+        stric_more,
+        more_equal,
+        stric_less,
+        less_equal,
         parsec(:boolean_factor)
       ],
-      gen_weights: [1, 2]
+      gen_weights: [1, 1, 1, 1, 2]
     )
   )
 
   defcombinatorp(
     :compare_terms,
     empty()
-    |> parsec(:term)
-    |> repeat(ignore(whitespace))
     |> choice(
       [
         equal,

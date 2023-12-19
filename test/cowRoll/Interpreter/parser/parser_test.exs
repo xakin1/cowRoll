@@ -165,17 +165,17 @@ defmodule CowRoll.ParserTest do
 
       assert token == [div: [number: [1], number: [1]]]
 
-      input = "( 1+1)"
+      input = "(1+1)"
       {_, token, _, _, _, _} = Parser.parse(input)
 
       assert token == [plus: [number: [1], number: [1]]]
 
-      input = "( 1-1 )"
+      input = "(1-1)"
       {_, token, _, _, _, _} = Parser.parse(input)
 
       assert token == [minus: [number: [1], number: [1]]]
 
-      input = "(1 + 1 ) * 2"
+      input = "(1+1) * 2"
       {_, token, _, _, _, _} = Parser.parse(input)
 
       assert token == [mult: [plus: [number: [1], number: [1]], number: [2]]]
@@ -225,17 +225,7 @@ defmodule CowRoll.ParserTest do
 
       assert token == [boolean: [true]]
 
-      input = "true "
-      {_, token, _, _, _, _} = Parser.parse(input)
-
-      assert token == [boolean: [true]]
-
-      input = " false"
-      {_, token, _, _, _, _} = Parser.parse(input)
-
-      assert token == [boolean: [false]]
-
-      input = " false "
+      input = "false"
       {_, token, _, _, _, _} = Parser.parse(input)
 
       assert token == [boolean: [false]]
@@ -255,7 +245,11 @@ defmodule CowRoll.ParserTest do
     end
 
     test "parse or operation" do
-      # Uso del analizador léxico en otro módulo
+      input = "true or true"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [or: [boolean: [true], boolean: [true]]]
+
       input = "trueortrue"
       {_, token, _, _, _, _} = Parser.parse(input)
 
@@ -276,6 +270,16 @@ defmodule CowRoll.ParserTest do
 
       assert token == [or: [{:stric_more, [number: [3], number: [4]]}, {:boolean, [false]}]]
 
+      input = "(4>7) == (true or false)"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [
+               equal: [
+                 stric_more: [number: [4], number: ~c"\a"],
+                 or: [boolean: [true], boolean: [false]]
+               ]
+             ]
+
       # input = "(3) or false"
       # {_, token, _, _, _, _} = Parser.parse(input)
 
@@ -289,7 +293,7 @@ defmodule CowRoll.ParserTest do
 
       assert token == [not: [boolean: [true]]]
 
-      input = "notfalse"
+      input = "not false"
       {_, token, _, _, _, _} = Parser.parse(input)
 
       assert token == [not: [boolean: [false]]]
@@ -297,12 +301,7 @@ defmodule CowRoll.ParserTest do
       input = " nottrue"
       {_, token, _, _, _, _} = Parser.parse(input)
 
-      assert token == [not: [boolean: [true]]]
-
-      input = "notfalse "
-      {_, token, _, _, _, _} = Parser.parse(input)
-
-      assert token == [not: [boolean: [false]]]
+      assert token == "expected boolean while processing parenthesis or not or boolean"
     end
 
     test "parse negation operation" do
@@ -333,6 +332,18 @@ defmodule CowRoll.ParserTest do
     end
 
     test "parse if_then statemen" do
+      input = "if false then 2"
+      {_, token, _, _, _, _} = Parser.parse(input)
+
+      assert token == [
+               if_statement: [
+                 "if",
+                 {:condition, [boolean: [false]]},
+                 "then",
+                 {:then_expression, [number: [2]]}
+               ]
+             ]
+
       input = "if false or true then 2"
       {_, token, _, _, _, _} = Parser.parse(input)
 
@@ -353,8 +364,10 @@ defmodule CowRoll.ParserTest do
                  "if",
                  {:condition,
                   [
-                    stric_more: [number: [4], number: [7]],
-                    equal: [or: [boolean: [true], boolean: [false]]]
+                    equal: [
+                      stric_more: [number: [4], number: ~c"\a"],
+                      or: [boolean: [true], boolean: [false]]
+                    ]
                   ]},
                  "then",
                  {:then_expression, [number: [2]]}
@@ -369,8 +382,10 @@ defmodule CowRoll.ParserTest do
                  "if",
                  {:condition,
                   [
-                    stric_more: [number: [4], number: [7]],
-                    equal: [or: [boolean: [true], boolean: [false]]]
+                    equal: [
+                      stric_more: [number: [4], number: ~c"\a"],
+                      or: [boolean: [true], boolean: [false]]
+                    ]
                   ]},
                  "then",
                  {:then_expression, [boolean: [false]]}
@@ -385,8 +400,10 @@ defmodule CowRoll.ParserTest do
                  "if",
                  {:condition,
                   [
-                    stric_more: [number: [4], number: [7]],
-                    equal: [or: [boolean: [true], boolean: [false]]]
+                    equal: [
+                      stric_more: [number: [4], number: ~c"\a"],
+                      or: [boolean: [true], boolean: [false]]
+                    ]
                   ]},
                  "then",
                  {:then_expression,
@@ -407,8 +424,10 @@ defmodule CowRoll.ParserTest do
                  "if",
                  {:condition,
                   [
-                    stric_more: [number: [4], number: [7]],
-                    equal: [or: [boolean: [true], boolean: [false]]]
+                    equal: [
+                      stric_more: [number: [4], number: ~c"\a"],
+                      or: [boolean: [true], boolean: [false]]
+                    ]
                   ]},
                  "then",
                  {:then_expression, [number: [2]]},
@@ -416,6 +435,15 @@ defmodule CowRoll.ParserTest do
                   [mult: [plus: [number: [4], mult: [number: [5], number: [3]]], number: [5]]]}
                ]
              ]
+    end
+  end
+
+  describe "detect basic semantic erros correctly" do
+    test "right parenthesis" do
+      # Uso del analizador léxico en otro módulo
+      input = "()"
+      {_, token, _, _, _, _} = Parser.parse(input)
+      assert token == []
     end
   end
 end
