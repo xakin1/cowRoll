@@ -441,7 +441,7 @@ defmodule CowRoll.ParserTest do
   describe "detect basic semantic erros correctly" do
     test "right parenthesis" do
       # Uso del analizador léxico en otro módulo
-      input = "()"
+      input = " if 5 > 6"
       {_, token, _, _, _, _} = Parser.parse(input)
       assert token == []
     end

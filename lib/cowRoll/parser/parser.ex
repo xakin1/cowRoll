@@ -318,7 +318,7 @@ defmodule Parser do
       [
         mult,
         div,
-        parsec(:factor)
+        parsec(:numeric_factor)
       ],
       gen_weights: [1, 1, 3]
     )
