@@ -455,38 +455,46 @@ defmodule CowRoll.ParserTest do
     end
 
     test "parse if_then statemen" do
-      input = "if false then 2"
+      input = "if false then 2 end"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:if_then_else, {:condition, {:boolean, false}}, {:then_expression, {:number, 2}}}
+               {:if_then_else, {:boolean, false}, {:number, 2}, :"$undefined"}
 
-      input = "if false or true then 2"
+      input = "if false or true then 2 end"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:if_then_else, {:condition, {:or_operation, {:boolean, false}, {:boolean, true}}},
-                {:then_expression, {:number, 2}}}
+               {:if_then_else, {:or_operation, {:boolean, false}, {:boolean, true}}, {:number, 2},
+                :"$undefined"}
 
-      input = "if (4>7) == (true or false) then 2"
-      {:ok, token} = Parser.parse(input)
-
-      assert token ==
-               {:if_then_else,
-                {:condition,
-                 {:equal, {:stric_more, {:number, 4}, {:number, 7}},
-                  {:or_operation, {:boolean, true}, {:boolean, false}}}},
-                {:then_expression, {:number, 2}}}
-
-      input = "if (4>7) == (true or false) then 2 else 3+5"
+      input = "if (4>7) == (true or false) then 2 end "
       {:ok, token} = Parser.parse(input)
 
       assert token ==
                {:if_then_else,
-                {:condition,
-                 {:equal, {:stric_more, {:number, 4}, {:number, 7}},
-                  {:or_operation, {:boolean, true}, {:boolean, false}}}},
-                {:else, {:number, 2}, {:else_expression, {:plus, {:number, 3}, {:number, 5}}}}}
+                {:equal, {:stric_more, {:number, 4}, {:number, 7}},
+                 {:or_operation, {:boolean, true}, {:boolean, false}}}, {:number, 2},
+                :"$undefined"}
+
+      input = "if (4>7) == (true or false) then 2 else 3+5 end"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:if_then_else,
+                {:equal, {:stric_more, {:number, 4}, {:number, 7}},
+                 {:or_operation, {:boolean, true}, {:boolean, false}}}, {:number, 2},
+                {:plus, {:number, 3}, {:number, 5}}}
+
+      input = "if (4>7) == (true or false) then if true then 2 else 1 end else 3+5 end"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:if_then_else,
+                {:equal, {:stric_more, {:number, 4}, {:number, 7}},
+                 {:or_operation, {:boolean, true}, {:boolean, false}}},
+                {:if_then_else, {:boolean, true}, {:number, 2}, {:number, 1}},
+                {:plus, {:number, 3}, {:number, 5}}}
     end
 
     test "parse for" do
