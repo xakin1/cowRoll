@@ -58,7 +58,67 @@ defmodule CowRoll.InterpreterTest do
     end
   end
 
-  describe "string/1" do
+  describe "tests ifs" do
+    test "should return 6" do
+      result = Interpreter.eval_input("if true then 2+4 end")
+
+      assert result == 6
+    end
+
+    test "should return 0" do
+      result = Interpreter.eval_input("if false then 2+4 else 0 end")
+
+      assert result == 0
+    end
+
+    test "nested if should return 6" do
+      result = Interpreter.eval_input("if true then if true then 2+4 else 3 end else 2 end")
+
+      assert result == 6
+    end
+
+    test "nested else should return 1" do
+      result = Interpreter.eval_input("if false then 2+4 else if false then 0 else 1 end end")
+
+      assert result == 1
+    end
+
+    test "nested else with operation should return 1" do
+      result = Interpreter.eval_input("
+      if false then
+        2+4
+      else
+        if false then
+          0
+        else
+          2-1
+        end
+      end")
+
+      assert result == 1
+    end
+
+    test "empty body should return fail" do
+      try do
+        Interpreter.eval_input("if true then else if false then 0 else 2-1 end")
+        assert false
+      rescue
+        _ ->
+          assert true
+      end
+    end
+
+    test "test if with boolean operation" do
+      result = Interpreter.eval_input("if (5 == 1) then true else false end")
+      assert false == result
+      result = Interpreter.eval_input("if (5 > 1) then true else false end")
+      assert true == result
+      result = Interpreter.eval_input("if (6*(5 - 5) > 1) then true else false end")
+      assert false == result
+    end
+  end
+
+  describe "test math operation" do
     test "returns a rolled dice" do
       for _ <- 1..100 do
         dice = Interpreter.eval_input("1d6")
@@ -254,46 +314,6 @@ defmodule CowRoll.InterpreterTest do
       assert number == 1
     end
 
-    test "should return 6" do
-      result = Interpreter.eval_input("if true then 2+4")
-
-      assert result == 6
-    end
-
-    test "should return 0" do
-      result = Interpreter.eval_input("if false then 2+4 else 0")
-
-      assert result == 0
-    end
-
-    test "nested if should return 6" do
-      result = Interpreter.eval_input("if true then if true  then 2+4 else 0 else 0")
-
-      assert result == 6
-    end
-
-    test "nested else should return 1" do
-      result = Interpreter.eval_input("if false then 2+4 else if false then 0 else 1")
-
-      assert result == 1
-    end
-
-    test "nested else with operation should return 1" do
-      result = Interpreter.eval_input("if false then 2+4 else if false then 0 else 2-1")
-
-      assert result == 1
-    end
-
-    test "nempty body should return fail" do
-      try do
-        Interpreter.eval_input("if true then else if false then 0 else 2-1")
-        assert false
-      rescue
-        _ ->
-          assert true
-      end
-    end
-
     test "more should return true" do
       result = Interpreter.eval_input("3 > 2")
       assert true == result
@@ -378,13 +398,9 @@ defmodule CowRoll.InterpreterTest do
       assert false == result
     end
 
-    test "test if with boolean operation" do
-      result = Interpreter.eval_input("if (5 == 1) then true else false")
-      assert false == result
-      result = Interpreter.eval_input("if (5 > 1) then true else false")
-      assert true == result
-      result = Interpreter.eval_input("if (6*(5 - 5) > 1) then true else false")
-      assert false == result
+    test "test plus with variables" do
+      result = Interpreter.eval_input("x = 6;x + 5")
+      assert 11 == result
     end
   end
 end

@@ -7,17 +7,54 @@ defmodule Interpreter do
           | {:divi, aterm, aterm}
           | {:plus, aterm, aterm}
           | {:minus, aterm, aterm}
+          | {:negative, aterm}
+          | {:not_operation, aterm}
+          | {:assignment, aterm, aterm}
+          | {:stric_more, aterm, aterm}
+          | {:more_equal, aterm, aterm}
+          | {:stric_less, aterm, aterm}
+          | {:less_equal, aterm, aterm}
+          | {:equal, aterm, aterm}
+          | {:not_equal, aterm, aterm}
+          | {:and_operation, aterm, aterm}
+          | {:or_operation, aterm, aterm}
+          | {:round_div, aterm, aterm}
+          | {:mod, aterm, aterm}
+          | {:pow, aterm, aterm}
           | aterm
 
   @type aterm ::
           {:number, any(), integer()}
           | {:dice, charlist()}
+          | {:not_defined, charlist()}
           | expr_ast
+
+  defp deleteVarMap do
+    :ets.delete(:var_map)
+  end
+
+  defp createVarMap do
+    :ets.new(:var_map, [:named_table, read_concurrency: true, write_concurrency: true])
+  end
 
   @spec eval_input(any()) :: any()
   def eval_input(input) do
-    {:ok, ast} = Parser.parse(input)
-    eval(ast)
+    createVarMap()
+    {:ok, list_sentences} = Parser.parse(input)
+    result = eval_tuple(list_sentences)
+    deleteVarMap()
+    result
+  end
+
+  def eval_tuple(tuple) do
+    case tuple do
+      {first_element, second_element} when is_tuple(first_element) ->
+        eval(first_element)
+        eval_tuple(second_element)
+
+      _ ->
+        eval(tuple)
+    end
   end
 
   def eval({:number, number}), do: number
@@ -27,6 +64,24 @@ defmodule Interpreter do
   def eval({:string, string}), do: string
 
   def eval({:not_defined, unknow}), do: throw({:error, unknow <> " is not defined"})
+
+  def eval({:assignment, {_, var_name}, value}) do
+    try do
+      case :ets.lookup_element(:var_map, var_name, 2) do
+        _ ->
+          :ets.update_element(:var_map, var_name, {var_name, [{1, eval(value)}]})
+      end
+    rescue
+      _ -> :ets.insert(:var_map, {var_name, eval(value)})
+    end
+  end
+
+  def eval({:var, variable}) do
+    case :ets.lookup_element(:var_map, variable, 2) do
+      nil -> throw({:error, "Variable '#{variable}' is not defined"})
+      value -> value
+    end
+  end
 
   def eval({:dice, dice}) do
     case(roll_dice(dice)) do
@@ -110,20 +165,20 @@ defmodule Interpreter do
   def eval({:pow, left_expression, right_expression}),
     do: Integer.pow(eval(left_expression), eval(right_expression))
 
+  # def eval({:for_loop, var, range, expresion}) do
+  #   for(var <- range) do
+  #     eval(expresion)
+  #   end
+  # end
+
   def eval({:else, code}),
     do: eval(code)
 
-  def eval({:if_then_else, condition, then_expression}) do
-    case then_expression do
-      {:else, expression, else_expression} ->
-        if eval(condition) do
-          eval(expression)
-        else
-          eval(else_expression)
-        end
-
-      _ ->
-        if eval(condition), do: eval(then_expression)
+  def eval({:if_then_else, condition, then_expression, else_expression}) do
+    if eval(condition) do
+      eval(then_expression)
+    else
+      eval(else_expression)
     end
   end
 end

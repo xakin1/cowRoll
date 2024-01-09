@@ -127,6 +127,22 @@ defmodule CowRoll.ParserTest do
       assert token == {:dice, "1d5"}
     end
 
+    test "parse var" do
+      input =
+        "x"
+
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:var, "x"}
+    end
+
+    test "parse assignament" do
+      input = "x = 6"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:assignment, {:var, "x"}, {:number, 6}}
+    end
+
     test "parse plus operation" do
       # Uso del analizador léxico en otro módulo
       input = "1+1"
@@ -337,6 +353,13 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token == {:less_equal, {:number, 3}, {:number, 4}}
+
+      input = "3 + 9 <= (2 - 1d6)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:less_equal, {:plus, {:number, 3}, {:number, 9}},
+                {:minus, {:number, 2}, {:dice, "1d6"}}}
     end
 
     test "parse boolean" do
@@ -372,21 +395,6 @@ defmodule CowRoll.ParserTest do
 
       assert token == {:or_operation, {:boolean, true}, {:boolean, true}}
 
-      input = "trueortrue"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:or_operation, {:boolean, true}, {:boolean, true}}
-
-      input = "trueor false"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:or_operation, {:boolean, true}, {:boolean, false}}
-
-      input = "false ortrue"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:or_operation, {:boolean, false}, {:boolean, true}}
-
       input = "(3 > 4) or false"
       {:ok, token} = Parser.parse(input)
 
@@ -417,11 +425,6 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token == {:not_operation, {:boolean, false}}
-
-      input = " nottrue"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:not_operation, {:boolean, true}}
     end
 
     test "parse negative operation" do
@@ -484,6 +487,18 @@ defmodule CowRoll.ParserTest do
                  {:equal, {:stric_more, {:number, 4}, {:number, 7}},
                   {:or_operation, {:boolean, true}, {:boolean, false}}}},
                 {:else, {:number, 2}, {:else_expression, {:plus, {:number, 3}, {:number, 5}}}}}
+    end
+
+    test "parse for" do
+      # Uso del analizador léxico en otro módulo
+      input = "
+      for x <- 1..100 do
+        x = x +1
+      end"
+      tokens = Parser.parse(input)
+
+      assert tokens ==
+               {:ok, {:minus, {:number, 5}, {:number, 5}}}
     end
 
     test "number minus number" do

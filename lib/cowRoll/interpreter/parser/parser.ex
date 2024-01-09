@@ -5,6 +5,7 @@ defmodule Parser do
     end
   end
 
+  @spec parse(any()) :: {:error, any()} | {:ok, tuple()}
   @doc """
   Attempts to tokenize an input string to start_tag, end_tag, and char
   """
