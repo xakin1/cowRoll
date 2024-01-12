@@ -29,24 +29,62 @@ defmodule Interpreter do
           | {:not_defined, charlist()}
           | expr_ast
 
-  defp deleteVarMap do
+  defp delete_VarMap do
     :ets.delete(:var_map)
   end
 
-  defp createVarMap do
+  defp create_VarMap do
     :ets.new(:var_map, [:named_table, read_concurrency: true, write_concurrency: true])
+  end
+
+  defp update_variable(var_name, value) when is_tuple(value) do
+    case search_variable(var_name) do
+      false ->
+        result_eval = eval(value)
+        insert_variable(var_name, result_eval)
+        result_eval
+
+      _ ->
+        result_eval = eval(value)
+        :ets.update_element(:var_map, var_name, {2, result_eval})
+        result_eval
+    end
+  end
+
+  defp update_variable(var_name, value) do
+    case search_variable(var_name) do
+      false ->
+        insert_variable(var_name, value)
+        value
+
+      _ ->
+        :ets.update_element(:var_map, var_name, {2, value})
+        value
+    end
+  end
+
+  defp insert_variable(var_name, value) do
+    :ets.insert(:var_map, {var_name, value})
+  end
+
+  defp search_variable(var_name) do
+    try do
+      :ets.lookup_element(:var_map, var_name, 2)
+    rescue
+      _ -> false
+    end
   end
 
   @spec eval_input(any()) :: any()
   def eval_input(input) do
-    createVarMap()
+    create_VarMap()
     {:ok, list_sentences} = Parser.parse(input)
     result = eval_tuple(list_sentences)
-    deleteVarMap()
+    delete_VarMap()
     result
   end
 
-  def eval_tuple(tuple) do
+  defp eval_tuple(tuple) do
     case tuple do
       {first_element, second_element} when is_tuple(first_element) ->
         eval(first_element)
@@ -66,19 +104,12 @@ defmodule Interpreter do
   def eval({:not_defined, unknow}), do: throw({:error, unknow <> " is not defined"})
 
   def eval({:assignment, {_, var_name}, value}) do
-    try do
-      case :ets.lookup_element(:var_map, var_name, 2) do
-        _ ->
-          :ets.update_element(:var_map, var_name, {var_name, [{1, eval(value)}]})
-      end
-    rescue
-      _ -> :ets.insert(:var_map, {var_name, eval(value)})
-    end
+    update_variable(var_name, value)
   end
 
   def eval({:var, variable}) do
-    case :ets.lookup_element(:var_map, variable, 2) do
-      nil -> throw({:error, "Variable '#{variable}' is not defined"})
+    case search_variable(variable) do
+      false -> throw({:error, "Variable '#{variable}' is not defined"})
       value -> value
     end
   end
@@ -165,11 +196,39 @@ defmodule Interpreter do
   def eval({:pow, left_expression, right_expression}),
     do: Integer.pow(eval(left_expression), eval(right_expression))
 
-  # def eval({:for_loop, var, range, expresion}) do
-  #   for(var <- range) do
-  #     eval(expresion)
-  #   end
-  # end
+  def eval({:range, range}) do
+    try do
+      case range do
+        {first, last} ->
+          {eval(first), eval(last)}
+
+        element ->
+          eval(element)
+      end
+    rescue
+      error -> throw(error)
+    end
+  end
+
+  def eval({:for_loop, {:var, var_name}, range, expresion}) do
+    try do
+      case eval(range) do
+        {first, last} ->
+          for(x <- first..last) do
+            update_variable(var_name, x)
+            eval(expresion)
+          end
+
+        variable ->
+          for(x <- variable) do
+            update_variable(var_name, x)
+            eval(expresion)
+          end
+      end
+    rescue
+      error -> throw(error)
+    end
+  end
 
   def eval({:else, code}),
     do: eval(code)

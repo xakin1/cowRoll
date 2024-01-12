@@ -116,6 +116,111 @@ defmodule CowRoll.InterpreterTest do
       result = Interpreter.eval_input("if (6*(5 - 5) > 1) then true else false end")
       assert false == result
     end
+
+    test "false and false if_then_else statemen with conditions and nested if_then_else in the if and else" do
+      result =
+        Interpreter.eval_input(
+          "if (4>7) == (true or false) then if true then 2 else 1 end else if false then 3+5 else 0 end end"
+        )
+
+      assert result == 0
+    end
+
+    test "false and true -> if_then_else statemen with conditions and nested if_then_else in the if and else" do
+      result =
+        Interpreter.eval_input(
+          "if (4>7) == (true or false) then if true then 2 else 1 end else if true then 3+5 else 0 end end"
+        )
+
+      assert result == 8
+    end
+
+    test "true and false -> if_then_else statemen with conditions and nested if_then_else in the if and else" do
+      result =
+        Interpreter.eval_input(
+          "if (4<7) == (true or false) then if true then 2 else 1 end else if false then 3+5 else 0 end end"
+        )
+
+      assert result == 2
+    end
+
+    test "true and true -> if_then_else statemen with conditions and nested if_then_else in the if and else" do
+      result =
+        Interpreter.eval_input(
+          "if (4<7) == (true or false) then if false then 2 else 1 end else if false then 3+5 else 0 end end"
+        )
+
+      assert result == 1
+    end
+  end
+
+  describe "test variables" do
+    test "create a variable" do
+      result = Interpreter.eval_input("x=6")
+      assert result == 6
+    end
+
+    test "using  a variable without initializing" do
+      try do
+        Interpreter.eval_input("x = x + 6")
+      catch
+        error -> assert error == {:error, "Variable 'x' is not defined"}
+      end
+    end
+
+    test "overwrite the value of a variable" do
+      result = Interpreter.eval_input("x=6; x=7")
+      assert result == 7
+    end
+
+    test "using vars in operations" do
+      result = Interpreter.eval_input("
+        x= 6; y = x + 2")
+      assert result == 8
+    end
+
+    test "using vars in operations changing values" do
+      result = Interpreter.eval_input("x= 6; y = x + 2; x = x +2; z = x+y")
+      assert result == 16
+    end
+  end
+
+  describe "test fors" do
+    test "basic loop" do
+      result = Interpreter.eval_input("
+      y = 0;
+      for x <- 1..3 do
+        y = y + x
+      end;
+      y
+      ")
+      assert 6 == result
+    end
+
+    test "loop with variables" do
+      result = Interpreter.eval_input("
+      y = 0;
+      begin = 3;
+      finish = 6;
+      for x <- begin..finish do
+        y = y + x
+      end;
+      y
+      ")
+      assert 18 == result
+    end
+
+    test "loop with array" do
+      result = Interpreter.eval_input("
+      y = 0;
+      enum = [1, 2, 3, 4, 5];
+      for x <- enum do
+        y = y + x
+      end;
+      y
+      ")
+      assert 15 == result
+    end
   end
 
   describe "test math operation" do
@@ -250,7 +355,6 @@ defmodule CowRoll.InterpreterTest do
       for _ <- 1..100 do
         dice = Interpreter.eval_input("1d6 - 3")
         assert is_integer(dice)
-
         assert dice >= -2 and dice <= 3
       end
     end
