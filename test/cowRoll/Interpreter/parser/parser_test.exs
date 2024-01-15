@@ -163,9 +163,53 @@ defmodule CowRoll.ParserTest do
     end
   end
 
+  describe "fors" do
+    test "parse for" do
+      input = "
+      for x <- y do
+        x = 2 + 1
+      end"
+
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:for_loop, {:var, "x"}, {:range, {:var, "y"}},
+                {:assignment, {:var, "x"}, {:plus, {:number, 2}, {:number, 1}}}}
+
+      input = "for x <- 1..3 do
+                  x = 2 + 1
+                end"
+
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:for_loop, {:var, "x"}, {:range, {{:number, 1}, {:number, 3}}},
+                {:assignment, {:var, "x"}, {:plus, {:number, 2}, {:number, 1}}}}
+
+      input = "for x <- y..3 do
+                  x = 2 + 1
+                end"
+
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:for_loop, {:var, "x"}, {:range, {{:var, "y"}, {:number, 3}}},
+                {:assignment, {:var, "x"}, {:plus, {:number, 2}, {:number, 1}}}}
+
+      input = "for x <- y..z do
+                  x = 2 + 1
+                end"
+
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:for_loop, {:var, "x"}, {:range, {{:var, "y"}, {:var, "z"}}},
+                {:assignment, {:var, "x"}, {:plus, {:number, 2}, {:number, 1}}}}
+    end
+  end
+
   describe "boolean expressions" do
     test "parse boolean" do
-      # Uso del analizador léxico en otro módulo
       input = "true"
       {:ok, token} = Parser.parse(input)
 
@@ -178,7 +222,6 @@ defmodule CowRoll.ParserTest do
     end
 
     test "parse and operation" do
-      # Uso del analizador léxico en otro módulo
       input = "false and false"
       {:ok, token} = Parser.parse(input)
 
@@ -217,7 +260,6 @@ defmodule CowRoll.ParserTest do
     end
 
     test "parse not operation" do
-      # Uso del analizador léxico en otro módulo
       input = "not true"
       {:ok, token} = Parser.parse(input)
 
@@ -273,7 +315,7 @@ defmodule CowRoll.ParserTest do
 
   describe "string expressions" do
     test "parse string with \"" do
-      input = '"hola mundo"'
+      input = "\"hola mundo\""
       {:ok, token} = Parser.parse(input)
       assert token == {:string, "\"hola mundo\""}
     end
@@ -282,6 +324,28 @@ defmodule CowRoll.ParserTest do
       input = "'hola mundo'"
       {:ok, token} = Parser.parse(input)
       assert token == {:string, "'hola mundo'"}
+    end
+
+    test "parse empty string" do
+      input = "''"
+      {:ok, token} = Parser.parse(input)
+      assert token == {:string, "''"}
+    end
+
+    test "concat string" do
+      input = "\"hola \" + \"mundo\""
+      {:ok, token} = Parser.parse(input)
+      assert token == {:concat, {:string, "\"hola \""}, {:string, "\"mundo\""}}
+    end
+
+    test "concat n strings" do
+      input = "\"hola \" + \"mundo\" + \", 2\" + \"\""
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:concat, {:string, "\"hola \""},
+                {:concat, {:string, "\"mundo\""},
+                 {:concat, {:string, "\", 2\""}, {:string, "\"\""}}}}
     end
   end
 
@@ -316,40 +380,8 @@ defmodule CowRoll.ParserTest do
     end
   end
 
-  describe "numeric expressions" do
-    test "parse integer" do
-      # Uso del analizador léxico en otro módulo
-      input = "1"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:number, 1}
-
-      input = "1 "
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:number, 1}
-
-      input = " 1"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:number, 1}
-
-      input = " 1"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:number, 1}
-    end
-
-    test "parse dice" do
-      # Uso del analizador léxico en otro módulo
-      input = "1d5"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:dice, "1d5"}
-    end
-
+  describe "plus" do
     test "parse plus operation" do
-      # Uso del analizador léxico en otro módulo
       input = "1+1"
       {:ok, token} = Parser.parse(input)
 
@@ -386,41 +418,83 @@ defmodule CowRoll.ParserTest do
       assert token == {:plus, {:number, 1}, {:dice, "1d5"}}
     end
 
+    test "parse plus operation with n operators" do
+      input = "1+1+3+4"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:plus, {:number, 1}, {:plus, {:number, 1}, {:plus, {:number, 3}, {:number, 4}}}}
+    end
+  end
+
+  describe "negative" do
+    test "parse negative operation" do
+      input = "- 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:negative, {:number, 1}}
+    end
+
+    test "parse negation of negation" do
+      input = "- - 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:negative, {:negative, {:number, 1}}}
+    end
+
+    test "parse negation inside parenthesis" do
+      input = "(- 1)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:negative, {:number, 1}}
+    end
+
+    test "parse negation outside parenthesis" do
+      input = "-( 1)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:negative, {:number, 1}}
+    end
+
+    test "test negative in a operation with and without parenthesis" do
+      input = "1+ (-3) +3 -2 +4 "
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:plus, {:number, 1},
+                {:plus, {:negative, {:number, 3}},
+                 {:plus, {:number, 3}, {:plus, {:negative, {:number, 2}}, {:number, 4}}}}}
+    end
+  end
+
+  describe "minus" do
     test "parse minus operation" do
-      # Uso del analizador léxico en otro módulo
       input = "1-1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:minus, {:number, 1}, {:number, 1}}
-
-      input = "1- 1"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:minus, {:number, 1}, {:number, 1}}
-
-      input = "1 -1"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:minus, {:number, 1}, {:number, 1}}
-
-      input = "1 - 1"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:minus, {:number, 1}, {:number, 1}}
-
-      input = " 1 - 1"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:minus, {:number, 1}, {:number, 1}}
-
-      input = " 1 - 1 "
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:minus, {:number, 1}, {:number, 1}}
+      assert token == {:plus, {:number, 1}, {:negative, {:number, 1}}}
     end
 
+    test "parse minus minus operation" do
+      input = "1 - (-3)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:plus, {:number, 1}, {:negative, {:negative, {:number, 3}}}}
+    end
+
+    test "parse minus operation with n operators" do
+      input = "1-1-3-4"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:plus, {:number, 1},
+                {:plus, {:negative, {:number, 1}},
+                 {:plus, {:negative, {:number, 3}}, {:negative, {:number, 4}}}}}
+    end
+  end
+
+  describe "multiplication" do
     test "parse mult operation" do
-      # Uso del analizador léxico en otro módulo
       input = "1*1"
       {:ok, token} = Parser.parse(input)
 
@@ -452,8 +526,17 @@ defmodule CowRoll.ParserTest do
       assert token == {:mult, {:number, 1}, {:number, 1}}
     end
 
+    test "parse mult operation with n operators" do
+      input = "1*1*3*4"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:mult, {:number, 1}, {:mult, {:number, 1}, {:mult, {:number, 3}, {:number, 4}}}}
+    end
+  end
+
+  describe "division" do
     test "parse div operation" do
-      # Uso del analizador léxico en otro módulo
       input = "1/1"
       {:ok, token} = Parser.parse(input)
 
@@ -484,157 +567,64 @@ defmodule CowRoll.ParserTest do
 
       assert token == {:divi, {:number, 1}, {:number, 1}}
     end
+  end
 
-    test "parse negative operation" do
-      input = "- 1"
+  describe "dice" do
+    test "parse dice" do
+      input = "1d5"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:negative, {:number, 1}}
-
-      input = "-1"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:negative, {:number, 1}}
-
-      input = " - 1 "
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:negative, {:number, 1}}
-
-      input = " - 1"
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:negative, {:number, 1}}
-
-      input = "- 1 "
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:negative, {:number, 1}}
+      assert token == {:dice, "1d5"}
     end
+  end
 
-    test "parse parenthesis" do
-      # Uso del analizador léxico en otro módulo
-      input = "(1/1)"
-      {:ok, token} = Parser.parse(input)
+  test "plus dice with a number" do
+    input = "5 + 1d5"
+    tokens = Parser.parse(input)
 
-      assert token == {:divi, {:number, 1}, {:number, 1}}
+    assert tokens ==
+             {:ok, {:plus, {:number, 5}, {:dice, "1d5"}}}
+  end
 
-      input = "(1+1)"
-      {:ok, token} = Parser.parse(input)
+  test "mult dice with a parentesis number" do
+    input = "(5 + 3) * 1d5"
+    tokens = Parser.parse(input)
 
-      assert token == {:plus, {:number, 1}, {:number, 1}}
+    assert tokens ==
+             {:ok, {:mult, {:plus, {:number, 5}, {:number, 3}}, {:dice, "1d5"}}}
+  end
 
-      input = "(1-1)"
-      {:ok, token} = Parser.parse(input)
+  test "div dice and multi a number with a parentesis" do
+    input = "(5 + 3) * 1d5 / 3"
+    tokens = Parser.parse(input)
 
-      assert token == {:minus, {:number, 1}, {:number, 1}}
+    assert tokens ==
+             {:ok,
+              {:mult, {:plus, {:number, 5}, {:number, 3}}, {:divi, {:dice, "1d5"}, {:number, 3}}}}
+  end
+end
 
-      input = "(1+1) * 2"
-      {:ok, token} = Parser.parse(input)
+describe "numeric expressions" do
+  test "parse integer" do
+    input = "1"
+    {:ok, token} = Parser.parse(input)
 
-      assert token == {:mult, {:plus, {:number, 1}, {:number, 1}}, {:number, 2}}
+    assert token == {:number, 1}
 
-      input = "-(1) "
-      {:ok, token} = Parser.parse(input)
+    input = "1 "
+    {:ok, token} = Parser.parse(input)
 
-      assert token == {:negative, {:number, 1}}
+    assert token == {:number, 1}
 
-      input = "-(1) + 3*4"
-      {:ok, token} = Parser.parse(input)
+    input = " 1"
+    {:ok, token} = Parser.parse(input)
 
-      assert token == {:plus, {:negative, {:number, 1}}, {:mult, {:number, 3}, {:number, 4}}}
+    assert token == {:number, 1}
 
-      input = "(-1) "
-      {:ok, token} = Parser.parse(input)
+    input = " 1"
+    {:ok, token} = Parser.parse(input)
 
-      assert token == {:negative, {:number, 1}}
-
-      input = "(3>4) "
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:stric_more, {:number, 3}, {:number, 4}}
-    end
-
-    test "parse for" do
-      input = "
-      for x <- y do
-        x = 2 + 1
-      end"
-
-      {:ok, token} = Parser.parse(input)
-
-      assert token ==
-               {:for_loop, {:var, "x"}, {:range, {:var, "y"}},
-                {:assignment, {:var, "x"}, {:plus, {:number, 2}, {:number, 1}}}}
-
-      input = "for x <- 1..3 do
-                  x = 2 + 1
-                end"
-
-      {:ok, token} = Parser.parse(input)
-
-      assert token ==
-               {:for_loop, {:var, "x"}, {:range, {{:number, 1}, {:number, 3}}},
-                {:assignment, {:var, "x"}, {:plus, {:number, 2}, {:number, 1}}}}
-
-      input = "for x <- y..3 do
-                  x = 2 + 1
-                end"
-
-      {:ok, token} = Parser.parse(input)
-
-      assert token ==
-               {:for_loop, {:var, "x"}, {:range, {{:var, "y"}, {:number, 3}}},
-                {:assignment, {:var, "x"}, {:plus, {:number, 2}, {:number, 1}}}}
-
-      input = "for x <- y..z do
-                  x = 2 + 1
-                end"
-
-      {:ok, token} = Parser.parse(input)
-
-      assert token ==
-               {:for_loop, {:var, "x"}, {:range, {{:var, "y"}, {:var, "z"}}},
-                {:assignment, {:var, "x"}, {:plus, {:number, 2}, {:number, 1}}}}
-    end
-
-    test "number minus number" do
-      # Uso del analizador léxico en otro módulo
-      input = "5 - 5"
-      tokens = Parser.parse(input)
-
-      assert tokens ==
-               {:ok, {:minus, {:number, 5}, {:number, 5}}}
-    end
-
-    test "plus dice with a number" do
-      # Uso del analizador léxico en otro módulo
-      input = "5 + 1d5"
-      tokens = Parser.parse(input)
-
-      assert tokens ==
-               {:ok, {:plus, {:number, 5}, {:dice, "1d5"}}}
-    end
-
-    test "mult dice with a parentesis number" do
-      # Uso del analizador léxico en otro módulo
-      input = "(5 + 3) * 1d5"
-      tokens = Parser.parse(input)
-
-      assert tokens ==
-               {:ok, {:mult, {:plus, {:number, 5}, {:number, 3}}, {:dice, "1d5"}}}
-    end
-
-    test "div dice and multi a number with a parentesis" do
-      # Uso del analizador léxico en otro módulo
-      input = "(5 + 3) * 1d5 / 3"
-      tokens = Parser.parse(input)
-
-      assert tokens ==
-               {:ok,
-                {:mult, {:plus, {:number, 5}, {:number, 3}},
-                 {:divi, {:dice, "1d5"}, {:number, 3}}}}
-    end
+    assert token == {:number, 1}
   end
 
   describe "variables" do

@@ -264,7 +264,26 @@ defmodule CowRoll.InterpreterTest do
     end
   end
 
-  describe "test math operation" do
+  describe "Test strings" do
+    test "basic string" do
+      result = Interpreter.eval_input("\"hola mundo\"")
+      assert result == "hola mundo"
+    end
+
+    test "concat string" do
+      result = Interpreter.eval_input("\"hola \" +  \"mundo\"")
+      assert result == "hola mundo"
+    end
+
+    test "concat n string" do
+      result =
+        Interpreter.eval_input("\"hola \" +  \"mundo\" +  \", mundo \" +  \"avanzado\" +  \"\"")
+
+      assert result == "hola mundo, mundo avanzado"
+    end
+  end
+
+  describe "dice" do
     test "returns a rolled dice" do
       for _ <- 1..100 do
         dice = Interpreter.eval_input("1d6")
@@ -274,6 +293,81 @@ defmodule CowRoll.InterpreterTest do
       end
     end
 
+    test "returns a rolled dice plus 3" do
+      for _ <- 1..100 do
+        dice = Interpreter.eval_input("1d6 +3")
+        assert is_integer(dice)
+
+        assert dice >= 4 and dice <= 9
+      end
+    end
+
+    test "returns a rolled dice minus 3" do
+      for _ <- 1..100 do
+        dice = Interpreter.eval_input("1d6 - 3")
+        assert is_integer(dice)
+        assert dice >= -2 and dice <= 3
+      end
+    end
+
+    test "returns a rolled dice multiply 3" do
+      for _ <- 1..100 do
+        dice = Interpreter.eval_input("1d6 * 3")
+        assert is_integer(dice)
+        assert dice >= 3 and dice <= 18
+      end
+    end
+
+    test "returns a rolled dice div 3" do
+      for _ <- 1..100 do
+        dice = Interpreter.eval_input("1d6 / 3")
+
+        assert is_integer(dice)
+        assert dice >= 0 and dice <= 2
+      end
+    end
+  end
+
+  describe "plus" do
+    test "simple plus" do
+      result = Interpreter.eval_input("1+2")
+      assert result == 1 + 2
+    end
+
+    test "plus with n operators" do
+      result = Interpreter.eval_input("1+2 +3 +2+1")
+      assert result == 1 + 2 + 3 + 2 + 1
+    end
+
+    test "plus with negatives" do
+      result = Interpreter.eval_input("1+ (-3)")
+      assert result == 1 + -3
+    end
+
+    test "plus with negatives and multiple factors" do
+      result = Interpreter.eval_input("1 + (-2) + 4 ")
+      assert result == 1 - 2 + 4
+    end
+  end
+
+  describe "minus" do
+    test "simple minus" do
+      result = Interpreter.eval_input("1-2")
+      assert result == 1 - 2
+    end
+
+    test "minus with n operators" do
+      result = Interpreter.eval_input("1-2 -3 -2-1")
+      assert result == 1 - 2 - 3 - 2 - 1
+    end
+
+    test "minus with negatives" do
+      result = Interpreter.eval_input("1 - (-3)")
+      assert result == 1 - -3
+    end
+  end
+
+  describe "test math operation" do
     test "should return a negative" do
       try do
         result = Interpreter.eval_input("- 1d6")
@@ -281,6 +375,16 @@ defmodule CowRoll.InterpreterTest do
       catch
         {:error, _} -> assert false
       end
+    end
+
+    test "plus and minus with multiples operators x - (y + z)" do
+      result = Interpreter.eval_input("1 - (2 + 4) ")
+      assert result == 1 - (2 + 4)
+    end
+
+    test "plus and minus with multiples operators x - y + z" do
+      result = Interpreter.eval_input("1 - 2 + 4 ")
+      assert result == 1 - 2 + 4
     end
 
     test "should do a rounding up and return 3" do
@@ -370,40 +474,6 @@ defmodule CowRoll.InterpreterTest do
         rescue
           _ -> assert false
         end
-      end
-    end
-
-    test "returns a rolled dice plus 3" do
-      for _ <- 1..100 do
-        dice = Interpreter.eval_input("1d6 +3")
-        assert is_integer(dice)
-
-        assert dice >= 4 and dice <= 9
-      end
-    end
-
-    test "returns a rolled dice minus 3" do
-      for _ <- 1..100 do
-        dice = Interpreter.eval_input("1d6 - 3")
-        assert is_integer(dice)
-        assert dice >= -2 and dice <= 3
-      end
-    end
-
-    test "returns a rolled dice multiply 3" do
-      for _ <- 1..100 do
-        dice = Interpreter.eval_input("1d6 * 3")
-        assert is_integer(dice)
-        assert dice >= 3 and dice <= 18
-      end
-    end
-
-    test "returns a rolled dice div 3" do
-      for _ <- 1..100 do
-        dice = Interpreter.eval_input("1d6 / 3")
-
-        assert is_integer(dice)
-        assert dice >= 0 and dice <= 2
       end
     end
 

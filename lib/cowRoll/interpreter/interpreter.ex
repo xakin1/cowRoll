@@ -105,38 +105,38 @@ defmodule Interpreter do
     end
   end
 
-  def eval({:number, number}), do: number
+  defp eval({:number, number}), do: number
 
-  def eval({:boolean, bool}), do: bool
+  defp eval({:boolean, bool}), do: bool
 
-  def eval({:string, string}) do
+  defp eval({:string, string}) do
     case String.match?(string, ~r/^'.*'$/) do
       true -> String.trim(string, "'")
       false -> String.trim(string, "\"")
     end
   end
 
-  def eval({:not_defined, unknow}), do: throw({:error, unknow <> " is not defined"})
+  defp eval({:not_defined, unknow}), do: throw({:error, unknow <> " is not defined"})
 
-  def eval({:var, variable}) do
+  defp eval({:var, variable}) do
     case search_variable(variable) do
       false -> throw({:error, "Variable '#{variable}' is not defined"})
       value -> value
     end
   end
 
-  def eval({:dice, dice}) do
+  defp eval({:dice, dice}) do
     case(roll_dice(dice)) do
       {:ok, dice} -> dice
       {:error, error} -> throw({:error, error})
     end
   end
 
-  def eval({:negative, expresion}), do: -eval(expresion)
+  defp eval({:negative, expresion}), do: -eval(expresion)
 
-  def eval({:not_operation, expresion}), do: not eval(expresion)
+  defp eval({:not_operation, expresion}), do: not eval(expresion)
 
-  def eval({:list_of_number, list_of_numbers}) do
+  defp eval({:list_of_number, list_of_numbers}) do
     case list_of_numbers do
       {first_element, second_element} when is_tuple(first_element) ->
         List.flatten([eval(first_element), eval_list(second_element)])
@@ -146,44 +146,47 @@ defmodule Interpreter do
     end
   end
 
-  def eval({:assignment, {_, var_name}, value}) do
+  defp eval({:assignment, {_, var_name}, value}) do
     update_variable(var_name, value)
   end
 
-  def eval({:plus, left_expression, right_expression}),
+  defp eval({:concat, left_expression, right_expression}),
+    do: eval(left_expression) <> eval(right_expression)
+
+  defp eval({:plus, left_expression, right_expression}),
     do: eval(left_expression) + eval(right_expression)
 
-  def eval({:minus, left_expression, right_expression}),
+  defp eval({:minus, left_expression, right_expression}),
     do: eval(left_expression) - eval(right_expression)
 
-  def eval({:stric_more, left_expression, right_expression}),
+  defp eval({:stric_more, left_expression, right_expression}),
     do: eval(left_expression) > eval(right_expression)
 
-  def eval({:more_equal, left_expression, right_expression}),
+  defp eval({:more_equal, left_expression, right_expression}),
     do: eval(left_expression) >= eval(right_expression)
 
-  def eval({:stric_less, left_expression, right_expression}),
+  defp eval({:stric_less, left_expression, right_expression}),
     do: eval(left_expression) < eval(right_expression)
 
-  def eval({:less_equal, left_expression, right_expression}),
+  defp eval({:less_equal, left_expression, right_expression}),
     do: eval(left_expression) <= eval(right_expression)
 
-  def eval({:equal, left_expression, right_expression}),
+  defp eval({:equal, left_expression, right_expression}),
     do: eval(left_expression) == eval(right_expression)
 
-  def eval({:not_equal, left_expression, right_expression}),
+  defp eval({:not_equal, left_expression, right_expression}),
     do: eval(left_expression) != eval(right_expression)
 
-  def eval({:and_operation, left_expression, right_expression}),
+  defp eval({:and_operation, left_expression, right_expression}),
     do: eval(left_expression) and eval(right_expression)
 
-  def eval({:or_operation, left_expression, right_expression}),
+  defp eval({:or_operation, left_expression, right_expression}),
     do: eval(left_expression) or eval(right_expression)
 
-  def eval({:mult, left_expression, right_expression}),
+  defp eval({:mult, left_expression, right_expression}),
     do: eval(left_expression) * eval(right_expression)
 
-  def eval({:divi, left_expression, right_expression}) do
+  defp eval({:divi, left_expression, right_expression}) do
     try do
       dividend = eval(left_expression)
       divider = eval(right_expression)
@@ -207,7 +210,7 @@ defmodule Interpreter do
     end
   end
 
-  def eval({:round_div, left_expression, right_expression}) do
+  defp eval({:round_div, left_expression, right_expression}) do
     evaluated_left_expression = eval(left_expression)
     evaluated_right_expression = eval(right_expression)
 
@@ -215,13 +218,13 @@ defmodule Interpreter do
       rem(evaluated_left_expression, evaluated_right_expression)
   end
 
-  def eval({:mod, left_expression, right_expression}),
+  defp eval({:mod, left_expression, right_expression}),
     do: Integer.mod(eval(left_expression), eval(right_expression))
 
-  def eval({:pow, left_expression, right_expression}),
+  defp eval({:pow, left_expression, right_expression}),
     do: Integer.pow(eval(left_expression), eval(right_expression))
 
-  def eval({:range, range}) do
+  defp eval({:range, range}) do
     try do
       case range do
         {:list_of_number, _} ->
@@ -241,7 +244,7 @@ defmodule Interpreter do
     end
   end
 
-  def eval({:for_loop, {:var, var_name}, range, expresion}) do
+  defp eval({:for_loop, {:var, var_name}, range, expresion}) do
     try do
       case eval(range) do
         {first, last} ->
@@ -261,10 +264,10 @@ defmodule Interpreter do
     end
   end
 
-  def eval({:else, code}),
+  defp eval({:else, code}),
     do: eval(code)
 
-  def eval({:if_then_else, condition, then_expression, else_expression}) do
+  defp eval({:if_then_else, condition, then_expression, else_expression}) do
     if eval(condition) do
       eval(then_expression)
     else

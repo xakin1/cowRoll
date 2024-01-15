@@ -1,8 +1,8 @@
 Definitions.
 
-STRING            = (\'\s*[a-zA-Z0-9_\s]*\'|\"\s*[a-zA-Z0-9_\s]*\")
+CONTENT_STRING    = [a-zA-Z0-9_,\-\/\\\.\s]*
+STRING            = (\'\s*{CONTENT_STRING}\'|\"\s*{CONTENT_STRING}\")
 % '
-DICE              = [0-9]+d[0-9]+
 WHITESPACE        = [\n\t\s]
 IF                = if
 THEN              = then
@@ -22,8 +22,9 @@ RIGHT_BRACKET     = \]
 VAR               = [a-zA-Z_][a-zA-Z0-9_]*
 RANGE             = \.\.
 NUMBER            = [0-9]+
+DICE              = {NUMBER}+d{NUMBER}+
 NOT_DEFINED       = .
-LIST_OF_NUMBERS   = \[([0-9]+(,[0-9]+)*)\]
+LIST_OF_NUMBERS   = \[({NUMBER}(,{NUMBER})*)\]
 
 
 Rules.

@@ -2,10 +2,10 @@ Nonterminals
     term factor boolean_factor numeric_expression
     boolean_term numeric_factor numeric_term compare_terms condition expression if_statement
     code boolean_expression  else_block  assignment block code_sequence for_loop interval list_of_number numeric_sequence
-    string_expression string_term string_factor. 
+    string_expression string_term string_factor negative_number minus. 
     
 Terminals 'if' 'then' 'else' not_defined boolean number var 'end' 'and' 'for' '..' '<-' 'do' 'or' 'not' '+' '>'
- '=' '>=' '<' ';' ',' '<=' '==' '!=' '-' '%' '*' '/' '//'  '[' ']' '(' ')' '^' '"' dice string.
+ '=' '>=' '<' ';' ',' '<=' '==' '!=' '-' '%' '*' '/' '//'  '[' ']' '(' ')' '^' dice string.
 
 Rootsymbol
     block.
@@ -57,9 +57,16 @@ compare_terms -> boolean_factor  '==' boolean_term   : {equal, '$1', '$3'}.
 term   ->  factor         : '$1'.
 factor ->  not_defined    : '$1'.
 
-numeric_expression -> numeric_term  '+' numeric_term : {plus, '$1', '$3'}.
-numeric_expression -> numeric_term  '-' numeric_term : {minus, '$1', '$3'}.
-numeric_expression -> numeric_term                    : '$1'.   
+minus -> negative_number '+' numeric_expression : {plus, '$1', '$3'}.
+minus -> negative_number minus                  : {plus, '$1', '$2'}.
+minus -> negative_number                        : '$1'.
+minus -> '(' negative_number ')'                : '$2'.
+
+negative_number -> '-' numeric_factor         : {negative, '$2'}.
+
+numeric_expression -> numeric_term  '+' numeric_expression : {plus, '$1', '$3'}.
+numeric_expression -> numeric_term  minus                  : {plus, '$1', '$2'}.
+numeric_expression -> numeric_term                         : '$1'.   
 
 numeric_term -> numeric_factor '*'  numeric_term : {mult, '$1', '$3'}.
 numeric_term -> numeric_factor '/'  numeric_term : {divi, '$1', '$3'}.
@@ -69,7 +76,7 @@ numeric_term -> numeric_factor '^'   numeric_term : {pow, '$1', '$3'}.
 numeric_term -> numeric_factor                    : '$1'.
 numeric_term -> var                               : '$1'.
 
-numeric_factor -> '-' numeric_factor         : {negative, '$2'}.
+numeric_factor -> negative_number            : '$1'.
 numeric_factor -> '(' numeric_expression ')' : '$2'.
 numeric_factor -> dice                       : '$1'.
 numeric_factor -> number                     : '$1'.
@@ -94,6 +101,7 @@ boolean_factor -> 'not' boolean_factor         : {not_operation, '$2'}.
 boolean_factor -> '(' boolean_expression ')'   : '$2'.
 boolean_factor -> boolean                      : '$1'.
 
+string_expression -> string_term  '+' string_expression : {concat, '$1', '$3'}.
 string_expression -> string_term    : '$1'.
 string_term       -> string_factor  : '$1'.
 string_factor     -> string : '$1'.
