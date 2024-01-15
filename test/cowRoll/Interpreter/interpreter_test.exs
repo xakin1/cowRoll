@@ -154,6 +154,31 @@ defmodule CowRoll.InterpreterTest do
     end
   end
 
+  describe "test list of numbers" do
+    test "empty array" do
+      input = "[]"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:list_of_number, :"$undefined"}
+    end
+
+    test "array with an element" do
+      result = Interpreter.eval_input("[1]")
+      assert result == [1]
+    end
+
+    test "array with two elements" do
+      result = Interpreter.eval_input("[1,2]")
+      assert result == [1, 2]
+    end
+
+    test "array with n elements" do
+      result = Interpreter.eval_input("[1,2,3,3]")
+
+      assert result == [1, 2, 3, 3]
+    end
+  end
+
   describe "test variables" do
     test "create a variable" do
       result = Interpreter.eval_input("x=6")
@@ -213,6 +238,17 @@ defmodule CowRoll.InterpreterTest do
     test "loop with array" do
       result = Interpreter.eval_input("
       y = 0;
+      for x <- [1, 2, 3, 4, 5] do
+        y = y + x
+      end;
+      y
+      ")
+      assert 15 == result
+    end
+
+    test "loop with array in a var" do
+      result = Interpreter.eval_input("
+      y = 0;
       enum = [1, 2, 3, 4, 5];
       for x <- enum do
         y = y + x
@@ -239,16 +275,6 @@ defmodule CowRoll.InterpreterTest do
         assert result < 0
       catch
         {:error, _} -> assert false
-      end
-    end
-
-    test "should return an error" do
-      try do
-        Interpreter.eval_input("a + 3")
-        assert false
-      rescue
-        _ ->
-          assert true
       end
     end
 

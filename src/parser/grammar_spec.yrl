@@ -1,10 +1,10 @@
 Nonterminals
     term factor boolean_factor numeric_expression
     boolean_term numeric_factor numeric_term compare_terms condition expression if_statement
-    code boolean_expression  else_block  assignment block code_sequence for_loop interval. 
+    code boolean_expression  else_block  assignment block code_sequence for_loop interval list_of_number numeric_sequence. 
     
 Terminals 'if' 'then' 'else' not_defined boolean number var 'end' 'and' 'for' '..' '<-' 'do' 'or' 'not' '+' '>'
- '=' '>=' '<' ';' '<=' '==' '!=' '-' '%' '*' '/' '//' '(' ')' '^' dice.
+ '=' '>=' '<' ';' ',' '<=' '==' '!=' '-' '%' '*' '/' '//' '[' ']' '(' ')' '^' dice .
 
 Rootsymbol
     block.
@@ -13,17 +13,19 @@ block -> code : '$1'.
 block -> code_sequence : '$1'.
 block -> '$empty'.
 
+code_sequence -> code ';' block : {'$1', '$3'}.
+
 code -> if_statement : '$1'.
 code -> expression   : '$1'.
 code -> assignment   : '$1'.
 code -> for_loop     : '$1'.
 
-code_sequence -> code ';' block : {'$1', '$3'}.
 
 for_loop -> 'for' var '<-' interval 'do' block 'end' : {for_loop, '$2', '$4', '$6'}.
 
 interval -> var : {range,'$1'}.
 interval -> numeric_expression'..'numeric_expression : {range,{'$1', '$3'}}.
+interval -> list_of_number  : {range,'$1'}.
 
 
 if_statement -> 'if' condition 'then' code else_block 'end'
@@ -55,8 +57,8 @@ factor ->  not_defined    : '$1'.
 
 numeric_expression -> numeric_term  '+' numeric_term : {plus, '$1', '$3'}.
 numeric_expression -> numeric_term  '-' numeric_term : {minus, '$1', '$3'}.
-numeric_expression -> numeric_term                   : '$1'.
-    
+numeric_expression -> numeric_term                    : '$1'.   
+
 numeric_term -> numeric_factor '*'  numeric_term : {mult, '$1', '$3'}.
 numeric_term -> numeric_factor '/'  numeric_term : {divi, '$1', '$3'}.
 numeric_term -> numeric_factor '//'  numeric_term : {round_div, '$1', '$3'}.
@@ -69,6 +71,12 @@ numeric_factor -> '-' numeric_factor         : {negative, '$2'}.
 numeric_factor -> '(' numeric_expression ')' : '$2'.
 numeric_factor -> dice                       : '$1'.
 numeric_factor -> number                     : '$1'.
+numeric_factor -> list_of_number             : '$1'.
+
+list_of_number -> '[' numeric_sequence ']'                      : {list_of_number, '$2'}.
+numeric_sequence -> numeric_expression ',' numeric_sequence     : {'$1', '$3'}.
+numeric_sequence -> numeric_expression                          : '$1'.
+numeric_sequence -> '$empty'.
 
 boolean_expression -> boolean_term 'or' boolean_expression  : {or_operation, '$1', '$3'}.
 boolean_expression -> boolean_term 'and' boolean_expression : {and_operation, '$1', '$3'}.

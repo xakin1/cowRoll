@@ -16,10 +16,13 @@ OR                = or
 NOT               = not
 LEFT_PARENTHESIS  = \(
 RIGHT_PARENTHESIS = \)
+LEFT_BRACKET      = \[
+RIGHT_BRACKET     = \]
 VAR               = [a-zA-Z_][a-zA-Z0-9_]*
 RANGE             = \.\.
 NUMBER            = [0-9]+
 NOT_DEFINED       = .
+LIST_OF_NUMBERS   = \[([0-9]+(,[0-9]+)*)\]
 
 
 Rules.
@@ -36,6 +39,10 @@ Rules.
 {LEFT_PARENTHESIS}     : {token, {'(', TokenLine}}.
 {RIGHT_PARENTHESIS}    : {token, {')', TokenLine}}.
 
+%% open/close bracket
+{LEFT_BRACKET}     : {token, {'[', TokenLine}}.
+{RIGHT_BRACKET}    : {token, {']', TokenLine}}.
+
 
 %% arithmetic operators
 \+      : {token, {'+', TokenLine}}.
@@ -45,7 +52,8 @@ Rules.
 \/      : {token, {'/', TokenLine}}.
 \^      : {token, {'^', TokenLine}}.
 \=      : {token, {'=', TokenLine}}.
-\;      : {token, {';', TokenLine}}.      
+\;      : {token, {';', TokenLine}}.   
+\,      : {token, {',', TokenLine}}.      
 \%      : {token, {'%', TokenLine}}.
 
 
@@ -80,14 +88,12 @@ Rules.
 
 {VAR}        : {token, {var, to_string(TokenChars)}}.
 
-
 {NOT_DEFINED} : {token, {not_defined, to_string(TokenChars)}}.
 
 Erlang code.
 
 to_string(TokenChars) ->
 
-    % Convierte la lista de caracteres en una cadena de texto binario
     TokenString = binary:list_to_bin(TokenChars),
 
     TokenString.

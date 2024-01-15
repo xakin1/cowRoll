@@ -271,7 +271,38 @@ defmodule CowRoll.ParserTest do
     end
   end
 
-  describe "numeric expressions/1" do
+  describe "numeric arrays" do
+    test "empty array" do
+      input = "[]"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:list_of_number, :"$undefined"}
+    end
+
+    test "array with an element" do
+      input = "[1]"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:list_of_number, {:number, 1}}
+    end
+
+    test "array with two elements" do
+      input = "[1,2]"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:list_of_number, {{:number, 1}, {:number, 2}}}
+    end
+
+    test "array with n elements" do
+      input = "[1,2,3,3]"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:list_of_number, {{:number, 1}, {{:number, 2}, {{:number, 3}, {:number, 3}}}}}
+    end
+  end
+
+  describe "numeric expressions" do
     test "parse integer" do
       # Uso del analizador léxico en otro módulo
       input = "1"

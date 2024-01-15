@@ -95,6 +95,16 @@ defmodule Interpreter do
     end
   end
 
+  defp eval_list(list_of_numbers) do
+    case list_of_numbers do
+      {first_element, second_element} when is_tuple(second_element) ->
+        [eval(first_element), eval_list(second_element)]
+
+      _ ->
+        [eval(list_of_numbers)]
+    end
+  end
+
   def eval({:number, number}), do: number
 
   def eval({:boolean, bool}), do: bool
@@ -102,10 +112,6 @@ defmodule Interpreter do
   def eval({:string, string}), do: string
 
   def eval({:not_defined, unknow}), do: throw({:error, unknow <> " is not defined"})
-
-  def eval({:assignment, {_, var_name}, value}) do
-    update_variable(var_name, value)
-  end
 
   def eval({:var, variable}) do
     case search_variable(variable) do
@@ -124,6 +130,20 @@ defmodule Interpreter do
   def eval({:negative, expresion}), do: -eval(expresion)
 
   def eval({:not_operation, expresion}), do: not eval(expresion)
+
+  def eval({:list_of_number, list_of_numbers}) do
+    case list_of_numbers do
+      {first_element, second_element} when is_tuple(first_element) ->
+        List.flatten([eval(first_element), eval_list(second_element)])
+
+      _ ->
+        [eval(list_of_numbers)]
+    end
+  end
+
+  def eval({:assignment, {_, var_name}, value}) do
+    update_variable(var_name, value)
+  end
 
   def eval({:plus, left_expression, right_expression}),
     do: eval(left_expression) + eval(right_expression)
@@ -199,6 +219,12 @@ defmodule Interpreter do
   def eval({:range, range}) do
     try do
       case range do
+        {:list_of_number, _} ->
+          eval(range)
+
+        {:var, _} ->
+          eval(range)
+
         {first, last} ->
           {eval(first), eval(last)}
 
