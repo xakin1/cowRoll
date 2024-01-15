@@ -32,7 +32,6 @@ defmodule CowRoll.InterpreterTest do
         assert error == "Error: divider must be an integer"
       rescue
         error ->
-          IO.puts(error)
           assert false
       end
     end
@@ -58,7 +57,7 @@ defmodule CowRoll.InterpreterTest do
     end
   end
 
-  describe "tests ifs" do
+  describe "ifs" do
     test "should return 6" do
       result = Interpreter.eval_input("if true then 2+4 end")
 
@@ -154,7 +153,7 @@ defmodule CowRoll.InterpreterTest do
     end
   end
 
-  describe "test list of numbers" do
+  describe "list of numbers" do
     test "empty array" do
       input = "[]"
       {:ok, token} = Parser.parse(input)
@@ -179,7 +178,7 @@ defmodule CowRoll.InterpreterTest do
     end
   end
 
-  describe "test variables" do
+  describe "variables" do
     test "create a variable" do
       result = Interpreter.eval_input("x=6")
       assert result == 6
@@ -213,9 +212,19 @@ defmodule CowRoll.InterpreterTest do
       result = Interpreter.eval_input("x= \"hola mundo\" ")
       assert result == "hola mundo"
     end
+
+    test "test plus with variables" do
+      result = Interpreter.eval_input("x = 6;x + 5")
+      assert 6 + 5 == result
+    end
+
+    test "test minus with variables" do
+      result = Interpreter.eval_input("x = 6;x - 5")
+      assert 6 - 5 == result
+    end
   end
 
-  describe "test fors" do
+  describe "fors" do
     test "basic loop" do
       result = Interpreter.eval_input("
       y = 0;
@@ -264,7 +273,7 @@ defmodule CowRoll.InterpreterTest do
     end
   end
 
-  describe "Test strings" do
+  describe "strings" do
     test "basic string" do
       result = Interpreter.eval_input("\"hola mundo\"")
       assert result == "hola mundo"
@@ -364,6 +373,156 @@ defmodule CowRoll.InterpreterTest do
     test "minus with negatives" do
       result = Interpreter.eval_input("1 - (-3)")
       assert result == 1 - -3
+    end
+  end
+
+  describe "boolean operations" do
+    test "more should return true" do
+      result = Interpreter.eval_input("3 > 2")
+      assert true == result
+    end
+
+    test "more with expression should return true" do
+      result = Interpreter.eval_input("3 + 9 > (2 - 1d6)")
+      assert true == result
+    end
+
+    test "more_equal with expression should return true" do
+      for _ <- 1..100 do
+        result = Interpreter.eval_input("(4 + 1d6)  >= 5")
+        assert true == result
+      end
+    end
+
+    test "less should return true" do
+      result = Interpreter.eval_input("3 < 2")
+      assert false == result
+    end
+
+    test "less with expression should return true" do
+      result = Interpreter.eval_input("3 + 9 <= (2 - 1d6)")
+      assert false == result
+    end
+
+    test "less_equal with expression should return true" do
+      for _ <- 1..100 do
+        result = Interpreter.eval_input("5 <= (4 + 1d6)")
+        assert true == result
+      end
+    end
+
+    test "test equal" do
+      result = Interpreter.eval_input("4 == 5")
+      assert 4 == 5 == result
+    end
+
+    test "test equal n factors" do
+      result = Interpreter.eval_input("4 == 5 == 6")
+      assert 4 == 5 == 6 == result
+
+      result = Interpreter.eval_input("5 == 5 == 5")
+      assert 5 == 5 == 5 == result
+    end
+
+    test "test equal with differents types" do
+      result = Interpreter.eval_input("false == 'false'")
+      expect = false == "false"
+      assert expect == result
+
+      result = Interpreter.eval_input("false == 5")
+      expect = false == "false"
+      assert expect == result
+    end
+
+    test "test and" do
+      result = Interpreter.eval_input("false and false")
+      expect = false and false
+      assert expect == result
+
+      result = Interpreter.eval_input("false and true")
+      expect = false and true
+      assert expect == result
+
+      result = Interpreter.eval_input("true and false")
+      expect = true and false
+      assert expect == result
+
+      result = Interpreter.eval_input("true and true")
+      expect = true and true
+      assert expect == result
+    end
+
+    test "test and with n factors" do
+      result = Interpreter.eval_input("false and false and false")
+      expect = false and false and false
+      assert expect == result
+
+      result = Interpreter.eval_input("false and true and false")
+      expect = true and false and false
+      assert expect == result
+
+      result = Interpreter.eval_input("true and false and false")
+      expect = false and true and false
+      assert expect == result
+
+      result = Interpreter.eval_input("true and true and true")
+      expect = true and true and true
+      assert expect == result
+    end
+
+    test "test or" do
+      result = Interpreter.eval_input("false or false")
+      expect = false or false
+      assert expect == result
+
+      result = Interpreter.eval_input("false or true")
+      expect = false or true
+      assert expect == result
+
+      result = Interpreter.eval_input("true or false")
+      expect = true or false
+      assert expect == result
+
+      result = Interpreter.eval_input("true or true")
+      expect = true and true
+      assert expect == result
+    end
+
+    test "test or with multiple operators" do
+      result = Interpreter.eval_input("false or false or true")
+      expect = false or false or true
+      assert expect == result
+    end
+
+    test "test not" do
+      result = Interpreter.eval_input("not false")
+      assert true == result
+    end
+
+    test "test concat nots" do
+      result = Interpreter.eval_input(" not not false")
+      expect = not not false
+      assert expect == result
+    end
+
+    test "test not with operation" do
+      result = Interpreter.eval_input("not (false or true)")
+      assert false == result
+
+      result = Interpreter.eval_input("not (true == (5<6))")
+      expect = not (true == 5 < 6)
+      assert expect == result
+    end
+
+    test "test not equal" do
+      result = Interpreter.eval_input("true != 6")
+      assert true == result
+
+      result = Interpreter.eval_input("true != true")
+      assert false == result
+
+      result = Interpreter.eval_input("true != (5<6)")
+      assert false == result
     end
   end
 
@@ -517,95 +676,6 @@ defmodule CowRoll.InterpreterTest do
 
       assert is_integer(number)
       assert number == 1
-    end
-
-    test "more should return true" do
-      result = Interpreter.eval_input("3 > 2")
-      assert true == result
-    end
-
-    test "more with expression should return true" do
-      result = Interpreter.eval_input("3 + 9 > (2 - 1d6)")
-      assert true == result
-    end
-
-    test "more_equal with expression should return true" do
-      for _ <- 1..100 do
-        result = Interpreter.eval_input("(4 + 1d6)  >= 5")
-        assert true == result
-      end
-    end
-
-    test "less should return true" do
-      result = Interpreter.eval_input("3 < 2")
-      assert false == result
-    end
-
-    test "less with expression should return true" do
-      result = Interpreter.eval_input("3 + 9 <= (2 - 1d6)")
-      assert false == result
-    end
-
-    test "less_equal with expression should return true" do
-      for _ <- 1..100 do
-        result = Interpreter.eval_input("5 <= (4 + 1d6)")
-        assert true == result
-      end
-    end
-
-    test "test equal" do
-      result = Interpreter.eval_input("4 == 5")
-      assert false == result
-      result = Interpreter.eval_input("5 == 5")
-      assert true == result
-    end
-
-    test "test and" do
-      result = Interpreter.eval_input("false and false")
-      assert false == result
-      result = Interpreter.eval_input("false and true")
-      assert false == result
-      result = Interpreter.eval_input("true and false")
-      assert false == result
-      result = Interpreter.eval_input("true and true")
-      assert true == result
-    end
-
-    test "test or" do
-      result = Interpreter.eval_input("false or false")
-      assert false == result
-      result = Interpreter.eval_input("false or true")
-      assert true == result
-      result = Interpreter.eval_input("true or false")
-      assert true == result
-      result = Interpreter.eval_input("true or true")
-      assert true == result
-    end
-
-    test "test not" do
-      result = Interpreter.eval_input("not false")
-      assert true == result
-    end
-
-    test "test not with operation" do
-      result = Interpreter.eval_input("not (false or true)")
-      assert false == result
-    end
-
-    test "test not equal" do
-      result = Interpreter.eval_input("5 != 6")
-      assert true == result
-
-      result = Interpreter.eval_input("true != true")
-      assert false == result
-
-      result = Interpreter.eval_input("true != (5<6)")
-      assert false == result
-    end
-
-    test "test plus with variables" do
-      result = Interpreter.eval_input("x = 6;x + 5")
-      assert 11 == result
     end
   end
 end

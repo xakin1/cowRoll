@@ -221,7 +221,7 @@ defmodule CowRoll.ParserTest do
       assert token == {:boolean, false}
     end
 
-    test "parse and operation" do
+    test "parse and" do
       input = "false and false"
       {:ok, token} = Parser.parse(input)
 
@@ -234,7 +234,7 @@ defmodule CowRoll.ParserTest do
                {:and_operation, {:stric_more, {:number, 3}, {:number, 4}}, {:boolean, false}}
     end
 
-    test "parse or operation" do
+    test "parse or" do
       input = "true or true"
       {:ok, token} = Parser.parse(input)
 
@@ -259,7 +259,7 @@ defmodule CowRoll.ParserTest do
       # assert token == {:number, 3}}
     end
 
-    test "parse not operation" do
+    test "parse not" do
       input = "not true"
       {:ok, token} = Parser.parse(input)
 
@@ -271,19 +271,16 @@ defmodule CowRoll.ParserTest do
       assert token == {:not_operation, {:boolean, false}}
     end
 
-    test "parse parenthesis" do
-      input = "(false) "
+    test "parse not with operation" do
+      input = "not (true == (5<6))"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:boolean, false}
-
-      input = "(false or true) "
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {:or_operation, {:boolean, false}, {:boolean, true}}
+      assert token ==
+               {:not_operation,
+                {:equal, {:boolean, true}, {:stric_less, {:number, 5}, {:number, 6}}}}
     end
 
-    test "parse compare operation" do
+    test "parse compare" do
       input = "3 > 4"
       {:ok, token} = Parser.parse(input)
 
@@ -309,7 +306,51 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:less_equal, {:plus, {:number, 3}, {:number, 9}},
-                {:minus, {:number, 2}, {:dice, "1d6"}}}
+                {:plus, {:number, 2}, {:negative, {:dice, "1d6"}}}}
+    end
+
+    test "parse equals" do
+      input = "3 == 3"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:equal, {:number, 3}, {:number, 3}}
+
+      input = "3 == (5>6)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:equal, {:number, 3}, {:stric_more, {:number, 5}, {:number, 6}}}
+    end
+
+    test "parse equals with multiple factors" do
+      input = "3==3==4"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:equal, {:number, 3}, {:equal, {:number, 3}, {:number, 4}}}
+    end
+
+    test "parse equals string number and boolean" do
+      input = "'no soy igual'== 3 == false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:equal, {:string, "'no soy igual'"}, {:equal, {:number, 3}, {:boolean, false}}}
+    end
+
+    test "parse parenthesis" do
+      input = "(false) "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:boolean, false}
+
+      input = "(false or true) "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:or_operation, {:boolean, false}, {:boolean, true}}
+
+      input = "(true == (5<6))"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:equal, {:boolean, true}, {:stric_less, {:number, 5}, {:number, 6}}}
     end
   end
 
@@ -527,11 +568,13 @@ defmodule CowRoll.ParserTest do
     end
 
     test "parse mult operation with n operators" do
-      input = "1*1*3*4"
+      input = "1*1*3*4+5"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:mult, {:number, 1}, {:mult, {:number, 1}, {:mult, {:number, 3}, {:number, 4}}}}
+               {:plus,
+                {:mult, {:number, 1}, {:mult, {:number, 1}, {:mult, {:number, 3}, {:number, 4}}}},
+                {:number, 5}}
     end
   end
 
@@ -576,55 +619,32 @@ defmodule CowRoll.ParserTest do
 
       assert token == {:dice, "1d5"}
     end
-  end
 
-  test "plus dice with a number" do
-    input = "5 + 1d5"
-    tokens = Parser.parse(input)
+    test "plus dice with a number" do
+      input = "5 + 1d5"
+      tokens = Parser.parse(input)
 
-    assert tokens ==
-             {:ok, {:plus, {:number, 5}, {:dice, "1d5"}}}
-  end
+      assert tokens ==
+               {:ok, {:plus, {:number, 5}, {:dice, "1d5"}}}
+    end
 
-  test "mult dice with a parentesis number" do
-    input = "(5 + 3) * 1d5"
-    tokens = Parser.parse(input)
+    test "mult dice with a parentesis number" do
+      input = "(5 + 3) * 1d5"
+      tokens = Parser.parse(input)
 
-    assert tokens ==
-             {:ok, {:mult, {:plus, {:number, 5}, {:number, 3}}, {:dice, "1d5"}}}
-  end
+      assert tokens ==
+               {:ok, {:mult, {:plus, {:number, 5}, {:number, 3}}, {:dice, "1d5"}}}
+    end
 
-  test "div dice and multi a number with a parentesis" do
-    input = "(5 + 3) * 1d5 / 3"
-    tokens = Parser.parse(input)
+    test "div dice and multi a number with a parentesis" do
+      input = "(5 + 3) * 1d5 / 3"
+      tokens = Parser.parse(input)
 
-    assert tokens ==
-             {:ok,
-              {:mult, {:plus, {:number, 5}, {:number, 3}}, {:divi, {:dice, "1d5"}, {:number, 3}}}}
-  end
-end
-
-describe "numeric expressions" do
-  test "parse integer" do
-    input = "1"
-    {:ok, token} = Parser.parse(input)
-
-    assert token == {:number, 1}
-
-    input = "1 "
-    {:ok, token} = Parser.parse(input)
-
-    assert token == {:number, 1}
-
-    input = " 1"
-    {:ok, token} = Parser.parse(input)
-
-    assert token == {:number, 1}
-
-    input = " 1"
-    {:ok, token} = Parser.parse(input)
-
-    assert token == {:number, 1}
+      assert tokens ==
+               {:ok,
+                {:mult, {:plus, {:number, 5}, {:number, 3}},
+                 {:divi, {:dice, "1d5"}, {:number, 3}}}}
+    end
   end
 
   describe "variables" do
@@ -675,6 +695,30 @@ describe "numeric expressions" do
       {:ok, token} = Parser.parse(input)
 
       assert token == {:assignment, {:var, "x"}, {:number, 6}}
+    end
+  end
+
+  describe "numeric expressions" do
+    test "parse integer" do
+      input = "1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:number, 1}
+
+      input = "1 "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:number, 1}
+
+      input = " 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:number, 1}
+
+      input = " 1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:number, 1}
     end
   end
 end

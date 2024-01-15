@@ -1,6 +1,6 @@
 Nonterminals
-    term factor boolean_factor numeric_expression
-    boolean_term numeric_factor numeric_term compare_terms condition expression if_statement
+    term factor boolean_factor numeric_expression compare_terms types comparison_expression
+    boolean_term numeric_factor numeric_term condition expression if_statement
     code boolean_expression  else_block  assignment block code_sequence for_loop interval list_of_number numeric_sequence
     string_expression string_term string_factor negative_number minus. 
     
@@ -29,33 +29,22 @@ interval -> numeric_expression'..'numeric_expression : {range,{'$1', '$3'}}.
 interval -> list_of_number  : {range,'$1'}.
 
 
-if_statement -> 'if' condition 'then' code else_block 'end'
+if_statement -> 'if' boolean_expression 'then' code else_block 'end'
     : {if_then_else, '$2', '$4', '$5'}.
 
 else_block -> '$empty'.
 else_block -> 'else' block     : '$2'.
 
-condition -> compare_terms              : '$1'.
-condition -> boolean_expression         : '$1'.
-condition -> '(' compare_terms ')'      : '$2'.
-
 
 assignment -> var '=' expression : {assignment, '$1', '$3'}.
 
+types   ->  numeric_expression        : '$1'.
+types   ->  string_expression         : '$1'.
+types   ->  not_defined               : '$1'.    
 
-expression -> compare_terms         : '$1'.
-expression -> numeric_expression    : '$1'.
+expression -> types    : '$1'.
 expression -> boolean_expression    : '$1'.
-expression -> string_expression     : '$1'.
-expression -> term                  : '$1'.
 
-compare_terms -> numeric_factor  '!=' numeric_term   : {not_equal, '$1', '$3'}.
-compare_terms -> numeric_factor  '==' numeric_term   : {equal, '$1', '$3'}.
-compare_terms -> boolean_factor  '!=' boolean_term   : {not_equal, '$1', '$3'}.
-compare_terms -> boolean_factor  '==' boolean_term   : {equal, '$1', '$3'}.
-
-term   ->  factor         : '$1'.
-factor ->  not_defined    : '$1'.
 
 minus -> negative_number '+' numeric_expression : {plus, '$1', '$3'}.
 minus -> negative_number minus                  : {plus, '$1', '$2'}.
@@ -87,8 +76,15 @@ numeric_sequence -> numeric_expression ',' numeric_sequence     : {'$1', '$3'}.
 numeric_sequence -> numeric_expression                          : '$1'.
 numeric_sequence -> '$empty'.
 
-boolean_expression -> boolean_term 'or' boolean_expression  : {or_operation, '$1', '$3'}.
-boolean_expression -> boolean_term 'and' boolean_expression : {and_operation, '$1', '$3'}.
+boolean_expression -> boolean_expression 'or' boolean_expression  : {or_operation, '$1', '$3'}.
+boolean_expression -> boolean_expression 'and' boolean_expression : {and_operation, '$1', '$3'}.
+boolean_expression -> comparison_expression                  : '$1'.
+
+comparison_expression -> types '!=' expression              : {not_equal, '$1', '$3'}.
+comparison_expression -> types '==' expression              : {equal, '$1', '$3'}.
+comparison_expression -> boolean_expression '!=' expression : {not_equal, '$1', '$3'}.
+comparison_expression -> boolean_expression '==' expression : {equal, '$1', '$3'}.
+
 boolean_expression -> boolean_term : '$1'.
 
 boolean_term -> numeric_expression '>'  numeric_expression   : {stric_more, '$1', '$3'}.
@@ -97,7 +93,7 @@ boolean_term -> numeric_expression '<=' numeric_expression   : {less_equal, '$1'
 boolean_term -> boolean_factor                               : '$1'.
 boolean_term -> numeric_expression '<'  numeric_expression   : {stric_less, '$1', '$3'}.
 
-boolean_factor -> 'not' boolean_factor         : {not_operation, '$2'}.
+boolean_factor -> 'not' boolean_expression     : {not_operation, '$2'}.
 boolean_factor -> '(' boolean_expression ')'   : '$2'.
 boolean_factor -> boolean                      : '$1'.
 
