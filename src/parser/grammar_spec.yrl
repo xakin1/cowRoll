@@ -87,11 +87,15 @@ comparison_expression -> boolean_expression '==' expression : {equal, '$1', '$3'
 
 boolean_expression -> boolean_term : '$1'.
 
-boolean_term -> numeric_expression '>'  numeric_expression   : {stric_more, '$1', '$3'}.
-boolean_term -> numeric_expression '>=' numeric_expression   : {more_equal, '$1', '$3'}.
-boolean_term -> numeric_expression '<=' numeric_expression   : {less_equal, '$1', '$3'}.
+boolean_term -> types '>'  expression   : {stric_more, '$1', '$3'}.
+boolean_term -> types '>=' expression   : {more_equal, '$1', '$3'}.
+boolean_term -> types '<=' expression   : {less_equal, '$1', '$3'}.
+boolean_term -> types '<'  expression   : {stric_less, '$1', '$3'}.
+boolean_term -> boolean_expression '>'  expression   : {stric_more, '$1', '$3'}.
+boolean_term -> boolean_expression '>=' expression   : {more_equal, '$1', '$3'}.
+boolean_term -> boolean_expression '<=' expression   : {less_equal, '$1', '$3'}.
+boolean_term -> boolean_expression '<'  expression   : {stric_less, '$1', '$3'}.
 boolean_term -> boolean_factor                               : '$1'.
-boolean_term -> numeric_expression '<'  numeric_expression   : {stric_less, '$1', '$3'}.
 
 boolean_factor -> 'not' boolean_expression     : {not_operation, '$2'}.
 boolean_factor -> '(' boolean_expression ')'   : '$2'.

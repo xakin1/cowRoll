@@ -281,6 +281,26 @@ defmodule CowRoll.ParserTest do
     end
 
     test "parse compare" do
+      input = "true < false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:stric_less, {:boolean, true}, {:boolean, false}}
+
+      input = "true > false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:stric_more, {:boolean, true}, {:boolean, false}}
+
+      input = "true >= false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:more_equal, {:boolean, true}, {:boolean, false}}
+
+      input = "true <= false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:less_equal, {:boolean, true}, {:boolean, false}}
+
       input = "3 > 4"
       {:ok, token} = Parser.parse(input)
 
@@ -307,6 +327,16 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:less_equal, {:plus, {:number, 3}, {:number, 9}},
                 {:plus, {:number, 2}, {:negative, {:dice, "1d6"}}}}
+    end
+
+    test "parse compare multiple factors" do
+      input = "4 > 3 + 9 <= (2 - 1d6)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:stric_more, {:number, 4},
+                {:less_equal, {:plus, {:number, 3}, {:number, 9}},
+                 {:plus, {:number, 2}, {:negative, {:dice, "1d6"}}}}}
     end
 
     test "parse equals" do
@@ -351,6 +381,14 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token == {:equal, {:boolean, true}, {:stric_less, {:number, 5}, {:number, 6}}}
+
+      input = "(4 > 3 + 9 <= (2 - 1d6))"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:stric_more, {:number, 4},
+                {:less_equal, {:plus, {:number, 3}, {:number, 9}},
+                 {:plus, {:number, 2}, {:negative, {:dice, "1d6"}}}}}
     end
   end
 

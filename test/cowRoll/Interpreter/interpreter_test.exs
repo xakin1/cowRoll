@@ -524,6 +524,48 @@ defmodule CowRoll.InterpreterTest do
       result = Interpreter.eval_input("true != (5<6)")
       assert false == result
     end
+
+    test "test compare" do
+      result = Interpreter.eval_input("true > false")
+      expect = true > false
+      assert expect == result
+
+      result = Interpreter.eval_input("true < false")
+      expect = true < false
+      assert expect == result
+
+      result = Interpreter.eval_input("5 > 6")
+      expect = 5 > 6
+      assert expect == result
+
+      result = Interpreter.eval_input("5 > 5")
+      expect = 5 > 5
+      assert expect == result
+
+      result = Interpreter.eval_input("5>=5")
+      expect = 5 >= 5
+      assert expect == result
+
+      result = Interpreter.eval_input("5>=6")
+      expect = 5 >= 6
+      assert expect == result
+
+      result = Interpreter.eval_input("5>=4")
+      expect = 5 >= 4
+      assert expect == result
+
+      result = Interpreter.eval_input("5<=5")
+      expect = 5 <= 5
+      assert expect == result
+
+      result = Interpreter.eval_input("5<=6")
+      expect = 5 <= 6
+      assert expect == result
+
+      result = Interpreter.eval_input("5<=4")
+      expect = 5 <= 4
+      assert expect == result
+    end
   end
 
   describe "test math operation" do
