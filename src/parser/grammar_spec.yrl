@@ -1,10 +1,11 @@
 Nonterminals
     term factor boolean_factor numeric_expression
     boolean_term numeric_factor numeric_term compare_terms condition expression if_statement
-    code boolean_expression  else_block  assignment block code_sequence for_loop interval list_of_number numeric_sequence. 
+    code boolean_expression  else_block  assignment block code_sequence for_loop interval list_of_number numeric_sequence
+    string_expression string_term string_factor. 
     
 Terminals 'if' 'then' 'else' not_defined boolean number var 'end' 'and' 'for' '..' '<-' 'do' 'or' 'not' '+' '>'
- '=' '>=' '<' ';' ',' '<=' '==' '!=' '-' '%' '*' '/' '//' '[' ']' '(' ')' '^' dice .
+ '=' '>=' '<' ';' ',' '<=' '==' '!=' '-' '%' '*' '/' '//'  '[' ']' '(' ')' '^' '"' dice string.
 
 Rootsymbol
     block.
@@ -45,6 +46,7 @@ assignment -> var '=' expression : {assignment, '$1', '$3'}.
 expression -> compare_terms         : '$1'.
 expression -> numeric_expression    : '$1'.
 expression -> boolean_expression    : '$1'.
+expression -> string_expression     : '$1'.
 expression -> term                  : '$1'.
 
 compare_terms -> numeric_factor  '!=' numeric_term   : {not_equal, '$1', '$3'}.
@@ -91,4 +93,8 @@ boolean_term -> numeric_expression '<'  numeric_expression   : {stric_less, '$1'
 boolean_factor -> 'not' boolean_factor         : {not_operation, '$2'}.
 boolean_factor -> '(' boolean_expression ')'   : '$2'.
 boolean_factor -> boolean                      : '$1'.
+
+string_expression -> string_term    : '$1'.
+string_term       -> string_factor  : '$1'.
+string_factor     -> string : '$1'.
 

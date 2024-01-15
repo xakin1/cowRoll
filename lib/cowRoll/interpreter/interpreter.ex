@@ -109,7 +109,12 @@ defmodule Interpreter do
 
   def eval({:boolean, bool}), do: bool
 
-  def eval({:string, string}), do: string
+  def eval({:string, string}) do
+    case String.match?(string, ~r/^'.*'$/) do
+      true -> String.trim(string, "'")
+      false -> String.trim(string, "\"")
+    end
+  end
 
   def eval({:not_defined, unknow}), do: throw({:error, unknow <> " is not defined"})
 

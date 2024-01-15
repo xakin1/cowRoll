@@ -1,7 +1,8 @@
 Definitions.
 
+STRING            = (\'\s*[a-zA-Z0-9_\s]*\'|\"\s*[a-zA-Z0-9_\s]*\")
+% '
 DICE              = [0-9]+d[0-9]+
-
 WHITESPACE        = [\n\t\s]
 IF                = if
 THEN              = then
@@ -34,6 +35,9 @@ Rules.
 
 {NUMBER}     : {token, {number, list_to_integer(TokenChars)}}.
 
+%% String
+
+{STRING} : {token, {string, to_string(TokenChars)}}. 
 
 %% open/close parens
 {LEFT_PARENTHESIS}     : {token, {'(', TokenLine}}.
@@ -42,7 +46,6 @@ Rules.
 %% open/close bracket
 {LEFT_BRACKET}     : {token, {'[', TokenLine}}.
 {RIGHT_BRACKET}    : {token, {']', TokenLine}}.
-
 
 %% arithmetic operators
 \+      : {token, {'+', TokenLine}}.
@@ -55,8 +58,6 @@ Rules.
 \;      : {token, {';', TokenLine}}.   
 \,      : {token, {',', TokenLine}}.      
 \%      : {token, {'%', TokenLine}}.
-
-
 
 %% conditional operators
 {IF}    : {token, {'if', TokenLine}}.
@@ -80,10 +81,6 @@ Rules.
 {DO}    : {token, {'do', TokenLine}}.
 {END}   : {token, {'end', TokenLine}}.
 
-\'.\'  : {token, {string, to_string(TokenChars)}}.
-%%%'
-\".\"  : {token, {string, to_string(TokenChars)}}.
-%"
 \<-     : {token, {'<-', TokenLine}}.
 
 {VAR}        : {token, {var, to_string(TokenChars)}}.

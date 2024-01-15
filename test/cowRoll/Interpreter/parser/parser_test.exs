@@ -271,6 +271,20 @@ defmodule CowRoll.ParserTest do
     end
   end
 
+  describe "string expressions" do
+    test "parse string with \"" do
+      input = '"hola mundo"'
+      {:ok, token} = Parser.parse(input)
+      assert token == {:string, "\"hola mundo\""}
+    end
+
+    test "parse string with ''" do
+      input = "'hola mundo'"
+      {:ok, token} = Parser.parse(input)
+      assert token == {:string, "'hola mundo'"}
+    end
+  end
+
   describe "numeric arrays" do
     test "empty array" do
       input = "[]"

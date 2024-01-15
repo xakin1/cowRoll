@@ -208,6 +208,11 @@ defmodule CowRoll.InterpreterTest do
       result = Interpreter.eval_input("x= 6; y = x + 2; x = x +2; z = x+y")
       assert result == 16
     end
+
+    test "using vars with strings" do
+      result = Interpreter.eval_input("x= \"hola mundo\" ")
+      assert result == "hola mundo"
+    end
   end
 
   describe "test fors" do
