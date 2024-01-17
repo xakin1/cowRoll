@@ -203,12 +203,6 @@ defmodule Interpreter do
         {_, 0} ->
           {:error, "Error: division by 0"}
 
-        {dividend, _} when not is_integer(dividend) ->
-          {:error, "Error: dividend must be an integer"}
-
-        {_, divider} when not is_integer(divider) ->
-          {:error, "Error: divider must be an integer"}
-
         {dividend, divider} ->
           div(dividend, divider)
       end

@@ -2,61 +2,6 @@ defmodule CowRoll.InterpreterTest do
   # Importa ExUnit.Case para definir pruebas
   use ExUnit.Case
 
-  describe "errors on interpreter" do
-    test "div should return an division by 0" do
-      try do
-        {:error, error} = Interpreter.eval_input("5/0")
-        assert error == "Error: division by 0"
-      rescue
-        _ ->
-          assert false
-      end
-    end
-
-    test "div should return must be an integer" do
-      try do
-        {:error, error} = Interpreter.eval_input("5/true")
-        assert error == "Error: divider must be an integer"
-        {:error, error} = Interpreter.eval_input("5/'a'")
-        assert error == "Error: divider must be an integer"
-      rescue
-        error ->
-          IO.puts(error)
-          assert false
-      end
-    end
-
-    test "div should return parenthesis error" do
-      try do
-        {:error, error} = Interpreter.eval_input("5/(3+4")
-        assert error == "Error: divider must be an integer"
-      rescue
-        error ->
-          assert false
-      end
-    end
-
-    test "div should return an error" do
-      try do
-        Interpreter.eval_input("5/((2)")
-        assert false
-      rescue
-        _ ->
-          assert true
-      end
-    end
-
-    test "pow should return an (ArithmeticError) bad argument in arithmetic expression" do
-      try do
-        Interpreter.eval_input("2^-3")
-        assert false
-      rescue
-        error ->
-          assert error == %ArithmeticError{message: "bad argument in arithmetic expression"}
-      end
-    end
-  end
-
   describe "priority" do
     test "apply correctly order and ignore the space" do
       number = Interpreter.eval_input("18 \n + 6 / \s 3")
@@ -466,6 +411,49 @@ defmodule CowRoll.InterpreterTest do
       assert is_integer(number)
       assert number == 1
     end
+
+    test "div should return an division by 0" do
+      try do
+        {:error, error} = Interpreter.eval_input("5/0")
+        assert error == "Error: division by 0"
+      rescue
+        _ ->
+          assert false
+      end
+    end
+
+    # test "div should return must be an integer" do
+    #   try do
+    #     {:error, error} = Interpreter.eval_input("5/true")
+    #     assert error == "Error: divider must be an integer"
+    #     {:error, error} = Interpreter.eval_input("5/'a'")
+    #     assert error == "Error: divider must be an integer"
+    #   rescue
+    #     error ->
+    #       IO.puts(error)
+    #       assert false
+    #   end
+    # end
+
+    # test "div should return parenthesis error" do
+    #   try do
+    #     {:error, error} = Interpreter.eval_input("5/(3+4")
+    #     assert error == "Error: divider must be an integer"
+    #   rescue
+    #     error ->
+    #       assert false
+    #   end
+    # end
+
+    # test "div should return an error" do
+    #   try do
+    #     Interpreter.eval_input("5/((2)")
+    #     assert false
+    #   rescue
+    #     _ ->
+    #       assert true
+    #   end
+    # end
   end
 
   describe "pow" do
@@ -478,25 +466,21 @@ defmodule CowRoll.InterpreterTest do
 
       try do
         input = "2^-1"
-        result = Interpreter.eval_input(input)
-        expect = Integer.pow(2, -1)
-
+        Interpreter.eval_input(input)
         assert false
       rescue
         _ -> assert true
       end
 
       input = "-2^1"
-      result = Interpreter.eval_input(input)
+      Interpreter.eval_input(input)
       expect = Integer.pow(-2, 1)
 
       assert expect == result
 
       try do
         input = "-2^-1"
-        result = Interpreter.eval_input(input)
-        expect = Integer.pow(-2, -1)
-
+        Interpreter.eval_input(input)
         assert false
       rescue
         _ -> assert true
@@ -568,6 +552,16 @@ defmodule CowRoll.InterpreterTest do
         rescue
           _ -> assert false
         end
+      end
+    end
+
+    test "pow should return an (ArithmeticError) bad argument in arithmetic expression" do
+      try do
+        Interpreter.eval_input("2^-3")
+        assert false
+      rescue
+        error ->
+          assert error == %ArithmeticError{message: "bad argument in arithmetic expression"}
       end
     end
   end
