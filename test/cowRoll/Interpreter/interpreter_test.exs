@@ -412,6 +412,62 @@ defmodule CowRoll.InterpreterTest do
     end
   end
 
+  describe "multiplication" do
+    test "mult operation" do
+      input = "1*1"
+      result = Interpreter.eval_input(input)
+      expect = 1 * 1
+
+      assert expect == result
+    end
+
+    test "parse mult operation with n operators" do
+      input = "1*1*3*4+5"
+      result = Interpreter.eval_input(input)
+      expect = 1 * 1 * 3 * 4 + 5
+
+      assert expect == result
+    end
+
+    test "apply correctly parathesis" do
+      number = Interpreter.eval_input("18 / ((3 + 6) * 2)")
+
+      assert is_integer(number)
+      assert number == 1
+    end
+
+    test "should apply correctly the negative" do
+      number = Interpreter.eval_input("-18 / ((3 + 6) * 2)")
+
+      assert is_integer(number)
+      assert number == -1
+    end
+
+    test "should apply correctly the negative with parenthesis" do
+      number = Interpreter.eval_input("(-(3 + 6) * 2)")
+
+      assert is_integer(number)
+      assert number == -18
+    end
+  end
+
+  describe "division" do
+    test "parse div operation" do
+      input = "1/1"
+      result = Interpreter.eval_input(input)
+      expect = 1 / 1
+
+      assert expect == result
+    end
+
+    test "should apply correctly the negative and return a positive number" do
+      number = Interpreter.eval_input("-18 / -((3 + 6) * 2)")
+
+      assert is_integer(number)
+      assert number == 1
+    end
+  end
+
   describe "pow" do
     test "simple pow" do
       input = "2^3"
@@ -767,34 +823,6 @@ defmodule CowRoll.InterpreterTest do
       catch
         {:error, _} -> assert false
       end
-    end
-
-    test "apply correctly parathesis" do
-      number = Interpreter.eval_input("18 / ((3 + 6) * 2)")
-
-      assert is_integer(number)
-      assert number == 1
-    end
-
-    test "should apply correctly the negative" do
-      number = Interpreter.eval_input("-18 / ((3 + 6) * 2)")
-
-      assert is_integer(number)
-      assert number == -1
-    end
-
-    test "should apply correctly the negative with parenthesis" do
-      number = Interpreter.eval_input("(-(3 + 6) * 2)")
-
-      assert is_integer(number)
-      assert number == -18
-    end
-
-    test "should apply correctly the negative and return a positive number" do
-      number = Interpreter.eval_input("-18 / -((3 + 6) * 2)")
-
-      assert is_integer(number)
-      assert number == 1
     end
   end
 end
