@@ -648,6 +648,58 @@ defmodule CowRoll.ParserTest do
     end
   end
 
+  describe "pow" do
+    test "parse simple pow" do
+      input = "2^3"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:pow, {:number, 2}, {:number, 3}}
+
+      input = "2^-1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:pow, {:number, 2}, {:negative, {:number, 1}}}
+
+      input = "-2^1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:pow, {:negative, {:number, 2}}, {:number, 1}}
+
+      input = "-2^-1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:pow, {:negative, {:number, 2}}, {:negative, {:number, 1}}}
+    end
+
+    test "parse concat pows" do
+      input = "2^2^3^4"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:pow, {:number, 2}, {:pow, {:number, 2}, {:pow, {:number, 3}, {:number, 4}}}}
+    end
+
+    test "parse pows with operations" do
+      input = "(3+2)^2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:pow, {:plus, {:number, 3}, {:number, 2}}, {:number, 2}}
+
+      input = "2^(3+2)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:pow, {:number, 2}, {:plus, {:number, 3}, {:number, 2}}}
+
+      input = "2^(3+2)^2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:pow, {:number, 2}, {:pow, {:plus, {:number, 3}, {:number, 2}}, {:number, 2}}}
+    end
+  end
+
   describe "dice" do
     test "parse dice" do
       input = "1d5"

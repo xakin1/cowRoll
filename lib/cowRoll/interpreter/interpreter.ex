@@ -34,7 +34,15 @@ defmodule Interpreter do
   end
 
   defp create_VarMap do
-    :ets.new(:var_map, [:named_table, read_concurrency: true, write_concurrency: true])
+    # Comprobamos si existe
+    case :lists.member(:var_map, :ets.all()) do
+      false ->
+        :ets.new(:var_map, [:named_table, read_concurrency: true, write_concurrency: true])
+
+      true ->
+        # La tabla ya existe, no hacemos nada
+        :ok
+    end
   end
 
   defp update_variable(var_name, value) when is_tuple(value) do
