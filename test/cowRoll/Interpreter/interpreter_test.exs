@@ -397,10 +397,16 @@ defmodule CowRoll.InterpreterTest do
   end
 
   describe "division" do
-    test "parse div operation" do
+    test "div operation" do
       input = "1/1"
       result = Interpreter.eval_input(input)
       expect = 1 / 1
+
+      assert expect == result
+
+      input = "1/2"
+      result = Interpreter.eval_input(input)
+      expect = 0
 
       assert expect == result
     end
@@ -454,6 +460,39 @@ defmodule CowRoll.InterpreterTest do
     #       assert true
     #   end
     # end
+  end
+
+  describe "round division" do
+    test "round div operation" do
+      input = "1//2"
+      result = Interpreter.eval_input(input)
+      expect = 1
+
+      assert expect == result
+
+      input = "0//2"
+      result = Interpreter.eval_input(input)
+      expect = 0
+
+      assert expect == result
+    end
+
+    test "should apply correctly the negative and return a positive number" do
+      result = Interpreter.eval_input("-18 // -((4 + 6) * 2)")
+
+      assert is_integer(result)
+      assert 1 = result
+    end
+
+    test "div should return an division by 0" do
+      try do
+        {:error, error} = Interpreter.eval_input("5//0")
+        assert error == "Error: division by 0"
+      rescue
+        _ ->
+          assert false
+      end
+    end
   end
 
   describe "pow" do

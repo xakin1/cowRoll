@@ -213,11 +213,24 @@ defmodule Interpreter do
   end
 
   defp eval({:round_div, left_expression, right_expression}) do
-    evaluated_left_expression = eval(left_expression)
-    evaluated_right_expression = eval(right_expression)
+    try do
+      dividend = eval(left_expression)
+      divisor = eval(right_expression)
 
-    div(evaluated_left_expression, evaluated_right_expression) +
-      rem(evaluated_left_expression, evaluated_right_expression)
+      case {dividend, divisor} do
+        {_, 0} ->
+          {:error, "Error: division by 0"}
+
+        {dividend, divisor} ->
+          result =
+            div(dividend, divisor) + (1 - div(Integer.mod(dividend, divisor), divisor))
+
+          result
+      end
+    catch
+      {:error, error} -> {:error, error}
+      _ -> {:error, "Aritmetic error: Unknow error"}
+    end
   end
 
   defp eval({:mod, left_expression, right_expression}),

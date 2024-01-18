@@ -700,6 +700,92 @@ defmodule CowRoll.ParserTest do
     end
   end
 
+  describe "mod" do
+    test "parse simple mod" do
+      input = "2%3"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:mod, {:number, 2}, {:number, 3}}
+
+      input = "2%1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:mod, {:number, 2}, {:negative, {:number, 1}}}
+
+      input = "-2%1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:mod, {:negative, {:number, 2}}, {:number, 1}}
+
+      input = "-2%-1"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:mod, {:negative, {:number, 2}}, {:negative, {:number, 1}}}
+    end
+
+    test "parse concat mods" do
+      input = "2%2%3%4"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:mod, {:number, 2}, {:mod, {:number, 2}, {:mod, {:number, 3}, {:number, 4}}}}
+    end
+
+    test "parse mods with operations" do
+      input = "(3+2)%2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:mod, {:plus, {:number, 3}, {:number, 2}}, {:number, 2}}
+
+      input = "2%(3+2)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:mod, {:number, 2}, {:plus, {:number, 3}, {:number, 2}}}
+
+      input = "2%(3+2)%2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:mod, {:number, 2}, {:mod, {:plus, {:number, 3}, {:number, 2}}, {:number, 2}}}
+    end
+  end
+
+  describe "round division" do
+    test "parse div operation" do
+      input = "1//2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:round_div, {:number, 1}, {:number, 2}}
+
+      input = "1//2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:round_div, {:number, 1}, {:number, 2}}
+
+      input = "1 //2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:round_div, {:number, 1}, {:number, 2}}
+
+      input = "1 // 2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:round_div, {:number, 1}, {:number, 2}}
+
+      input = " 1 // 2"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:round_div, {:number, 1}, {:number, 2}}
+
+      input = " 1 // 2 "
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:round_div, {:number, 1}, {:number, 2}}
+    end
+  end
+
   describe "dice" do
     test "parse dice" do
       input = "1d5"
