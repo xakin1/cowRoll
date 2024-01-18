@@ -103,13 +103,13 @@ defmodule Interpreter do
     end
   end
 
-  defp eval_list(list_of_numbers) do
-    case list_of_numbers do
+  defp eval_list(list) do
+    case list do
       {first_element, second_element} when is_tuple(second_element) ->
         [eval(first_element), eval_list(second_element)]
 
       _ ->
-        [eval(list_of_numbers)]
+        [eval(list)]
     end
   end
 
@@ -144,13 +144,16 @@ defmodule Interpreter do
 
   defp eval({:not_operation, expresion}), do: not eval(expresion)
 
-  defp eval({:list_of_number, list_of_numbers}) do
-    case list_of_numbers do
+  defp eval({:list, list}) do
+    case list do
       {first_element, second_element} when is_tuple(first_element) ->
         List.flatten([eval(first_element), eval_list(second_element)])
 
+      :"$undefined" ->
+        []
+
       _ ->
-        [eval(list_of_numbers)]
+        [eval(list)]
     end
   end
 
@@ -262,7 +265,7 @@ defmodule Interpreter do
   defp eval({:range, range}) do
     try do
       case range do
-        {:list_of_number, _} ->
+        {:list, _} ->
           eval(range)
 
         {:var, _} ->

@@ -124,15 +124,15 @@ defmodule CowRoll.ParserTest do
                 :"$undefined"}
     end
 
-    test "parse if_then_else statemen with conditions" do
-      input = "if (4>7) == (true or false) then 2 else 3+5 end"
+    test "parse if_then_else statemen with conditions and returning differents types" do
+      input = "if (4>7) == (true or false) then 2 else '3' end"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
                {:if_then_else,
                 {:equal, {:stric_more, {:number, 4}, {:number, 7}},
                  {:or_operation, {:boolean, true}, {:boolean, false}}}, {:number, 2},
-                {:plus, {:number, 3}, {:number, 5}}}
+                {:string, "'3'"}}
     end
 
     test "parse if_then_else statemen with conditions and nested if_then_else in the if" do
@@ -453,6 +453,12 @@ defmodule CowRoll.ParserTest do
       assert token == {:string, "'hola mundo'"}
     end
 
+    test "parse string with a number" do
+      input = "'1'"
+      {:ok, token} = Parser.parse(input)
+      assert token == {:string, "'1'"}
+    end
+
     test "parse empty string" do
       input = "''"
       {:ok, token} = Parser.parse(input)
@@ -476,34 +482,78 @@ defmodule CowRoll.ParserTest do
     end
   end
 
-  describe "numeric arrays" do
+  describe "arrays" do
     test "empty array" do
       input = "[]"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:list_of_number, :"$undefined"}
+      assert token == {:list, :"$undefined"}
     end
 
-    test "array with an element" do
+    test "array with an numeric element" do
       input = "[1]"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:list_of_number, {:number, 1}}
+      assert token == {:list, {:number, 1}}
     end
 
-    test "array with two elements" do
+    test "array with two numeric elements" do
       input = "[1,2]"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:list_of_number, {{:number, 1}, {:number, 2}}}
+      assert token == {:list, {{:number, 1}, {:number, 2}}}
     end
 
-    test "array with n elements" do
+    test "array with n numeric elements" do
       input = "[1,2,3,3]"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:list_of_number, {{:number, 1}, {{:number, 2}, {{:number, 3}, {:number, 3}}}}}
+               {:list, {{:number, 1}, {{:number, 2}, {{:number, 3}, {:number, 3}}}}}
+    end
+
+    test "array with an string element" do
+      input = "['1']"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:list, {:string, "'1'"}}
+    end
+
+    test "array with two string elements" do
+      input = "['1',\"2\"]"
+      {:ok, token} = Parser.parse(input)
+
+      assert token == {:list, {{:string, "'1'"}, {:string, "\"2\""}}}
+    end
+
+    test "array with n string elements" do
+      input = "['1','2','3','3']"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:list,
+                {{:string, "'1'"}, {{:string, "'2'"}, {{:string, "'3'"}, {:string, "'3'"}}}}}
+    end
+
+    test "array with n mix elements" do
+      input = "['1',2,'3',true]"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:list, {{:string, "'1'"}, {{:number, 2}, {{:string, "'3'"}, {:boolean, true}}}}}
+    end
+
+    test "array with n mix elements and operations" do
+      input = "['1'+'2',3+2*(3+3),'3', if true then 3 else 'r' end]"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:list,
+                {{:concat, {:string, "'1'"}, {:string, "'2'"}},
+                 {{:plus, {:number, 3},
+                   {:mult, {:number, 2}, {:plus, {:number, 3}, {:number, 3}}}},
+                  {{:string, "'3'"},
+                   {:if_then_else, {:boolean, true}, {:number, 3}, {:string, "'r'"}}}}}}
     end
   end
 

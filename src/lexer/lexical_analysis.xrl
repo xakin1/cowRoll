@@ -24,8 +24,6 @@ RANGE             = \.\.
 NUMBER            = [0-9]+
 DICE              = {NUMBER}+d{NUMBER}+
 NOT_DEFINED       = .
-LIST_OF_NUMBERS   = \[({NUMBER}(,{NUMBER})*)\]
-
 
 Rules.
 

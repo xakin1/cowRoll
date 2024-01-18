@@ -121,14 +121,28 @@ defmodule CowRoll.InterpreterTest do
 
       assert result == 1
     end
+
+    test "if_then_else statemen with conditions and returning differents types" do
+      input = "if (4>7) == (true or false) then 2 else '3' end"
+      result = Interpreter.eval_input(input)
+
+      expect =
+        if 4 > 7 == (true or false) do
+          2
+        else
+          "3"
+        end
+
+      assert expect == result
+    end
   end
 
-  describe "list of numbers" do
+  describe "list" do
     test "empty array" do
       input = "[]"
-      {:ok, token} = Parser.parse(input)
+      result = Interpreter.eval_input("[]")
 
-      assert token == {:list_of_number, :"$undefined"}
+      assert result == []
     end
 
     test "array with an element" do
@@ -145,6 +159,52 @@ defmodule CowRoll.InterpreterTest do
       result = Interpreter.eval_input("[1,2,3,3]")
 
       assert result == [1, 2, 3, 3]
+    end
+
+    test "array with an string element" do
+      input = "['1']"
+      result = Interpreter.eval_input(input)
+      expect = ["1"]
+      assert result == expect
+    end
+
+    test "array with two string elements" do
+      input = "['1',\"2\"]"
+      result = Interpreter.eval_input(input)
+      expect = ["1", "2"]
+      assert result == expect
+    end
+
+    test "array with n string elements" do
+      input = "['1','2','3','3']"
+      result = Interpreter.eval_input(input)
+      expect = ["1", "2", "3", "3"]
+      assert result == expect
+    end
+
+    test "array with n mix elements" do
+      input = "['1',2,'3',true]"
+      result = Interpreter.eval_input(input)
+      expect = ["1", 2, "3", true]
+      assert result == expect
+    end
+
+    test "array with n mix elements and operations" do
+      input = "['1'+'2',3+2*(3+3),'3', if true then 3 else 'r' end]"
+      result = Interpreter.eval_input(input)
+
+      expect = [
+        "1" <> "2",
+        3 + 2 * (3 + 3),
+        "3",
+        if true do
+          3
+        else
+          ~c"r"
+        end
+      ]
+
+      assert result == expect
     end
   end
 

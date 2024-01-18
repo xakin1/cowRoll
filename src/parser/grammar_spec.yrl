@@ -1,8 +1,8 @@
 Nonterminals
     boolean_expression_prior0 numeric_expression_prior2  grammar logic_conditions logic_expression_prior3 logic_expression_prior2 logic_expression_prior1
     boolean_expression_prior2 boolean_expression_prior3 numeric_expression_prior0 numeric_expression_prior1 expression if_statement 
-    code boolean_expression_prior1  else_block  assignment block for_loop enumerable list_of_number numeric_sequence
-    string_expression_prior2 string_expression_prior1 string_expression_prior0 negative_number minus logic_expression_prior0. 
+    code boolean_expression_prior1  else_block  assignment block for_loop enumerable items_sequence list
+    string_expression_prior2 string_expression_prior1 string_expression_prior0 negative_number minus logic_expression_prior0 .  
     
 Terminals 'if' 'then' 'else' not_defined boolean number var 'end' 'and' 'for' '..' '<-' 'do' 'or' 'not' '+' '>'
  '=' '>=' '<' ';' ',' '<=' '==' '!=' '-' '%' '*' '/' '//'  '[' ']' '(' ')' '^' dice string.
@@ -35,13 +35,20 @@ block -> '$empty'.
     for_loop -> 'for' var '<-' enumerable 'do' block 'end' : {for_loop, '$2', '$4', '$6'}.
     enumerable -> var : {range,'$1'}.
     enumerable -> numeric_expression_prior2'..'numeric_expression_prior2 : {range,{'$1', '$3'}}.
-    enumerable -> list_of_number  : {range,'$1'}.
+    enumerable -> list  : {range,'$1'}.
 
 
 % assignment of variables
     assignment -> var '=' expression : {assignment, '$1', '$3'}.
 
 % expressions
+    expression -> list                             : '$1'.
+
+    list -> '[' items_sequence ']'                                        : {list, '$2'}.
+                items_sequence -> code ',' items_sequence                 : {'$1', '$3'}.
+                items_sequence -> code                                    : '$1'.
+                items_sequence -> '$empty'.
+
     expression -> numeric_expression_prior2        : '$1'.
     expression -> string_expression_prior2         : '$1'.
 
@@ -70,18 +77,15 @@ block -> '$empty'.
         numeric_expression_prior0 -> dice                                               : '$1'.
         numeric_expression_prior0 -> number                                             : '$1'.
         numeric_expression_prior0 -> var                                                : '$1'.
-        numeric_expression_prior0 -> list_of_number                                     : '$1'.
-            list_of_number -> '[' numeric_sequence ']'                                  : {list_of_number, '$2'}.
-                numeric_sequence -> numeric_expression_prior2 ',' numeric_sequence      : {'$1', '$3'}.
-                numeric_sequence -> numeric_expression_prior2                           : '$1'.
-                numeric_sequence -> '$empty'.
+           
 
 
     %strings expressions
         string_expression_prior2 -> string_expression_prior1  '+' string_expression_prior2 : {concat, '$1', '$3'}.
-        string_expression_prior2 -> string_expression_prior1  : '$1'.
-        string_expression_prior1 -> string_expression_prior0  : '$1'.
-        string_expression_prior0 -> string                    : '$1'.
+        string_expression_prior2 -> string_expression_prior1                               : '$1'.
+        string_expression_prior1 -> string_expression_prior0                               : '$1'.
+        string_expression_prior0 -> string                                                 : '$1'.
+
 
 %logic conditions
     logic_conditions -> boolean_expression_prior3 : '$1'.
