@@ -19,9 +19,9 @@ defmodule CowRoll.InterpreterTest do
 
     test "general priority" do
       result =
-        Interpreter.eval_input("((3 + 5 * 2)  / 2^3 + 4%2 == 0 and 6 - 2 >= 3) or not(5 < 7)")
+        Interpreter.eval_input("((3 + 5 * 2)  / 2^3 + 9%17 == 1 and 6 - 2 >= 3) or not (5 > 7)")
 
-      expect = ((3 + 5 * 2) / :math.pow(2, 3) + rem(4, 2) == 0 and 6 - 2 >= 3) or not (5 < 7)
+      expect = ((3 + 5 * 2) / :math.pow(2, 3) + rem(4, 2) == 0 and 6 - 2 >= 3) or not (5 > 7)
 
       assert expect == result
     end
@@ -512,7 +512,7 @@ defmodule CowRoll.InterpreterTest do
       end
 
       input = "-2^1"
-      Interpreter.eval_input(input)
+      result = Interpreter.eval_input(input)
       expect = Integer.pow(-2, 1)
 
       assert expect == result
@@ -875,6 +875,13 @@ defmodule CowRoll.InterpreterTest do
 
       result = Interpreter.eval_input("5<=4")
       expect = 5 <= 4
+      assert expect == result
+    end
+
+    test "complex boolean expression" do
+      input = "((3 + 5 * 2)  / 2^3 + 9%17 == 1 and 6 - 2 >= 3)"
+      result = Interpreter.eval_input(input)
+      expect = (3 + 5 * 2) / Integer.pow(2, 3) + Integer.mod(9, 17) == 1 and 6 - 2 >= 3
       assert expect == result
     end
   end

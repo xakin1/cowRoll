@@ -234,6 +234,23 @@ defmodule CowRoll.ParserTest do
                {:and_operation, {:stric_more, {:number, 3}, {:number, 4}}, {:boolean, false}}
     end
 
+    test "parse and with multiples factors" do
+      input = "false and false and false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:and_operation, {:boolean, false},
+                {:and_operation, {:boolean, false}, {:boolean, false}}}
+
+      input = "(3>4) and false and (4<3 and true)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:and_operation, {:stric_more, {:number, 3}, {:number, 4}},
+                {:and_operation, {:boolean, false},
+                 {:and_operation, {:stric_less, {:number, 4}, {:number, 3}}, {:boolean, true}}}}
+    end
+
     test "parse or" do
       input = "true or true"
       {:ok, token} = Parser.parse(input)
@@ -257,6 +274,23 @@ defmodule CowRoll.ParserTest do
       # {:ok, token} = Parser.parse(input)
 
       # assert token == {:number, 3}}
+    end
+
+    test "parse or with multiples factors" do
+      input = "false or false or false"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:or_operation, {:boolean, false},
+                {:or_operation, {:boolean, false}, {:boolean, false}}}
+
+      input = "(3>4) or false or (4<3 or true)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:or_operation, {:stric_more, {:number, 3}, {:number, 4}},
+                {:or_operation, {:boolean, false},
+                 {:or_operation, {:stric_less, {:number, 4}, {:number, 3}}, {:boolean, true}}}}
     end
 
     test "parse not" do
@@ -334,8 +368,9 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:less_equal, {:stric_more, {:number, 4}, {:plus, {:number, 3}, {:number, 9}}},
-                {:plus, {:number, 2}, {:negative, {:dice, "1d6"}}}}
+               {:stric_more, {:number, 4},
+                {:less_equal, {:plus, {:number, 3}, {:number, 9}},
+                 {:plus, {:number, 2}, {:negative, {:dice, "1d6"}}}}}
     end
 
     test "parse equals" do
@@ -385,8 +420,23 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:less_equal, {:stric_more, {:number, 4}, {:plus, {:number, 3}, {:number, 9}}},
-                {:plus, {:number, 2}, {:negative, {:dice, "1d6"}}}}
+               {:stric_more, {:number, 4},
+                {:less_equal, {:plus, {:number, 3}, {:number, 9}},
+                 {:plus, {:number, 2}, {:negative, {:dice, "1d6"}}}}}
+    end
+
+    test "parse complex boolean expression" do
+      input = "((3 + 5 * 2)  / 2^3 + 9%17 == 1 and 6 - 2 >= 3)"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:and_operation,
+                {:equal,
+                 {:plus,
+                  {:divi, {:plus, {:number, 3}, {:mult, {:number, 5}, {:number, 2}}},
+                   {:pow, {:number, 2}, {:number, 3}}}, {:mod, {:number, 9}, {:number, 17}}},
+                 {:number, 1}},
+                {:more_equal, {:plus, {:number, 6}, {:negative, {:number, 2}}}, {:number, 3}}}
     end
   end
 
@@ -707,7 +757,7 @@ defmodule CowRoll.ParserTest do
 
       assert token == {:mod, {:number, 2}, {:number, 3}}
 
-      input = "2%1"
+      input = "2%-1"
       {:ok, token} = Parser.parse(input)
 
       assert token == {:mod, {:number, 2}, {:negative, {:number, 1}}}

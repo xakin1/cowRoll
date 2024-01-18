@@ -254,8 +254,11 @@ defmodule Interpreter do
     end
   end
 
-  defp eval({:pow, left_expression, right_expression}),
-    do: Integer.pow(eval(left_expression), eval(right_expression))
+  defp eval({:pow, left_expression, right_expression}) do
+    base = eval(left_expression)
+    exponent = eval(right_expression)
+    Integer.pow(base, exponent)
+  end
 
   defp eval({:range, range}) do
     try do
