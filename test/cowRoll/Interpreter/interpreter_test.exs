@@ -672,6 +672,19 @@ defmodule CowRoll.InterpreterTest do
 
       assert expect == result
     end
+
+    test "can do a mod with a complex expresion" do
+      try do
+        for _ <- 1..100 do
+          result = Interpreter.eval_input("12%(-1d6*(3+5))")
+          assert result <= 0 and result >= -36
+          result = Interpreter.eval_input("12%-1d6*(3+5)")
+          assert result <= 0 and result >= -36
+        end
+      catch
+        {:error, _} -> assert false
+      end
+    end
   end
 
   describe "boolean operations" do
@@ -863,68 +876,6 @@ defmodule CowRoll.InterpreterTest do
       result = Interpreter.eval_input("5<=4")
       expect = 5 <= 4
       assert expect == result
-    end
-  end
-
-  describe "test math operation" do
-    test "should return a negative" do
-      try do
-        result = Interpreter.eval_input("- 1d6")
-        assert result < 0
-      catch
-        {:error, _} -> assert false
-      end
-    end
-
-    test "plus and minus with multiples operators x - (y + z)" do
-      result = Interpreter.eval_input("1 - (2 + 4) ")
-      assert result == 1 - (2 + 4)
-    end
-
-    test "plus and minus with multiples operators x - y + z" do
-      result = Interpreter.eval_input("1 - 2 + 4 ")
-      assert result == 1 - 2 + 4
-    end
-
-    test "should do a rounding up and return 3" do
-      try do
-        result = Interpreter.eval_input("5//2")
-        assert result == 3
-      rescue
-        _ ->
-          assert false
-      end
-    end
-
-    test "should do a mod and return 2" do
-      try do
-        result = Interpreter.eval_input("12%10")
-        assert 2 == result
-      catch
-        {:error, _} -> assert false
-      end
-    end
-
-    test "should do a mod with negative numbers and return -2" do
-      try do
-        result = Interpreter.eval_input("12%-10")
-        assert -8 == result
-      catch
-        {:error, _} -> assert false
-      end
-    end
-
-    test "can do a mod with a complex expresion" do
-      try do
-        for _ <- 1..100 do
-          result = Interpreter.eval_input("12%(-1d6*(3+5))")
-          assert result <= 0 and result >= -36
-          result = Interpreter.eval_input("12%-1d6*(3+5)")
-          assert result <= 0 and result >= -36
-        end
-      catch
-        {:error, _} -> assert false
-      end
     end
   end
 end
