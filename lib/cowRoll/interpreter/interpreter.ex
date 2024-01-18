@@ -222,8 +222,7 @@ defmodule Interpreter do
           {:error, "Error: division by 0"}
 
         {dividend, divisor} ->
-          result =
-            div(dividend, divisor) + (1 - div(Integer.mod(dividend, divisor), divisor))
+          result = div(dividend, divisor) + ceil(rem(dividend, divisor) / divisor)
 
           result
       end
