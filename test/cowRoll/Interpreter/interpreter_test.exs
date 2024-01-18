@@ -547,6 +547,12 @@ defmodule CowRoll.InterpreterTest do
 
       assert expect == result
 
+      input = "2^3+2"
+      result = Interpreter.eval_input(input)
+      expect = Integer.pow(2, 3) + 2
+
+      assert expect == result
+
       input = "2^(3+2)^2"
       result = Interpreter.eval_input(input)
       expect = :math.pow(2, :math.pow(3 + 2, 2))
