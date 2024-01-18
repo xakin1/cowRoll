@@ -605,6 +605,75 @@ defmodule CowRoll.InterpreterTest do
     end
   end
 
+  describe "mod" do
+    test "simple mod" do
+      input = "5%3"
+      result = Interpreter.eval_input(input)
+      expect = Integer.mod(5, 3)
+
+      assert expect == result
+
+      input = "6%3"
+      result = Interpreter.eval_input(input)
+      expect = Integer.mod(6, 3)
+
+      assert expect == result
+
+      input = "6%-3"
+      result = Interpreter.eval_input(input)
+      expect = Integer.mod(6, -3)
+
+      assert expect == result
+
+      input = "-6%-3"
+      result = Interpreter.eval_input(input)
+      expect = Integer.mod(-6, -3)
+
+      assert expect == result
+
+      input = "-6%3"
+      result = Interpreter.eval_input(input)
+      expect = Integer.mod(-6, 3)
+
+      assert expect == result
+
+      input = "0%3"
+      result = Interpreter.eval_input(input)
+      expect = Integer.mod(0, 3)
+
+      assert expect == result
+    end
+
+    test "concat mods" do
+      input = "2%4%3%4"
+      result = Interpreter.eval_input(input)
+      expect = Integer.mod(2, Integer.mod(4, Integer.mod(3, 4)))
+
+      assert expect == result
+    end
+
+    test "mods by zero" do
+      try do
+        {:error, error} = Interpreter.eval_input("5%0")
+        assert error == "Error: division by 0"
+
+        {:error, error} = Interpreter.eval_input("0%0")
+        assert error == "Error: division by 0"
+      rescue
+        _ ->
+          assert false
+      end
+    end
+
+    test "mods with operations" do
+      input = "(3+2)%2"
+      result = Interpreter.eval_input(input)
+      expect = Integer.mod(3 + 2, 2)
+
+      assert expect == result
+    end
+  end
+
   describe "boolean operations" do
     test "more should return true" do
       result = Interpreter.eval_input("3 > 2")

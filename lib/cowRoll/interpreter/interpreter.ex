@@ -233,8 +233,26 @@ defmodule Interpreter do
     end
   end
 
-  defp eval({:mod, left_expression, right_expression}),
-    do: Integer.mod(eval(left_expression), eval(right_expression))
+  defp eval({:mod, left_expression, right_expression}) do
+    try do
+      dividend = eval(left_expression)
+      module = eval(right_expression)
+
+      case {dividend, module} do
+        {_, 0} ->
+          {:error, "Error: division by 0"}
+
+        {dividend, module} ->
+          result =
+            Integer.mod(dividend, module)
+
+          result
+      end
+    catch
+      {:error, error} -> {:error, error}
+      _ -> {:error, "Aritmetic error: Unknow error"}
+    end
+  end
 
   defp eval({:pow, left_expression, right_expression}),
     do: Integer.pow(eval(left_expression), eval(right_expression))
