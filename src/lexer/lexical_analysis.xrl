@@ -5,6 +5,7 @@ STRING            = (\'\s*{CONTENT_STRING}\'|\"\s*{CONTENT_STRING}\")
 % '
 WHITESPACE        = [\n\t\s]
 IF                = if
+FUNCTION          = function
 THEN              = then
 ELSE              = else
 FOR               = for
@@ -82,6 +83,7 @@ Rules.
 
 \<-     : {token, {'<-', TokenLine}}.
 
+{FUNCTION}   : {token, {def_function, to_string(TokenChars)}}.
 {VAR}        : {token, {var, to_string(TokenChars)}}.
 
 {NOT_DEFINED} : {token, {not_defined, to_string(TokenChars)}}.

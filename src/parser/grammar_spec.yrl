@@ -1,35 +1,52 @@
 Nonterminals
-    boolean_expression_prior0 numeric_expression_prior2  grammar logic_conditions logic_expression_prior3 logic_expression_prior2 logic_expression_prior1
-    boolean_expression_prior2 boolean_expression_prior3 numeric_expression_prior0 numeric_expression_prior1 expression if_statement 
-    code boolean_expression_prior1  else_block  assignment block for_loop enumerable items_sequence list
-    string_expression_prior2 string_expression_prior1 string_expression_prior0 negative_number minus logic_expression_prior0 .  
-    
+assignment block boolean_expression_prior0 boolean_expression_prior1 boolean_expression_prior2 boolean_expression_prior3
+code else_block enumerable expression for_loop function grammar if_statement items_sequence list
+logic_conditions logic_expression_prior0 logic_expression_prior1 logic_expression_prior2 logic_expression_prior3
+minus negative_number numeric_expression_prior0 numeric_expression_prior1 numeric_expression_prior2 parameters
+statement statements string_expression_prior0 string_expression_prior1 string_expression_prior2.
+
 Terminals 'if' 'then' 'else' not_defined boolean number var 'end' 'and' 'for' '..' '<-' 'do' 'or' 'not' '+' '>'
- '=' '>=' '<' ';' ',' '<=' '==' '!=' '-' '%' '*' '/' '//'  '[' ']' '(' ')' '^' dice string.
+ '=' '>=' '<' ';' ',' '<=' '==' '!=' '-' '%' '*' '/' '//'  '[' ']' '(' ')' '^' dice string def_function jump.
 
 Rootsymbol
     grammar.
 
-grammar -> block : '$1'.
+grammar -> code : '$1'.
 
-block -> code           : '$1'.
-block -> code ';' block : {'$1', '$3'}. 
-block -> not_defined    : '$1'.  
-block -> '$empty'.
+code -> function : '$1'.
+    function ->  def_function var '(' parameters ')' 'do' block 'end': {function, {function_name, '$2'}, '$4', {function_code, '$7'} }.
+        parameters -> var                 : {parameters,'$1'}.
+        parameters -> var ',' parameters  : {parameters, '$1', '$3'}.
+        parameters -> '$empty'            : {parameters, nil }.
 
-%code
-    code -> if_statement : '$1'.
-    code -> for_loop     : '$1'.
-    code -> assignment   : '$1'.
-    code -> expression   : '$1'.
-    code -> logic_conditions   : '$1'.
+code -> block    : '$1'.
+
+block -> statements            : '$1'.
+block -> statements jump block : {'$1', '$3'}. 
+block -> not_defined           : '$1'.  
+block -> '$empty'              : nil.
+
+
+
+%statements
+    statements -> statement ';' : '$1'.
+    statements -> statement ';' statements : {'$1', '$3'}. 
+    statements ->  statement    : '$1'.
+
+    statement -> if_statement : '$1'.
+    statement -> for_loop     : '$1'.
+    statement -> assignment   : '$1'.
+    statement -> expression   : '$1'.
+    statement -> logic_conditions   : '$1'.
+
+
 
 %ifs
-    if_statement -> 'if' logic_conditions 'then' code else_block 'end'
+    if_statement -> 'if' logic_conditions 'then' block else_block 'end'
     : {if_then_else, '$2', '$4', '$5'}.
 
     else_block -> 'else' block     : '$2'.
-    else_block -> '$empty'.
+    else_block -> '$empty' : nil.
 
 %fors
     for_loop -> 'for' var '<-' enumerable 'do' block 'end' : {for_loop, '$2', '$4', '$6'}.
@@ -44,10 +61,10 @@ block -> '$empty'.
 % expressions
     expression -> list                             : '$1'.
 
-    list -> '[' items_sequence ']'                                        : {list, '$2'}.
-                items_sequence -> code ',' items_sequence                 : {'$1', '$3'}.
-                items_sequence -> code                                    : '$1'.
-                items_sequence -> '$empty'.
+    list -> '[' items_sequence ']'                                              : {list, '$2'}.
+                items_sequence -> statements ',' items_sequence                 : {'$1', '$3'}.
+                items_sequence -> statements                                    : '$1'.
+                items_sequence -> '$empty'                                      : nil.
 
     expression -> numeric_expression_prior2        : '$1'.
     expression -> string_expression_prior2         : '$1'.
