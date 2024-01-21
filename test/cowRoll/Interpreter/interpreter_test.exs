@@ -776,29 +776,26 @@ defmodule CowRoll.InterpreterTest do
   end
 
   describe "functions" do
-    test "basic function" do
+    test "basic function declaration" do
       input = "function hola_mundo () do
         'hola mundo'
       end"
       result = Interpreter.eval_input(input)
-      expect = "hola mundo"
+      expect = {:string, "'hola mundo'"}
 
-      assert expect == result
+      assert result == expect
     end
 
-    test "basic function with parameters" do
+    test "basic function with parameters declaration" do
       input = "function hola_mundo (msg, range) do
         for participants <- range do
           msg
         end
       end"
-      {:ok, tokens} = Parser.parse(input)
+      result = Interpreter.eval_input(input)
 
-      assert tokens ==
-               {:function, {:function_name, {:var, "hola_mundo"}},
-                {:parameters, {:var, "msg"}, {:parameters, {:var, "range"}}},
-                {:function_code,
-                 {:for_loop, {:var, "participants"}, {:range, {:var, "range"}}, {:var, "msg"}}}}
+      assert result ==
+               {:for_loop, {:var, "participants"}, {:range, {:var, "range"}}, {:var, "msg"}}
     end
   end
 

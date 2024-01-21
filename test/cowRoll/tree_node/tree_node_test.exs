@@ -584,6 +584,22 @@ defmodule CowRoll.TreeNodeTest do
       assert node == expect
     end
 
+    test "insert fucntions into scopes" do
+      node = TreeNode.create_tree()
+      TreeNode.add_fuction_to_scope("hola_mundo", "msg", "IO.puts(msg)")
+      node = TreeNode.get_tree()
+
+      expect = %TreeNode{
+        id: :"1",
+        name: :tree,
+        parent_id: nil,
+        value: %{"hola_mundo" => %{parameters: "msg", code: "IO.puts(msg)"}},
+        children: []
+      }
+
+      assert node == expect
+    end
+
     test "get variables" do
       node = TreeNode.create_tree()
       TreeNode.add_scope(node.id, :child)
@@ -599,36 +615,6 @@ defmodule CowRoll.TreeNodeTest do
       result = TreeNode.get_variable_from_scope(:"4", "x")
 
       assert result == 4
-      #  %TreeNode{
-      #    id: :"1",
-      #    name: :tree,
-      #    parent_id: nil,
-      #    value: %{},
-      #    children: [
-      #      %TreeNode{
-      #        id: :"4",
-      #        name: :child_3,
-      #        parent_id: :"1",
-      #        value: %{"x" => 4},
-      #        children: []
-      #      },
-      #      %TreeNode{
-      #        id: :"2",
-      #        name: :child,
-      #        parent_id: :"1",
-      #        value: %{"x" => 4},
-      #        children: [
-      #          %TreeNode{
-      #            id: :"3",
-      #            name: :child_2,
-      #            parent_id: :"2",
-      #            value: %{},
-      #            children: []
-      #          }
-      #        ]
-      #      }
-      #    ]
-      #  }
     end
   end
 end

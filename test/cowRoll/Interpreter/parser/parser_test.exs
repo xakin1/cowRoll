@@ -997,7 +997,7 @@ defmodule CowRoll.ParserTest do
       {:ok, tokens} = Parser.parse(input)
 
       assert tokens ==
-               {:function, {:function_name, {:var, "hola_mundo"}}, {:parameters, nil},
+               {:assignament_function, {:function_name, {:var, "hola_mundo"}}, {:parameters, nil},
                 {:function_code, {:string, "'hola mundo'"}}}
     end
 
@@ -1010,7 +1010,7 @@ defmodule CowRoll.ParserTest do
       {:ok, tokens} = Parser.parse(input)
 
       assert tokens ==
-               {:function, {:function_name, {:var, "hola_mundo"}},
+               {:assignament_function, {:function_name, {:var, "hola_mundo"}},
                 {:parameters, {:var, "msg"}, {:parameters, {:var, "range"}}},
                 {:function_code,
                  {:for_loop, {:var, "participants"}, {:range, {:var, "range"}}, {:var, "msg"}}}}

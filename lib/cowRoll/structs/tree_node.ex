@@ -117,6 +117,15 @@ defmodule TreeNode do
     value
   end
 
+  # No hace falta el id del nodo pues siempre se declararan como funciones globales
+  @spec add_fuction_to_scope(any(), any(), any()) :: any()
+  def add_fuction_to_scope(function_name, parameters, code) do
+    tree = get_tree()
+    tree = %TreeNode{tree | value: %{function_name => %{parameters: parameters, code: code}}}
+    update_tree(tree)
+    code
+  end
+
   defp parent_of_target_node?(node, node_target_id) do
     if node.id == node_target_id do
       true

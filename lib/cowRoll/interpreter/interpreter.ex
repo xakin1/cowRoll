@@ -277,4 +277,12 @@ defmodule Interpreter do
     remove_scope(:for_loop)
     result
   end
+
+  defp eval(
+         _,
+         {:assignament_function, {:function_name, function_name}, parameters,
+          {:function_code, function_code}}
+       ) do
+    add_fuction_to_scope(function_name, parameters, function_code)
+  end
 end

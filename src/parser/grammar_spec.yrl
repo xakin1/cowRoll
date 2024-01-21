@@ -1,6 +1,6 @@
 Nonterminals
-assignment block boolean_expression_prior0 boolean_expression_prior1 boolean_expression_prior2 boolean_expression_prior3
-code else_block enumerable expression for_loop function grammar if_statement items_sequence list
+assignment assignament_function block boolean_expression_prior0 boolean_expression_prior1 boolean_expression_prior2 boolean_expression_prior3
+code else_block enumerable expression for_loop grammar if_statement items_sequence list
 logic_conditions logic_expression_prior0 logic_expression_prior1 logic_expression_prior2 logic_expression_prior3
 minus negative_number numeric_expression_prior0 numeric_expression_prior1 numeric_expression_prior2 parameters
 statement statements string_expression_prior0 string_expression_prior1 string_expression_prior2.
@@ -13,8 +13,8 @@ Rootsymbol
 
 grammar -> code : '$1'.
 
-code -> function : '$1'.
-    function ->  def_function var '(' parameters ')' 'do' block 'end': {function, {function_name, '$2'}, '$4', {function_code, '$7'} }.
+code -> assignament_function : '$1'.
+    assignament_function ->  def_function var '(' parameters ')' 'do' block 'end': {assignament_function, {function_name, '$2'}, '$4', {function_code, '$7'} }.
         parameters -> var                 : {parameters,'$1'}.
         parameters -> var ',' parameters  : {parameters, '$1', '$3'}.
         parameters -> '$empty'            : {parameters, nil }.
