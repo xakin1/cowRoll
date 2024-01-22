@@ -1,9 +1,9 @@
 Nonterminals
-assignment assignament_function block boolean_expression_prior0 boolean_expression_prior1 boolean_expression_prior2 boolean_expression_prior3
-code else_block enumerable expression for_loop grammar if_statement items_sequence list
+arguments assignment assignament_function boolean_expression_prior0 boolean_expression_prior1 boolean_expression_prior2 boolean_expression_prior3
+code else_code enumerable expression for_loop grammar if_statement items_sequence list
 logic_conditions logic_expression_prior0 logic_expression_prior1 logic_expression_prior2 logic_expression_prior3
 minus negative_number numeric_expression_prior0 numeric_expression_prior1 numeric_expression_prior2 parameters
-statement statements string_expression_prior0 string_expression_prior1 string_expression_prior2.
+statement statements string_expression_prior0 string_expression_prior1 string_expression_prior2 variable.
 
 Terminals 'if' 'then' 'else' not_defined boolean number var 'end' 'and' 'for' '..' '<-' 'do' 'or' 'not' '+' '>'
  '=' '>=' '<' ';' ',' '<=' '==' '!=' '-' '%' '*' '/' '//'  '[' ']' '(' ')' '^' dice string def_function jump.
@@ -13,43 +13,50 @@ Rootsymbol
 
 grammar -> code : '$1'.
 
-code -> assignament_function : '$1'.
-    assignament_function ->  def_function var '(' parameters ')' 'do' block 'end': {assignament_function, {function_name, '$2'}, '$4', {function_code, '$7'} }.
-        parameters -> var                 : {parameters,'$1'}.
-        parameters -> var ',' parameters  : {parameters, '$1', '$3'}.
-        parameters -> '$empty'            : {parameters, nil }.
-
-code -> block    : '$1'.
-
-block -> statements            : '$1'.
-block -> statements jump block : {'$1', '$3'}. 
-block -> not_defined           : '$1'.  
-block -> '$empty'              : nil.
-
+code -> statements            : '$1'.
+code -> not_defined           : '$1'.  
+code -> '$empty'              : nil.
 
 
 %statements
-    statements -> statement ';' : '$1'.
     statements -> statement ';' statements : {'$1', '$3'}. 
-    statements ->  statement    : '$1'.
+    statements -> statement jump statement : {'$1', '$3'}. 
+    statements -> statement ';'            : '$1'.
+    statements ->  statement               : '$1'.
 
-    statement -> if_statement : '$1'.
-    statement -> for_loop     : '$1'.
-    statement -> assignment   : '$1'.
-    statement -> expression   : '$1'.
-    statement -> logic_conditions   : '$1'.
+    statement -> for_loop               : '$1'.
+    statement -> expression             : '$1'.
+    statement -> assignment             : '$1'.
+    statement -> if_statement           : '$1'.
+    statement -> variable               : '$1'.
+    statement -> logic_conditions       : '$1'.
+    statement -> assignament_function   : '$1'.
 
+    variable -> var '(' arguments ')'      : {call_function, '$1', {parameters,'$3'}}.
+    variable -> var '(' ')'                 : {call_function, '$1'}.
+    
+    arguments -> expression                 : '$1'.
+    arguments -> expression ',' arguments  : {'$1', '$3'}.
+    arguments -> '$empty'                   : nil.
+
+
+%functions
+    assignament_function ->  def_function var '(' parameters ')' 'do' code 'end': {assignament_function, {function_name, '$2'}, {parameters, '$4'}, {function_code, '$7'} }.
+    
+    parameters -> var                 : '$1'.
+    parameters -> var ',' parameters  : {'$1', '$3'}.
+    parameters -> '$empty'            : nil.
 
 
 %ifs
-    if_statement -> 'if' logic_conditions 'then' block else_block 'end'
+    if_statement -> 'if' logic_conditions 'then' code else_code 'end'
     : {if_then_else, '$2', '$4', '$5'}.
 
-    else_block -> 'else' block     : '$2'.
-    else_block -> '$empty' : nil.
+    else_code -> 'else' code     : '$2'.
+    else_code -> '$empty' : nil.
 
 %fors
-    for_loop -> 'for' var '<-' enumerable 'do' block 'end' : {for_loop, '$2', '$4', '$6'}.
+    for_loop -> 'for' var '<-' enumerable 'do' code 'end' : {for_loop, '$2', '$4', '$6'}.
     enumerable -> var : {range,'$1'}.
     enumerable -> numeric_expression_prior2'..'numeric_expression_prior2 : {range,{'$1', '$3'}}.
     enumerable -> list  : {range,'$1'}.

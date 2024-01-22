@@ -616,5 +616,29 @@ defmodule CowRoll.TreeNodeTest do
 
       assert result == 4
     end
+
+    test "get function" do
+      node = TreeNode.create_tree()
+      TreeNode.add_fuction_to_scope("hola_mundo", "msg", "IO.puts(msg)")
+      {parameters, code} = TreeNode.get_fuction_from_scope("hola_mundo")
+
+      assert parameters == "msg"
+      assert code == "IO.puts(msg)"
+
+      {parameters, code} = TreeNode.get_fuction_from_scope("hola_mundo")
+
+      assert parameters == "msg"
+      assert code == "IO.puts(msg)"
+
+      TreeNode.add_fuction_to_scope("hola_mundo2", nil, "IO.puts(msg)")
+      {parameters, code} = TreeNode.get_fuction_from_scope("hola_mundo2")
+
+      assert parameters == nil
+      assert code == "IO.puts(msg)"
+
+      exists? = TreeNode.get_fuction_from_scope("hola_mundo3")
+
+      assert exists? == false
+    end
   end
 end

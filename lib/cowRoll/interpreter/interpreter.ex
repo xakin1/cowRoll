@@ -280,9 +280,58 @@ defmodule Interpreter do
 
   defp eval(
          _,
-         {:assignament_function, {:function_name, function_name}, parameters,
+         {:assignament_function, {:function_name, function_name}, {:parameters, parameters},
           {:function_code, function_code}}
        ) do
     add_fuction_to_scope(function_name, parameters, function_code)
+  end
+
+  defp eval(
+         scope,
+         {:call_function, function_name, {:parameters, parameters}}
+       ) do
+    {parameters_to_replace, code} = get_fuction_from_scope(function_name)
+    node = add_scope(scope, function_name)
+
+    case initialize_function(scope, parameters_to_replace, parameters) do
+      {:error, error} ->
+        throw({:error, error})
+
+      _ ->
+        result = eval(node, code)
+        remove_scope(function_name)
+        result
+    end
+  end
+
+  defp eval(
+         scope,
+         {:call_function, function_name}
+       ) do
+    {_, code} = get_fuction_from_scope(function_name)
+    node = add_scope(scope, function_name)
+    result = eval(node, code)
+    remove_scope(function_name)
+    result
+  end
+
+  defp initialize_function(scope, parameters_to_replace, parameters) do
+    case {parameters_to_replace, parameters} do
+      {{parameter_to_replace_head, _}, {parameter_head, _}}
+      when not is_tuple(parameter_to_replace_head) or not is_tuple(parameter_head) ->
+        eval(scope, {:assignment, parameters_to_replace, parameters})
+        initialize_function(scope, {}, {})
+
+      {{parameter_to_replace_head, tail_to_replace}, {parameter_head, tail}}
+      when is_tuple(parameter_to_replace_head) and is_tuple(parameter_head) ->
+        eval(scope, {:assignment, parameter_to_replace_head, parameter_head})
+        initialize_function(scope, tail_to_replace, tail)
+
+      {{}, {}} ->
+        :ok
+
+      _ ->
+        {:error, "bad number of parameters"}
+    end
   end
 end

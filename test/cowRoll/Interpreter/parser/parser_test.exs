@@ -1011,9 +1011,26 @@ defmodule CowRoll.ParserTest do
 
       assert tokens ==
                {:assignament_function, {:function_name, {:var, "hola_mundo"}},
-                {:parameters, {:var, "msg"}, {:parameters, {:var, "range"}}},
+                {:parameters, {{:var, "msg"}, {:var, "range"}}},
                 {:function_code,
                  {:for_loop, {:var, "participants"}, {:range, {:var, "range"}}, {:var, "msg"}}}}
+    end
+
+    test "parse basic call function without parameters" do
+      input = "hola_mundo()"
+      {:ok, tokens} = Parser.parse(input)
+
+      assert tokens ==
+               {:call_function, {:var, "hola_mundo"}}
+    end
+
+    test "parse basic call function with parameters" do
+      input = "hola_mundo('hola mundo ', 2)"
+      {:ok, tokens} = Parser.parse(input)
+
+      assert tokens ==
+               {:call_function, {:var, "hola_mundo"},
+                {:parameters, {{:string, "'hola mundo '"}, {:number, 2}}}}
     end
   end
 

@@ -167,6 +167,15 @@ defmodule TreeNode do
     get_value_recursive(tree, node_id, var_name)
   end
 
+  def get_fuction_from_scope(function_name) do
+    tree = get_tree()
+
+    case Map.fetch(tree.value, function_name) do
+      {:ok, %{parameters: parameters, code: code}} -> {parameters, code}
+      _ -> false
+    end
+  end
+
   @spec add_scope(any(), any()) :: any()
   def add_scope(tree \\ @tree, tree_name \\ @tree_name, node_parent_id, scope_name) do
     tree_node = get_tree(tree, tree_name)
