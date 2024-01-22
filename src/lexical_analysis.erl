@@ -12,7 +12,7 @@
 -export([format_error/1]).
 
 %% User code. This is placed here to allow extra attributes.
--file("src/lexer/lexical_analysis.xrl", 91).
+-file("src/lexer/lexical_analysis.xrl", 92).
 
 to_string(TokenChars) ->
 
@@ -1270,202 +1270,202 @@ yyaction(39, TokenLen, YYtcs, _, _) ->
 yyaction(_, _, _, _, _) -> error.
 
 -compile({inline,yyaction_0/0}).
--file("src/lexer/lexical_analysis.xrl", 29).
+-file("src/lexer/lexical_analysis.xrl", 30).
 yyaction_0() ->
      skip_token .
 
 -compile({inline,yyaction_1/1}).
--file("src/lexer/lexical_analysis.xrl", 31).
+-file("src/lexer/lexical_analysis.xrl", 32).
 yyaction_1(TokenChars) ->
      { token, { dice, to_string (TokenChars) } } .
 
 -compile({inline,yyaction_2/1}).
--file("src/lexer/lexical_analysis.xrl", 32).
+-file("src/lexer/lexical_analysis.xrl", 33).
 yyaction_2(TokenChars) ->
      { token, { '..', to_string (TokenChars) } } .
 
 -compile({inline,yyaction_3/1}).
--file("src/lexer/lexical_analysis.xrl", 34).
+-file("src/lexer/lexical_analysis.xrl", 35).
 yyaction_3(TokenChars) ->
      { token, { number, list_to_integer (TokenChars) } } .
 
 -compile({inline,yyaction_4/1}).
--file("src/lexer/lexical_analysis.xrl", 38).
+-file("src/lexer/lexical_analysis.xrl", 39).
 yyaction_4(TokenChars) ->
      { token, { string, to_string (TokenChars) } } .
 
 -compile({inline,yyaction_5/1}).
--file("src/lexer/lexical_analysis.xrl", 41).
+-file("src/lexer/lexical_analysis.xrl", 42).
 yyaction_5(TokenLine) ->
      { token, { '(', TokenLine } } .
 
 -compile({inline,yyaction_6/1}).
--file("src/lexer/lexical_analysis.xrl", 42).
+-file("src/lexer/lexical_analysis.xrl", 43).
 yyaction_6(TokenLine) ->
      { token, { ')', TokenLine } } .
 
 -compile({inline,yyaction_7/1}).
--file("src/lexer/lexical_analysis.xrl", 45).
+-file("src/lexer/lexical_analysis.xrl", 46).
 yyaction_7(TokenLine) ->
      { token, { '[', TokenLine } } .
 
 -compile({inline,yyaction_8/1}).
--file("src/lexer/lexical_analysis.xrl", 46).
+-file("src/lexer/lexical_analysis.xrl", 47).
 yyaction_8(TokenLine) ->
      { token, { ']', TokenLine } } .
 
 -compile({inline,yyaction_9/1}).
--file("src/lexer/lexical_analysis.xrl", 49).
+-file("src/lexer/lexical_analysis.xrl", 50).
 yyaction_9(TokenLine) ->
      { token, { '+', TokenLine } } .
 
 -compile({inline,yyaction_10/1}).
--file("src/lexer/lexical_analysis.xrl", 50).
+-file("src/lexer/lexical_analysis.xrl", 51).
 yyaction_10(TokenLine) ->
      { token, { '-', TokenLine } } .
 
 -compile({inline,yyaction_11/1}).
--file("src/lexer/lexical_analysis.xrl", 51).
+-file("src/lexer/lexical_analysis.xrl", 52).
 yyaction_11(TokenLine) ->
      { token, { '*', TokenLine } } .
 
 -compile({inline,yyaction_12/1}).
--file("src/lexer/lexical_analysis.xrl", 52).
+-file("src/lexer/lexical_analysis.xrl", 53).
 yyaction_12(TokenLine) ->
      { token, { '//', TokenLine } } .
 
 -compile({inline,yyaction_13/1}).
--file("src/lexer/lexical_analysis.xrl", 53).
+-file("src/lexer/lexical_analysis.xrl", 54).
 yyaction_13(TokenLine) ->
      { token, { '/', TokenLine } } .
 
 -compile({inline,yyaction_14/1}).
--file("src/lexer/lexical_analysis.xrl", 54).
+-file("src/lexer/lexical_analysis.xrl", 55).
 yyaction_14(TokenLine) ->
      { token, { '^', TokenLine } } .
 
 -compile({inline,yyaction_15/1}).
--file("src/lexer/lexical_analysis.xrl", 55).
+-file("src/lexer/lexical_analysis.xrl", 56).
 yyaction_15(TokenLine) ->
      { token, { '=', TokenLine } } .
 
 -compile({inline,yyaction_16/1}).
--file("src/lexer/lexical_analysis.xrl", 56).
+-file("src/lexer/lexical_analysis.xrl", 57).
 yyaction_16(TokenLine) ->
      { token, { ';', TokenLine } } .
 
 -compile({inline,yyaction_17/1}).
--file("src/lexer/lexical_analysis.xrl", 57).
+-file("src/lexer/lexical_analysis.xrl", 58).
 yyaction_17(TokenLine) ->
      { token, { ',', TokenLine } } .
 
 -compile({inline,yyaction_18/1}).
--file("src/lexer/lexical_analysis.xrl", 58).
+-file("src/lexer/lexical_analysis.xrl", 59).
 yyaction_18(TokenLine) ->
      { token, { '%', TokenLine } } .
 
 -compile({inline,yyaction_19/1}).
--file("src/lexer/lexical_analysis.xrl", 61).
+-file("src/lexer/lexical_analysis.xrl", 62).
 yyaction_19(TokenLine) ->
      { token, { 'if', TokenLine } } .
 
 -compile({inline,yyaction_20/1}).
--file("src/lexer/lexical_analysis.xrl", 62).
+-file("src/lexer/lexical_analysis.xrl", 63).
 yyaction_20(TokenLine) ->
      { token, { then, TokenLine } } .
 
 -compile({inline,yyaction_21/1}).
--file("src/lexer/lexical_analysis.xrl", 63).
+-file("src/lexer/lexical_analysis.xrl", 64).
 yyaction_21(TokenLine) ->
      { token, { else, TokenLine } } .
 
 -compile({inline,yyaction_22/0}).
--file("src/lexer/lexical_analysis.xrl", 64).
+-file("src/lexer/lexical_analysis.xrl", 65).
 yyaction_22() ->
      { token, { boolean, true } } .
 
 -compile({inline,yyaction_23/0}).
--file("src/lexer/lexical_analysis.xrl", 65).
+-file("src/lexer/lexical_analysis.xrl", 66).
 yyaction_23() ->
      { token, { boolean, false } } .
 
 -compile({inline,yyaction_24/1}).
--file("src/lexer/lexical_analysis.xrl", 66).
+-file("src/lexer/lexical_analysis.xrl", 67).
 yyaction_24(TokenLine) ->
      { token, { 'and', TokenLine } } .
 
 -compile({inline,yyaction_25/1}).
--file("src/lexer/lexical_analysis.xrl", 67).
+-file("src/lexer/lexical_analysis.xrl", 68).
 yyaction_25(TokenLine) ->
      { token, { 'or', TokenLine } } .
 
 -compile({inline,yyaction_26/1}).
--file("src/lexer/lexical_analysis.xrl", 68).
+-file("src/lexer/lexical_analysis.xrl", 69).
 yyaction_26(TokenLine) ->
      { token, { 'not', TokenLine } } .
 
 -compile({inline,yyaction_27/1}).
--file("src/lexer/lexical_analysis.xrl", 69).
+-file("src/lexer/lexical_analysis.xrl", 70).
 yyaction_27(TokenLine) ->
      { token, { '>', TokenLine } } .
 
 -compile({inline,yyaction_28/1}).
--file("src/lexer/lexical_analysis.xrl", 70).
+-file("src/lexer/lexical_analysis.xrl", 71).
 yyaction_28(TokenLine) ->
      { token, { '>=', TokenLine } } .
 
 -compile({inline,yyaction_29/1}).
--file("src/lexer/lexical_analysis.xrl", 71).
+-file("src/lexer/lexical_analysis.xrl", 72).
 yyaction_29(TokenLine) ->
      { token, { '<', TokenLine } } .
 
 -compile({inline,yyaction_30/1}).
--file("src/lexer/lexical_analysis.xrl", 72).
+-file("src/lexer/lexical_analysis.xrl", 73).
 yyaction_30(TokenLine) ->
      { token, { '<=', TokenLine } } .
 
 -compile({inline,yyaction_31/1}).
--file("src/lexer/lexical_analysis.xrl", 73).
+-file("src/lexer/lexical_analysis.xrl", 74).
 yyaction_31(TokenLine) ->
      { token, { '==', TokenLine } } .
 
 -compile({inline,yyaction_32/1}).
--file("src/lexer/lexical_analysis.xrl", 74).
+-file("src/lexer/lexical_analysis.xrl", 75).
 yyaction_32(TokenLine) ->
      { token, { '!=', TokenLine } } .
 
 -compile({inline,yyaction_33/1}).
--file("src/lexer/lexical_analysis.xrl", 78).
+-file("src/lexer/lexical_analysis.xrl", 79).
 yyaction_33(TokenLine) ->
      { token, { for, TokenLine } } .
 
 -compile({inline,yyaction_34/1}).
--file("src/lexer/lexical_analysis.xrl", 79).
+-file("src/lexer/lexical_analysis.xrl", 80).
 yyaction_34(TokenLine) ->
      { token, { do, TokenLine } } .
 
 -compile({inline,yyaction_35/1}).
--file("src/lexer/lexical_analysis.xrl", 80).
+-file("src/lexer/lexical_analysis.xrl", 81).
 yyaction_35(TokenLine) ->
      { token, { 'end', TokenLine } } .
 
 -compile({inline,yyaction_36/1}).
--file("src/lexer/lexical_analysis.xrl", 82).
+-file("src/lexer/lexical_analysis.xrl", 83).
 yyaction_36(TokenLine) ->
      { token, { '<-', TokenLine } } .
 
 -compile({inline,yyaction_37/1}).
--file("src/lexer/lexical_analysis.xrl", 84).
+-file("src/lexer/lexical_analysis.xrl", 85).
 yyaction_37(TokenChars) ->
      { token, { def_function, to_string (TokenChars) } } .
 
 -compile({inline,yyaction_38/1}).
--file("src/lexer/lexical_analysis.xrl", 85).
+-file("src/lexer/lexical_analysis.xrl", 86).
 yyaction_38(TokenChars) ->
      { token, { var, to_string (TokenChars) } } .
 
 -compile({inline,yyaction_39/1}).
--file("src/lexer/lexical_analysis.xrl", 87).
+-file("src/lexer/lexical_analysis.xrl", 88).
 yyaction_39(TokenChars) ->
      { token, { not_defined, to_string (TokenChars) } } .
 -file("/home/xaquin/.asdf/installs/erlang/26.1/lib/parsetools-2.5/include/leexinc.hrl", 344).

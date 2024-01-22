@@ -955,32 +955,6 @@ defmodule CowRoll.ParserTest do
       assert token == {:var, "hola"}
     end
 
-    test "parse sentences" do
-      input =
-        "x = 2;
-        y= 3;
-        z= 4+x;"
-
-      {:ok, token} = Parser.parse(input)
-
-      assert token == {
-               {:assignment, {:var, "x"}, {:number, 2}},
-               {{:assignment, {:var, "y"}, {:number, 3}},
-                {:assignment, {:var, "z"}, {:plus, {:number, 4}, {:var, "x"}}}}
-             }
-
-      input =
-        "x= 6; y = x + 2; x = x +2; z = x+y"
-
-      {:ok, token} = Parser.parse(input)
-
-      assert token ==
-               {{:assignment, {:var, "x"}, {:number, 6}},
-                {{:assignment, {:var, "y"}, {:plus, {:var, "x"}, {:number, 2}}},
-                 {{:assignment, {:var, "x"}, {:plus, {:var, "x"}, {:number, 2}}},
-                  {:assignment, {:var, "z"}, {:plus, {:var, "x"}, {:var, "y"}}}}}}
-    end
-
     test "parse assignament" do
       input = "x = 6"
       {:ok, token} = Parser.parse(input)
@@ -1031,6 +1005,44 @@ defmodule CowRoll.ParserTest do
       assert tokens ==
                {:call_function, {:var, "hola_mundo"},
                 {:parameters, {{:string, "'hola mundo '"}, {:number, 2}}}}
+    end
+  end
+
+  describe "statements" do
+    test "parse sentences" do
+      input =
+        "x = 2;
+        y= 3;
+        z= 4+x;"
+
+      {:ok, token} = Parser.parse(input)
+
+      expect = {
+        {:assignment, {:var, "x"}, {:number, 2}},
+        {{:assignment, {:var, "y"}, {:number, 3}},
+         {:assignment, {:var, "z"}, {:plus, {:number, 4}, {:var, "x"}}}}
+      }
+
+      assert token == expect
+
+      input =
+        "x = 2
+        y= 3
+        z= 4+x"
+
+      {:ok, token} = Parser.parse(input)
+      assert token == expect
+
+      input =
+        "x= 6; y = x + 2; x = x +2; z = x+y"
+
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {{:assignment, {:var, "x"}, {:number, 6}},
+                {{:assignment, {:var, "y"}, {:plus, {:var, "x"}, {:number, 2}}},
+                 {{:assignment, {:var, "x"}, {:plus, {:var, "x"}, {:number, 2}}},
+                  {:assignment, {:var, "z"}, {:plus, {:var, "x"}, {:var, "y"}}}}}}
     end
   end
 

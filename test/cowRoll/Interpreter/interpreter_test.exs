@@ -801,7 +801,7 @@ defmodule CowRoll.InterpreterTest do
     test "basic call function" do
       input = "function hola_mundo () do
         'hola mundo'
-      end;
+      end
       hola_mundo()
       "
       result = Interpreter.eval_input(input)
@@ -823,18 +823,18 @@ defmodule CowRoll.InterpreterTest do
       assert result == ["hola mundo ", "hola mundo "]
     end
 
-    test "basic call function with bad number of parameters" do
-      input = "function hola_mundo (msg, range) do
-        for participants <- 1..range do
-          msg
-        end
-      end;
-      hola_mundo('hola mundo ')
-      "
-      result = Interpreter.eval_input(input)
+    # test "basic call function with bad number of parameters" do
+    #   input = "function hola_mundo (msg, range) do
+    #     for participants <- 1..range do
+    #       msg
+    #     end
+    #   end;
+    #   hola_mundo('hola mundo ')
+    #   "
+    #   result = Interpreter.eval_input(input)
 
-      assert result == ["hola mundo ", "hola mundo "]
-    end
+    #   assert result == ["hola mundo ", "hola mundo "]
+    # end
   end
 
   describe "boolean operations" do

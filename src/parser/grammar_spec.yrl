@@ -19,10 +19,11 @@ code -> '$empty'              : nil.
 
 
 %statements
-    statements -> statement ';' statements : {'$1', '$3'}. 
-    statements -> statement jump statement : {'$1', '$3'}. 
-    statements -> statement ';'            : '$1'.
-    statements ->  statement               : '$1'.
+    statements -> statement ';' statements   : {'$1', '$3'}. 
+    statements -> statement statements       : {'$1', '$2'}.
+    statements -> statement ';'              : '$1'.
+    statements -> statement                  : '$1'.
+
 
     statement -> for_loop               : '$1'.
     statement -> expression             : '$1'.

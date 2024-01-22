@@ -4,6 +4,7 @@ CONTENT_STRING    = [a-zA-Z0-9_,\-\/\\\.\s]*
 STRING            = (\'\s*{CONTENT_STRING}\'|\"\s*{CONTENT_STRING}\")
 % '
 WHITESPACE        = [\n\t\s]
+JUMP              = \n
 IF                = if
 FUNCTION          = function
 THEN              = then
