@@ -10,20 +10,23 @@ defmodule Parser do
   Attempts to tokenize an input string to start_tag, end_tag, and char
   """
   def parse(input) do
-    {:ok, tokens, _} = input |> to_charlist |> :lexical_analysis.string()
+    result = input |> to_charlist |> :lexical_analysis.string()
 
-    case :grammar_spec.parse(tokens) do
-      {:error, {_, :grammar_spec, [~c"syntax error before: ", []]}} ->
-        throw({:error, "missing statement"})
+    case result do
+      {:ok, tokens, _} ->
+        case :grammar_spec.parse(tokens) do
+          {:error, error} ->
+            throw({:error, error})
 
-      {:error, {_, :grammar_spec, [~c"syntax error before: ", ~c"')'"]}} ->
-        throw({:error, "missing left parenthesis"})
+          input_parsed ->
+            input_parsed
+        end
 
-      {:ok, {:error, error}} ->
-        throw({:error, to_string(error)})
-
-      input_parsed ->
-        input_parsed
+      {:error, {_, :lexical_analysis, {:user, {:token, cause_error, line}}}, 1} ->
+        throw(
+          {:error,
+           "error at the end of: " <> cause_error <> " in line " <> Integer.to_string(line)}
+        )
     end
   end
 end

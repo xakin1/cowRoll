@@ -67,6 +67,8 @@ defmodule Interpreter do
 
   defp eval(_, {:number, number}), do: number
 
+  defp eval(_, {:negative_number, number}), do: number
+
   defp eval(_, {:boolean, bool}), do: bool
 
   defp eval(_, {:string, string}) do
@@ -79,10 +81,10 @@ defmodule Interpreter do
   defp eval(_, {:not_defined, unknow}),
     do: throw({:error, unknow <> " is not defined"})
 
-  defp eval(_, {:dice, dice}) do
-    case(roll_dice(dice)) do
-      {:ok, dice} -> dice
+  defp eval(scope, {:dice, number_of_dices, number_of_faces}) do
+    case(roll_dices(eval(scope, number_of_dices), eval(scope, number_of_faces))) do
       {:error, error} -> throw({:error, error})
+      result -> result
     end
   end
 
@@ -90,7 +92,7 @@ defmodule Interpreter do
 
   defp eval(scope, {:not_operation, expresion}), do: not eval(scope, expresion)
 
-  defp eval(scope, {:var, variable}) do
+  defp eval(scope, {:name, variable}) do
     case get_variable_from_scope(scope, variable) do
       false -> throw({:error, "Variable '#{variable}' is not defined"})
       value -> value
@@ -221,7 +223,7 @@ defmodule Interpreter do
         {:list, _} ->
           eval(scope, range)
 
-        {:var, _} ->
+        {:name, _} ->
           eval(scope, range)
 
         {first, last} ->
@@ -235,7 +237,7 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:for_loop, {:var, var_name}, range, expresion}) do
+  defp eval(scope, {:for_loop, {:name, var_name}, range, expresion}) do
     try do
       scope = add_scope(scope, :for_loop)
 
