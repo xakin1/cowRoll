@@ -121,7 +121,8 @@ defmodule TreeNode do
   @spec add_fuction_to_scope(any(), any(), any()) :: any()
   def add_fuction_to_scope(function_name, parameters, code) do
     tree = get_tree()
-    tree = %TreeNode{tree | value: %{function_name => %{parameters: parameters, code: code}}}
+    map_with_function = %{function_name => %{parameters: parameters, code: code}}
+    tree = %TreeNode{tree | value: Map.merge(tree.value, map_with_function)}
     update_tree(tree)
     code
   end

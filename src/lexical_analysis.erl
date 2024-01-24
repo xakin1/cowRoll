@@ -402,7 +402,11 @@ yystate(75, [10|Ics], Line, _, Tlen, _, _) ->
     yystate(67, Ics, Line+1, 1, Tlen+1, 1, Tlen);
 yystate(75, [C|Ics], Line, Col, Tlen, _, _) when C >= 0, C =< 9 ->
     yystate(67, Ics, Line, Col, Tlen+1, 1, Tlen);
-yystate(75, [C|Ics], Line, Col, Tlen, _, _) when C >= 11, C =< 47 ->
+yystate(75, [C|Ics], Line, Col, Tlen, _, _) when C >= 11, C =< 31 ->
+    yystate(67, Ics, Line, Col, Tlen+1, 1, Tlen);
+yystate(75, [C|Ics], Line, Col, Tlen, _, _) when C >= 33, C =< 41 ->
+    yystate(67, Ics, Line, Col, Tlen+1, 1, Tlen);
+yystate(75, [C|Ics], Line, Col, Tlen, _, _) when C >= 43, C =< 47 ->
     yystate(67, Ics, Line, Col, Tlen+1, 1, Tlen);
 yystate(75, [C|Ics], Line, Col, Tlen, _, _) when C >= 58, C =< 64 ->
     yystate(67, Ics, Line, Col, Tlen+1, 1, Tlen);

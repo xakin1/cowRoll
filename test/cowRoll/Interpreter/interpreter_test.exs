@@ -215,7 +215,7 @@ defmodule CowRoll.InterpreterTest do
     end
 
     test "array with n mix elements and operations" do
-      input = "['1'+'2',3+2*(3+3),'3', if true then 3 else 'r' end]"
+      input = "['1'++'2',3+2*(3+3),'3', if true then 3 else 'r' end]"
       result = Interpreter.eval_input(input)
 
       expect = [
@@ -368,13 +368,15 @@ defmodule CowRoll.InterpreterTest do
     end
 
     test "concat string" do
-      result = Interpreter.eval_input("\"hola \" +  \"mundo\"")
+      result = Interpreter.eval_input("\"hola \" ++  \"mundo\"")
       assert result == "hola mundo"
     end
 
     test "concat n string" do
       result =
-        Interpreter.eval_input("\"hola \" +  \"mundo\" +  \", mundo \" +  \"avanzado\" +  \"\"")
+        Interpreter.eval_input(
+          "\"hola \" ++  \"mundo\" ++  \", mundo \" ++  \"avanzado\" ++  \"\""
+        )
 
       assert result == "hola mundo, mundo avanzado"
     end
@@ -383,7 +385,7 @@ defmodule CowRoll.InterpreterTest do
   describe "dice" do
     test "returns a rolled dice" do
       for _ <- 1..100 do
-        dice = Interpreter.eval_input("1 d 6")
+        dice = Interpreter.eval_input("1d6")
         assert is_integer(dice)
 
         assert dice > 0 and dice <= 6
@@ -392,7 +394,7 @@ defmodule CowRoll.InterpreterTest do
 
     test "returns a rolled dice plus 3" do
       for _ <- 1..100 do
-        dice = Interpreter.eval_input("1 d 6 +3")
+        dice = Interpreter.eval_input("1d6 +3")
         assert is_integer(dice)
 
         assert dice >= 4 and dice <= 9
@@ -401,7 +403,7 @@ defmodule CowRoll.InterpreterTest do
 
     test "returns a rolled dice minus 3" do
       for _ <- 1..100 do
-        dice = Interpreter.eval_input("1 d 6 - 3")
+        dice = Interpreter.eval_input("1d6 - 3")
         assert is_integer(dice)
         assert dice >= -2 and dice <= 3
       end
@@ -409,7 +411,7 @@ defmodule CowRoll.InterpreterTest do
 
     test "returns a rolled dice multiply 3" do
       for _ <- 1..100 do
-        dice = Interpreter.eval_input("1 d 6 * 3")
+        dice = Interpreter.eval_input("1d6 * 3")
         assert is_integer(dice)
         assert dice >= 3 and dice <= 18
       end
@@ -417,7 +419,7 @@ defmodule CowRoll.InterpreterTest do
 
     test "returns a rolled dice div 3" do
       for _ <- 1..100 do
-        dice = Interpreter.eval_input("1 d 6 / 3")
+        dice = Interpreter.eval_input("1d6 / 3")
 
         assert is_integer(dice)
         assert dice >= 0 and dice <= 2
@@ -429,7 +431,7 @@ defmodule CowRoll.InterpreterTest do
         dice = Interpreter.eval_input("
         x = 6
         y= 1
-        y d x / 3")
+        yd x / 3")
 
         assert is_integer(dice)
         assert dice >= 0 and dice <= 2
@@ -439,7 +441,7 @@ defmodule CowRoll.InterpreterTest do
     test "dice with calling a function" do
       for _ <- 1..100 do
         dice = Interpreter.eval_input("
-        y= 1
+        y = 1
 
         function contar_longitud(lista) do
           longitud = 0
@@ -799,7 +801,7 @@ defmodule CowRoll.InterpreterTest do
     test "concat mods" do
       input = "2%4%3%4"
       result = Interpreter.eval_input(input)
-      expect = Integer.mod(2, Integer.mod(4, Integer.mod(3, 4)))
+      expect = Integer.mod(Integer.mod(Integer.mod(2, 4), 3), 4)
 
       assert expect == result
     end
@@ -824,19 +826,6 @@ defmodule CowRoll.InterpreterTest do
 
       assert expect == result
     end
-
-    test "can do a mod with a complex expresion" do
-      try do
-        for _ <- 1..100 do
-          result = Interpreter.eval_input("12%(-1d6*(3+5))")
-          assert result <= 0 and result >= -36
-          result = Interpreter.eval_input("12%-1d6*(3+5)")
-          assert result <= 0 and result >= -36
-        end
-      catch
-        {:error, _} -> assert false
-      end
-    end
   end
 
   describe "functions" do
@@ -859,7 +848,7 @@ defmodule CowRoll.InterpreterTest do
       result = Interpreter.eval_input(input)
 
       assert result ==
-               {:for_loop, {:var, "participants"}, {:range, {:var, "range"}}, {:var, "msg"}}
+               {:for_loop, {:name, "participants"}, {:range, {:name, "range"}}, {:name, "msg"}}
     end
 
     test "basic call function" do

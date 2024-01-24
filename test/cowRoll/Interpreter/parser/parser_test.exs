@@ -2,90 +2,6 @@ defmodule CowRoll.ParserTest do
   # Importa ExUnit.Case para definir pruebas
   use ExUnit.Case
 
-  # describe "lexical error" do
-  #   test "error missing right parenthesis" do
-  #     input = "(3+ 2"
-
-  #     try do
-  #       Parser.parse(input)
-  #       assert false
-  #     catch
-  #       error ->
-  #         assert error == {:error, "error at the end of: (3+ in line 1"}
-  #     end
-
-  #     input = "(true"
-
-  #     try do
-  #       Parser.parse(input)
-  #       assert false
-  #     catch
-  #       error ->
-  #         assert error == {:error, "error at the end of: (true in line 1"}
-  #     end
-
-  #     input = "('gl'"
-
-  #     try do
-  #       Parser.parse(input)
-  #       assert false
-  #     catch
-  #       error ->
-  #         assert error == {:error, "error at the end of: ('gl' in line 1"}
-  #     end
-
-  #     input = "(3+ (2 - (5+3))"
-
-  #     try do
-  #       Parser.parse(input)
-  #       assert false
-  #     catch
-  #       error ->
-  #         assert error == {:error, "error at the end of: (3+ in line 1"}
-  #     end
-  #   end
-
-  #   test "error missing left parenthesis" do
-  #     input = "3+ 2)"
-
-  #     try do
-  #       Parser.parse(input)
-  #       assert false
-  #     catch
-  #       error -> assert error == {:error, "error at the end of: 3+ in line 1"}
-  #     end
-
-  #     input = "(3+ (2) - 5+3))"
-
-  #     try do
-  #       Parser.parse(input)
-  #       assert false
-  #     catch
-  #       error -> assert error == {:error, "error at the end of: (3+ in line 1"}
-  #     end
-  #   end
-
-  #   test "error missing then" do
-  #     input = "if (x>5"
-
-  #     try do
-  #       Parser.parse(input)
-  #       assert false
-  #     catch
-  #       error -> assert error == {:error, "error at the end of: (x>5 in line 1"}
-  #     end
-
-  #     input = "if (x>5)"
-
-  #     try do
-  #       Parser.parse(input)
-  #       assert false
-  #     catch
-  #       error -> assert error == {:error, "error at the end of: (x>5) in line 1"}
-  #     end
-  #   end
-  # end
-
   describe "ifs" do
     test "parse if_then statemen" do
       input = "if false then 2 end"
@@ -813,11 +729,11 @@ defmodule CowRoll.ParserTest do
     end
 
     test "parse concat pows" do
-      input = "2^2^3^4"
+      input = "2^2^2^2"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:pow, {:pow, {:pow, {:number, 2}, {:number, 2}}, {:number, 3}}, {:number, 4}}
+               {:pow, {:number, 2}, {:pow, {:number, 2}, {:pow, {:number, 2}, {:number, 2}}}}
     end
 
     test "parse pows with operations" do
@@ -837,7 +753,7 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:pow, {:pow, {:number, 2}, {:plus, {:number, 3}, {:number, 2}}}, {:number, 2}}
+               {:pow, {:number, 2}, {:pow, {:plus, {:number, 3}, {:number, 2}}, {:number, 2}}}
     end
   end
 
@@ -968,6 +884,67 @@ defmodule CowRoll.ParserTest do
 
       assert tokens ==
                {:mult, {:dice, {:number, 1}, {:number, 6}}, {:number, 3}}
+    end
+
+    test "parse with variables" do
+      {:ok, token} = Parser.parse("
+        x = 6
+        y= 1
+        y d x / 3")
+
+      assert token ==
+               {{:assignment, {:name, "x"}, {:number, 6}},
+                {{:assignment, {:name, "y"}, {:number, 1}},
+                 {:divi, {:dice, {:name, "y"}, {:name, "x"}}, {:number, 3}}}}
+
+      {:ok, token} = Parser.parse("
+                 x = 6
+                 y= 1
+                 y()d x / 3")
+
+      assert token ==
+               {{:assignment, {:name, "x"}, {:number, 6}},
+                {{:assignment, {:name, "y"}, {:number, 1}},
+                 {:divi,
+                  {:dice, {:call_function, {:name, "y"}, {:parameters, nil}}, {:name, "x"}},
+                  {:number, 3}}}}
+    end
+
+    test "parse dice with calling a function" do
+      for _ <- 1..100 do
+        {:ok, token} = Parser.parse("
+        y = 1
+
+        function contar_longitud(lista) do
+          longitud = 0
+          for elemento <- lista do
+              longitud = longitud + 1
+          end
+          longitud
+        end
+
+        lista = [1,2,3,4,5,6]
+        y d contar_longitud(lista) / 3")
+
+        assert token ==
+                 {{:assignment, {:name, "y"}, {:number, 1}},
+                  {{:assignment_function, {:function_name, {:name, "contar_longitud"}},
+                    {:parameters, {:name, "lista"}},
+                    {:function_code,
+                     {{:assignment, {:name, "longitud"}, {:number, 0}},
+                      {{:for_loop, {:name, "elemento"}, {:range, {:name, "lista"}},
+                        {:assignment, {:name, "longitud"},
+                         {:plus, {:name, "longitud"}, {:number, 1}}}}, {:name, "longitud"}}}}},
+                   {{:assignment, {:name, "lista"},
+                     {:list,
+                      {{:number, 1},
+                       {{:number, 2},
+                        {{:number, 3}, {{:number, 4}, {{:number, 5}, {:number, 6}}}}}}}},
+                    {:divi,
+                     {:dice, {:name, "y"},
+                      {:call_function, {:name, "contar_longitud"},
+                       {:parameters, {:name, "lista"}}}}, {:number, 3}}}}}
+      end
     end
   end
 

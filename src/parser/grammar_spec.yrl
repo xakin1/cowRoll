@@ -17,9 +17,8 @@ Rootsymbol
     Left 500 '/'.
     Left 500 '//'.
     Left 500 '%'.
-    Left 600 '^'.
-
     Left 600 'd'.
+
     Left 100 'or'.
     Left 100 'and'.
     Left 200 '=='.
@@ -28,10 +27,12 @@ Rootsymbol
     Left 300 '>'.
     Left 300 '<='.
     Left 300 '>='.
+    
+    Right 700 '^'.
 
-    Right 700 name '(' arguments')'.
-    Unary 700 uminus.
-    Unary 700 uninot.
+    Right 800 name '(' arguments')'.
+    Unary 800 uminus.
+    Unary 800 uninot.
 
 
 grammar -> code : '$1'.

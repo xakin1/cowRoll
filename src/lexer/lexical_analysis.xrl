@@ -24,7 +24,7 @@ RIGHT_PARENTHESIS = \)
 LEFT_BRACKET      = \[
 RIGHT_BRACKET     = \]
 % Esto se hace para que evitar que expresiones como 1d743 lo tokenice como number 1 var d743
-NAME              = [a-ce-zA-Z_]|d[^0-9]|[a-zA-Z_][a-zA-Z_]+[a-zA-Z0-9_]*
+NAME              = [a-ce-zA-Z_]|d[^0-9\s*]|[a-zA-Z_][a-zA-Z_]+[a-zA-Z0-9_]*
 
 RANGE             = \.\.
 NUMBER            = [0-9]+

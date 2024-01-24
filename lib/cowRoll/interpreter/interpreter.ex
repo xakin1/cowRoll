@@ -4,25 +4,42 @@ defmodule Interpreter do
   import TreeNode
 
   @type expr_ast ::
-          {:mult, aterm, aterm}
-          | {:divi, aterm, aterm}
-          | {:plus, aterm, aterm}
-          | {:minus, aterm, aterm}
-          | {:negative, aterm}
-          | {:not_operation, aterm}
-          | {:assignment, aterm, aterm}
-          | {:stric_more, aterm, aterm}
-          | {:more_equal, aterm, aterm}
-          | {:stric_less, aterm, aterm}
-          | {:less_equal, aterm, aterm}
-          | {:equal, aterm, aterm}
-          | {:not_equal, aterm, aterm}
-          | {:and_operation, aterm, aterm}
-          | {:or_operation, aterm, aterm}
-          | {:round_div, aterm, aterm}
-          | {:mod, aterm, aterm}
-          | {:pow, aterm, aterm}
-          | aterm
+          {:mult, expr_ast, expr_ast}
+          | {:divi, expr_ast, expr_ast}
+          | {:plus, expr_ast, expr_ast}
+          | {:minus, expr_ast, expr_ast}
+          | {:negative, expr_ast}
+          | {:not_operation, expr_ast}
+          | {:assignment, expr_ast, expr_ast}
+          | {:stric_more, expr_ast, expr_ast}
+          | {:more_equal, expr_ast, expr_ast}
+          | {:stric_less, expr_ast, expr_ast}
+          | {:less_equal, expr_ast, expr_ast}
+          | {:equal, expr_ast, expr_ast}
+          | {:not_equal, expr_ast, expr_ast}
+          | {:and_operation, expr_ast, expr_ast}
+          | {:or_operation, expr_ast, expr_ast}
+          | {:round_div, expr_ast, expr_ast}
+          | {:mod, expr_ast, expr_ast}
+          | {:pow, expr_ast, expr_ast}
+          | {:number, number}
+          | {:negative_number, number}
+          | {:boolean, boolean}
+          | {:string, String.t()}
+          | {:not_defined, String.t()}
+          | {:dice, expr_ast, expr_ast}
+          | {:negative, expr_ast}
+          | {:name, String.t()}
+          | {:list, expr_ast}
+          | {:assignment, {:name, String.t()}, expr_ast}
+          | {:concat, expr_ast, expr_ast}
+          | {:range, expr_ast}
+          | {:for_loop, {:name, String.t()}, expr_ast, expr_ast}
+          | {:if_then_else, expr_ast, expr_ast, expr_ast}
+          | {:assignment_function, {:function_name, String.t()}, {:parameters, expr_ast},
+             {:function_code, expr_ast}}
+          | {:call_function, String.t(), {:parameters, expr_ast}}
+          | {:call_function, String.t()}
 
   @type aterm ::
           {:number, any(), integer()}
@@ -263,9 +280,6 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:else, code}),
-    do: eval(scope, code)
-
   defp eval(scope, {:if_then_else, condition, then_expression, else_expression}) do
     node = add_scope(scope, :for_loop)
 
@@ -282,7 +296,7 @@ defmodule Interpreter do
 
   defp eval(
          _,
-         {:assignament_function, {:function_name, function_name}, {:parameters, parameters},
+         {:assignment_function, {:function_name, function_name}, {:parameters, parameters},
           {:function_code, function_code}}
        ) do
     add_fuction_to_scope(function_name, parameters, function_code)
@@ -300,7 +314,7 @@ defmodule Interpreter do
         throw({:error, error})
 
       _ ->
-        result = eval(node, code)
+        result = eval_block(node, code)
         remove_scope(function_name)
         result
     end
@@ -330,6 +344,9 @@ defmodule Interpreter do
         initialize_function(scope, tail_to_replace, tail)
 
       {{}, {}} ->
+        :ok
+
+      {nil, nil} ->
         :ok
 
       _ ->
