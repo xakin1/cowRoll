@@ -3,13 +3,14 @@ arguments assignment assignment_function code else_code enumerable
 function for_loop grammar if_statement items_sequence list parameters statement statements
 uminus uninot variable VAR E.
 
-Terminals 'if' 'then' 'else' error not_defined boolean number name 'end' 'elseif' 'and' 'for' '..' '<-' 'd' 'do' 'or' 'not' '+' '>'
+Terminals 'if' 'then' 'else' error not_defined boolean number name 'end' 'elseif' 'and' 'for' '..' '<-' 'd' 'do' 'or' 'not' '+' '++' '>'
  '=' '>=' '<' ';' ',' '<=' '==' '!=' '-' '%' '*' '/' '//'  '[' ']' '(' ')' '^' string def_function.
 
 Rootsymbol
     grammar.
 
 %precedences
+    Left 300 '++'.
     Left 400 '-'.
     Left 400 '+'.
     Left 500 '*'.
@@ -90,6 +91,7 @@ code -> error                 : '$1'.
     E -> E '+'   E : {plus,          '$1', '$3'}.
     E -> E '=='  E : {equal,         '$1', '$3'}.
     E -> E '-'   E : {minus,         '$1', '$3'}.
+    E -> E '++'  E : {concat,        '$1', '$3'}.
     E -> E '//'  E : {round_div,     '$1', '$3'}.
     E -> E '!='  E : {not_equal,     '$1', '$3'}.       
     E -> E '>'   E : {stric_more,    '$1', '$3'}.

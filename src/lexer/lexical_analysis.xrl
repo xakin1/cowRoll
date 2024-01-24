@@ -56,9 +56,10 @@ Rules.
 
 %% arithmetic operators
 \+      : {token, {'+', TokenLine}}.
+\+\+    : {token, {'++',TokenLine}}.
 \-      : {token, {'-', TokenLine}}.
 \*      : {token, {'*', TokenLine}}.
-\//     : {token, {'//', TokenLine}}.
+\//     : {token, {'//',TokenLine}}.
 \/      : {token, {'/', TokenLine}}.
 \^      : {token, {'^', TokenLine}}.
 \=      : {token, {'=', TokenLine}}.

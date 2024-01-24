@@ -506,18 +506,18 @@ defmodule CowRoll.ParserTest do
     end
 
     test "concat string" do
-      input = "\"hola \" + \"mundo\""
+      input = "\"hola \" ++ \"mundo\""
       {:ok, token} = Parser.parse(input)
-      assert token == {:plus, {:string, "\"hola \""}, {:string, "\"mundo\""}}
+      assert token == {:concat, {:string, "\"hola \""}, {:string, "\"mundo\""}}
     end
 
     test "concat n strings" do
-      input = "\"hola \" + \"mundo\" + \", 2\" + \"\""
+      input = "\"hola \" ++ \"mundo\" ++ \", 2\" ++ \"\""
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:plus,
-                {:plus, {:plus, {:string, "\"hola \""}, {:string, "\"mundo\""}},
+               {:concat,
+                {:concat, {:concat, {:string, "\"hola \""}, {:string, "\"mundo\""}},
                  {:string, "\", 2\""}}, {:string, "\"\""}}
     end
   end
@@ -584,12 +584,12 @@ defmodule CowRoll.ParserTest do
     end
 
     test "array with n mix elements and operations" do
-      input = "['1'+'2',3+2*(3+3),'3', if true then 3 else 'r' end]"
+      input = "['1'++'2',3+2*(3+3),'3', if true then 3 else 'r' end]"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
                {:list,
-                {{:plus, {:string, "'1'"}, {:string, "'2'"}},
+                {{:concat, {:string, "'1'"}, {:string, "'2'"}},
                  {{:plus, {:number, 3},
                    {:mult, {:number, 2}, {:plus, {:number, 3}, {:number, 3}}}},
                   {{:string, "'3'"},
