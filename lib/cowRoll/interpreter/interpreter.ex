@@ -94,8 +94,6 @@ defmodule Interpreter do
 
   defp eval(_, {:number, number}), do: number
 
-  defp eval(_, {:negative_number, number}), do: number
-
   defp eval(_, {:boolean, bool}), do: bool
 
   defp eval(_, {:string, string}) do
@@ -104,9 +102,6 @@ defmodule Interpreter do
       false -> String.trim(string, "\"")
     end
   end
-
-  defp eval(_, {:not_defined, unknow}),
-    do: throw({:error, unknow <> " is not defined"})
 
   defp eval(scope, {:negative, expresion}) do
     case eval(scope, expresion) do
@@ -210,7 +205,6 @@ defmodule Interpreter do
       end
     catch
       {:error, error} -> throw({:error, error})
-      _ -> {:error, "Aritmetic error: Unknow error"}
     end
   end
 
@@ -231,7 +225,6 @@ defmodule Interpreter do
       end
     catch
       {:error, error} -> throw({:error, error})
-      _ -> {:error, "Aritmetic error: Unknow error"}
     end
   end
 
@@ -254,7 +247,6 @@ defmodule Interpreter do
       end
     catch
       {:error, error} -> throw({:error, error})
-      _ -> throw({:error, "Aritmetic error: Unknow error"})
     end
   end
 
@@ -304,49 +296,38 @@ defmodule Interpreter do
       )
 
   defp eval(scope, {:range, range}) do
-    try do
-      case range do
-        {:list, _} ->
-          eval(scope, range)
+    case range do
+      {:list, _} ->
+        eval(scope, range)
 
-        {:name, _} ->
-          eval(scope, range)
+      {:name, _} ->
+        eval(scope, range)
 
-        {first, last} ->
-          {eval(scope, first), eval(scope, last)}
-
-        element ->
-          eval(scope, element)
-      end
-    rescue
-      error -> throw(error)
+      {first, last} ->
+        {eval(scope, first), eval(scope, last)}
     end
   end
 
   defp eval(scope, {:for_loop, {:name, var_name}, range, expresion}) do
-    try do
-      scope = add_scope(scope, :for_loop)
+    scope = add_scope(scope, :for_loop)
 
-      result =
-        case eval(scope, range) do
-          {first, last} ->
-            for(x <- first..last) do
-              add_variable_to_scope(scope, var_name, x)
-              eval(scope, expresion)
-            end
+    result =
+      case eval(scope, range) do
+        {first, last} ->
+          for(x <- first..last) do
+            add_variable_to_scope(scope, var_name, x)
+            eval(scope, expresion)
+          end
 
-          variable ->
-            for(x <- variable) do
-              add_variable_to_scope(scope, var_name, x)
-              eval(scope, expresion)
-            end
-        end
+        variable ->
+          for(x <- variable) do
+            add_variable_to_scope(scope, var_name, x)
+            eval(scope, expresion)
+          end
+      end
 
-      remove_scope(:for_loop)
-      result
-    rescue
-      error -> throw(error)
-    end
+    remove_scope(:for_loop)
+    result
   end
 
   defp eval(scope, {:if_then_else, condition, then_expression, else_expression}) do
@@ -396,28 +377,27 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(
-         scope,
-         {:call_function, function_name}
-       ) do
-    {_, code} = get_fuction_from_scope(function_name)
-    node = add_scope(scope, function_name)
-    result = eval(node, code)
-    remove_scope(function_name)
-    result
-  end
-
   defp initialize_function(scope, parameters_to_replace, parameters) do
     case {parameters_to_replace, parameters} do
-      {{parameter_to_replace_head, _}, {parameter_head, _}}
-      when not is_tuple(parameter_to_replace_head) or not is_tuple(parameter_head) ->
-        eval(scope, {:assignment, parameters_to_replace, parameters})
-        initialize_function(scope, {}, {})
+      {{parameter_to_replace_head, tail}, {parameter_head, _}}
+      when is_tuple(parameter_to_replace_head) and not is_tuple(parameter_head) ->
+        eval(scope, {:assignment, parameter_to_replace_head, parameters})
+        initialize_function(scope, tail, {})
+
+      {{parameter_to_replace_head, _}, {parameter_head, tail}}
+      when not is_tuple(parameter_to_replace_head) and is_tuple(parameter_head) ->
+        eval(scope, {:assignment, parameters_to_replace, parameter_head})
+        initialize_function(scope, {}, tail)
 
       {{parameter_to_replace_head, tail_to_replace}, {parameter_head, tail}}
       when is_tuple(parameter_to_replace_head) and is_tuple(parameter_head) ->
         eval(scope, {:assignment, parameter_to_replace_head, parameter_head})
         initialize_function(scope, tail_to_replace, tail)
+
+      {{parameter_to_replace_head, _}, {parameter_head, _}}
+      when not is_tuple(parameter_to_replace_head) and not is_tuple(parameter_head) ->
+        eval(scope, {:assignment, parameters_to_replace, parameters})
+        initialize_function(scope, {}, {})
 
       {{}, {}} ->
         :ok
@@ -439,7 +419,6 @@ defmodule Interpreter do
     check_type(factors, is_x_type, error)
 
     case Enum.reduce(factors, &operation.(&2, &1)) do
-      {:error, error} -> throw({:error, error})
       value -> value
     end
   end

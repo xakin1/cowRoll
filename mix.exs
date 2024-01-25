@@ -7,6 +7,13 @@ defmodule CowRoll.MixProject do
       version: "0.1.0",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -37,6 +44,7 @@ defmodule CowRoll.MixProject do
       {:swoosh, "~> 1.3"},
       {:poison, "~> 5.0"},
       {:finch, "~> 0.13"},
+      {:excoveralls, "~> 0.18", only: :test},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},

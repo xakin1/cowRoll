@@ -27,6 +27,23 @@ defmodule CowRoll.InterpreterTest do
     end
   end
 
+  describe "negative number" do
+    test "simply negative number" do
+      result = Interpreter.eval_input("-1")
+      assert -1 == result
+    end
+
+    test "simply negative number with parenthesis" do
+      result = Interpreter.eval_input("(-1)")
+      assert -1 == result
+    end
+
+    test "simply negative number with operation" do
+      result = Interpreter.eval_input("-1+1")
+      assert 0 == result
+    end
+  end
+
   describe "checking types" do
     test "check numeric expression with plus" do
       try do
@@ -1005,18 +1022,39 @@ defmodule CowRoll.InterpreterTest do
       assert result == ["hola mundo ", "hola mundo "]
     end
 
-    # test "basic call function with bad number of parameters" do
-    #   input = "function hola_mundo (msg, range) do
-    #     for participants <- 1..range do
-    #       msg
-    #     end
-    #   end;
-    #   hola_mundo('hola mundo ')
-    #   "
-    #   result = Interpreter.eval_input(input)
+    test "basic call function with bad number of parameters" do
+      try do
+        input = "function hola_mundo (msg, range) do
+          for participants <- 1..range do
+            msg
+          end
+        end;
+        hola_mundo('hola mundo')
+        "
+        result = Interpreter.eval_input(input)
 
-    #   assert result == ["hola mundo ", "hola mundo "]
-    # end
+        assert false
+      catch
+        error -> assert error == {:error, "bad number of parameters"}
+      end
+    end
+
+    test "basic call function with moreparameters" do
+      try do
+        input = "function hola_mundo (a) do
+          for participants <- 1..range do
+            msg
+          end
+        end;
+        hola_mundo('hola', 'mundo')
+        "
+        result = Interpreter.eval_input(input)
+
+        assert false
+      catch
+        error -> assert error == {:error, "bad number of parameters"}
+      end
+    end
   end
 
   describe "boolean operations" do

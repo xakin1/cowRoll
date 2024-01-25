@@ -29,7 +29,6 @@ NAME              = [a-ce-zA-Z_]|d[^0-9\s*]|[a-zA-Z_][a-zA-Z_]+[a-zA-Z0-9_]*
 RANGE             = \.\.
 NUMBER            = [0-9]+
 NEGATIVE_NUMBER   = \-\s*[0-9]+
-NOT_DEFINED       = .
 
 
 Rules.
@@ -94,9 +93,6 @@ Rules.
 
 {FUNCTION}   : {token, {def_function, to_string(TokenChars)}}.
 {NAME}        : {token, {name, to_string(TokenChars)}}.
-
-% {ERROR}         : {error, {token,to_string(TokenChars),TokenLine} }.
-% {NOT_DEFINED}   : {token, {not_defined, to_string(TokenChars)}}.
 
 Erlang code.
 
