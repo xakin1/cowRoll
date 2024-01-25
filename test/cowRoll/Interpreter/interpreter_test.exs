@@ -27,6 +27,139 @@ defmodule CowRoll.InterpreterTest do
     end
   end
 
+  describe "checking types" do
+    test "check numeric expression with plus" do
+      try do
+        Interpreter.eval_input("3+true")
+        assert false
+      catch
+        error -> assert error == {:error, "Error, in + operation both factors must be numbers"}
+      end
+    end
+
+    test "check numeric expression with minus" do
+      try do
+        Interpreter.eval_input("3-true")
+        assert false
+      catch
+        error -> assert error == {:error, "Error, in - operation both factors must be numbers"}
+      end
+    end
+
+    test "check numeric expression with mult" do
+      try do
+        Interpreter.eval_input("3*true")
+        assert false
+      catch
+        error -> assert error == {:error, "Error, in * operation both factors must be numbers"}
+      end
+    end
+
+    test "check numeric expression with div" do
+      try do
+        Interpreter.eval_input("3/true")
+        assert false
+      catch
+        error -> assert error == {:error, "Error, in / operation both factors must be numbers"}
+      end
+    end
+
+    test "check numeric expression with round div" do
+      try do
+        Interpreter.eval_input("3//true")
+        assert false
+      catch
+        error -> assert error == {:error, "Error, in // operation both factors must be numbers"}
+      end
+    end
+
+    test "check numeric expression with round mod" do
+      try do
+        Interpreter.eval_input("3%true")
+        assert false
+      catch
+        error -> assert error == {:error, "Error, in % operation both factors must be numbers"}
+      end
+    end
+
+    test "check numeric expression with pow" do
+      try do
+        Interpreter.eval_input("3^true")
+        assert false
+      catch
+        error -> assert error == {:error, "Error, in ^ operation both factors must be numbers"}
+      end
+    end
+
+    test "check numeric expression with dice" do
+      try do
+        Interpreter.eval_input("1d true")
+        assert false
+      catch
+        error -> assert error == {:error, "Error, in dice operation both factors must be numbers"}
+      end
+    end
+
+    test "check numeric expression with unitary -" do
+      try do
+        Interpreter.eval_input("-true")
+        assert false
+      catch
+        error -> assert error == {:error, "Error, in - operation the factor must be number"}
+      end
+    end
+
+    test "check boolean expression with or" do
+      try do
+        Interpreter.eval_input("3 or true")
+        assert false
+      catch
+        error ->
+          assert error == {:error, "Error, in or operation both factors must be boolean"}
+      end
+    end
+
+    test "check boolean expression with and" do
+      try do
+        Interpreter.eval_input("3 and true")
+        assert false
+      catch
+        error ->
+          assert error == {:error, "Error, in and operation both factors must be boolean"}
+      end
+    end
+
+    test "check boolean expression with not" do
+      try do
+        Interpreter.eval_input("not 3")
+        assert false
+      catch
+        error ->
+          assert error == {:error, "Error, in not operation the factor must be boolean"}
+      end
+    end
+
+    test "check strings expression" do
+      try do
+        Interpreter.eval_input("'3' ++ 2")
+        assert false
+      catch
+        error ->
+          assert error == {:error, "Error, in ++ operation both factors must be string"}
+      end
+    end
+
+    test "check condition of if" do
+      try do
+        Interpreter.eval_input("if 3 then 3 end")
+        assert false
+      catch
+        error ->
+          assert error == {:error, "Error, in condition operation the factor must be boolean"}
+      end
+    end
+  end
+
   describe "ifs" do
     test "should return 6" do
       result = Interpreter.eval_input("if true then 2+4 end")
@@ -431,7 +564,7 @@ defmodule CowRoll.InterpreterTest do
         dice = Interpreter.eval_input("
         x = 6
         y= 1
-        yd x / 3")
+        y d x / 3")
 
         assert is_integer(dice)
         assert dice >= 0 and dice <= 2
@@ -808,14 +941,10 @@ defmodule CowRoll.InterpreterTest do
 
     test "mods by zero" do
       try do
-        {:error, error} = Interpreter.eval_input("5%0")
-        assert error == "Error: division by 0"
-
-        {:error, error} = Interpreter.eval_input("0%0")
-        assert error == "Error: division by 0"
-      rescue
-        _ ->
-          assert false
+        Interpreter.eval_input("5%0")
+      catch
+        {:error, error} ->
+          assert error == "Error: division by 0"
       end
     end
 

@@ -985,7 +985,7 @@ defmodule CowRoll.ParserTest do
       input = "1d numero_de_razas"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {{:number, 1}, {{:name, "d "}, {:name, "numero_de_razas"}}}
+      assert token == {:dice, {:number, 1}, {:name, "numero_de_razas"}}
     end
   end
 
