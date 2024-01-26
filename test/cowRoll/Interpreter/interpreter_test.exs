@@ -315,7 +315,7 @@ defmodule CowRoll.InterpreterTest do
   describe "list" do
     test "empty array" do
       input = "[]"
-      result = Interpreter.eval_input("[]")
+      result = Interpreter.eval_input(input)
 
       assert result == []
     end
@@ -1031,7 +1031,7 @@ defmodule CowRoll.InterpreterTest do
         end;
         hola_mundo('hola mundo')
         "
-        result = Interpreter.eval_input(input)
+        Interpreter.eval_input(input)
 
         assert false
       catch
@@ -1048,7 +1048,7 @@ defmodule CowRoll.InterpreterTest do
         end;
         hola_mundo('hola', 'mundo')
         "
-        result = Interpreter.eval_input(input)
+        Interpreter.eval_input(input)
 
         assert false
       catch

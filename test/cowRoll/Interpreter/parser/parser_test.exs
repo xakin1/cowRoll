@@ -122,6 +122,77 @@ defmodule CowRoll.ParserTest do
     end
   end
 
+  describe "errors" do
+    test "missing parenthesis" do
+      try do
+        input = "(3+1"
+
+        Parser.parse(input)
+      catch
+        error ->
+          assert {:error,
+                  "Error de sintaxis en la línea 1: Falta un paréntesis o hay un problema de sintaxis."} ==
+                   error
+      end
+
+      try do
+        input = "3+1)"
+
+        Parser.parse(input)
+      catch
+        error ->
+          assert {:error,
+                  "Error de sintaxis en la línea 1: Falta un paréntesis o hay un problema de sintaxis."} ==
+                   error
+      end
+    end
+
+    test "missing statements - if-" do
+      try do
+        input = "
+        x=true
+        x then 3 end"
+
+        Parser.parse(input)
+      catch
+        error ->
+          assert error ==
+                   {:error,
+                    "Error de sintaxis en la línea 3: Falta un if o hay un problema de sintaxis."}
+      end
+    end
+
+    test "missing statements - for-" do
+      try do
+        input = "
+        x=true
+        y <- x do 3 end"
+
+        Parser.parse(input)
+      catch
+        error ->
+          assert error ==
+                   {:error,
+                    "Error de sintaxis en la línea 3: Falta un for o hay un problema de sintaxis."}
+      end
+    end
+
+    test "missing statements - generic error-" do
+      try do
+        input = "
+        x=true
+        if x then elseif 2 end "
+
+        Parser.parse(input)
+        assert false
+      catch
+        error ->
+          assert error ==
+                   {:error, "Error de sintaxis en la línea 3"}
+      end
+    end
+  end
+
   describe "fors" do
     test "parse for" do
       input = "

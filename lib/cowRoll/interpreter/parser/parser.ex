@@ -12,21 +12,38 @@ defmodule Parser do
   def parse(input) do
     result = input |> to_charlist |> :lexical_analysis.string()
 
-    case result do
-      {:ok, tokens, _} ->
-        case :grammar_spec.parse(tokens) do
-          {:error, error} ->
-            throw({:error, error})
+    try do
+      case result do
+        {:ok, tokens, _} ->
+          case :grammar_spec.parse(tokens) do
+            {:error, error} ->
+              throw({:error, error})
 
-          input_parsed ->
-            input_parsed
-        end
-
-      {:error, {_, :lexical_analysis, {:user, {:token, cause_error, line}}}, 1} ->
+            input_parsed ->
+              input_parsed
+          end
+      end
+    catch
+      {:error, {line, :grammar_spec, [~c"syntax error before: ", []]}} ->
         throw(
           {:error,
-           "error at the end of: " <> cause_error <> " in line " <> Integer.to_string(line)}
+           "Error de sintaxis en la línea #{line}: Falta un paréntesis o hay un problema de sintaxis."}
         )
+
+      {:error, {line, :grammar_spec, [~c"syntax error before: ", ~c"')'"]}} ->
+        throw(
+          {:error,
+           "Error de sintaxis en la línea #{line}: Falta un paréntesis o hay un problema de sintaxis."}
+        )
+
+      {:error, {line, :grammar_spec, [~c"syntax error before: ", ~c"'<-'"]}} ->
+        throw(
+          {:error,
+           "Error de sintaxis en la línea #{line}: Falta un for o hay un problema de sintaxis."}
+        )
+
+      {:error, {line, :grammar_spec, _}} ->
+        throw({:error, "Error de sintaxis en la línea #{line}"})
     end
   end
 end

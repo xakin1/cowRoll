@@ -346,6 +346,12 @@ defmodule CowRoll.TreeNodeTest do
       }
 
       assert node == expect
+
+      node = TreeNode.remove_scope(:"1")
+
+      expect = []
+
+      assert node == expect
     end
 
     test "insert variables into scopes" do
@@ -585,7 +591,7 @@ defmodule CowRoll.TreeNodeTest do
     end
 
     test "insert fucntions into scopes" do
-      node = TreeNode.create_tree()
+      TreeNode.create_tree()
       TreeNode.add_fuction_to_scope("hola_mundo", "msg", "IO.puts(msg)")
       node = TreeNode.get_tree()
 
@@ -601,24 +607,41 @@ defmodule CowRoll.TreeNodeTest do
     end
 
     test "get variables" do
-      node = TreeNode.create_tree()
-      TreeNode.add_scope(node.id, :child)
-      TreeNode.add_variable_to_scope(:"2", "x", 2)
-      TreeNode.add_variable_to_scope(:"2", "x", 3)
-      TreeNode.add_scope(:"2", :child_2)
-      TreeNode.add_variable_to_scope(:"3", "x", 5)
-      TreeNode.add_scope(:"1", :child_3)
-      TreeNode.add_variable_to_scope(:"4", "x", 4)
-      TreeNode.add_variable_to_scope(:"4", "z", 3)
-      node = TreeNode.get_tree()
+      node_tree = TreeNode.create_tree()
+      node_2_id = TreeNode.add_scope(node_tree.id, :child)
+      TreeNode.add_variable_to_scope(node_2_id, "x", 2)
+      TreeNode.add_variable_to_scope(node_2_id, "x", 3)
+      node_3_id = TreeNode.add_scope(node_2_id, :child_2)
+      TreeNode.add_variable_to_scope(node_3_id, "x", 5)
+      node_4_id = TreeNode.add_scope(node_tree, :child_3)
+      TreeNode.add_variable_to_scope(node_4_id, "x", 4)
+      TreeNode.add_variable_to_scope(node_4_id, "z", 3)
+      TreeNode.get_tree()
 
-      result = TreeNode.get_variable_from_scope(:"4", "x")
+      result = TreeNode.get_variable_from_scope(node_4_id, "x")
 
       assert result == 4
     end
 
+    test "get variables that not exist" do
+      node_tree = TreeNode.create_tree()
+      node_2_id = TreeNode.add_scope(node_tree.id, :child)
+      TreeNode.add_variable_to_scope(node_2_id, "x", 2)
+      TreeNode.add_variable_to_scope(node_2_id, "x", 3)
+      node_3_id = TreeNode.add_scope(node_2_id, :child_2)
+      TreeNode.add_variable_to_scope(node_3_id, "x", 5)
+      node_4_id = TreeNode.add_scope(node_tree, :child_3)
+      TreeNode.add_variable_to_scope(node_4_id, "x", 4)
+      TreeNode.add_variable_to_scope(node_4_id, "z", 3)
+      TreeNode.get_tree()
+
+      result = TreeNode.get_variable_from_scope(:"-1", "x")
+
+      assert result == false
+    end
+
     test "get function" do
-      node = TreeNode.create_tree()
+      TreeNode.create_tree()
       TreeNode.add_fuction_to_scope("hola_mundo", "msg", "IO.puts(msg)")
       {parameters, code} = TreeNode.get_fuction_from_scope("hola_mundo")
 
