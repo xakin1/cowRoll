@@ -42,8 +42,14 @@ defmodule Parser do
            "Error de sintaxis en la línea #{line}: Falta un for o hay un problema de sintaxis."}
         )
 
-      {:error, {line, :grammar_spec, _}} ->
-        throw({:error, "Error de sintaxis en la línea #{line}"})
+      {:error, {line, :grammar_spec, [~c"syntax error before: ", ~c"then"]}} ->
+        throw(
+          {:error,
+           "Error de sintaxis en la línea #{line}: Falta un if o hay un problema de sintaxis."}
+        )
+
+      {:error, {token, :grammar_spec, _}} ->
+        throw({:error, "Error de sintaxis en la línea #{token}"})
     end
   end
 end

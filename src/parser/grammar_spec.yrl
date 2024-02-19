@@ -1,38 +1,49 @@
 Nonterminals
 arguments assignment assignment_function code else_code enumerable
-function for_loop grammar if_statement items_sequence list parameters statement statements
-uminus uninot variable VAR E.
+function for_loop grammar index if_statement items_sequence list map parameters statement statements
+map_sequence uminus uninot variable map_struct VAR E.
 
 Terminals 'if' 'then' 'else' error not_defined boolean number name 'end' 'elseif' 'and' 'for' '..' '<-' 'd' 'do' 'or' 'not' '+' '++' '>'
- '=' '>=' '<' ';' ',' '<=' '==' '!=' '-' '%' '*' '/' '//'  '[' ']' '(' ')' '^' string def_function.
+ '=' '>=' '<' ';' ':' ',' '<=' '==' '!=' '-' '%' '*' '/' '//'  '[' ']' '{' '}' '(' ')' '^' string def_function.
 
 Rootsymbol
     grammar.
 
 %precedences
-    Left 300 '++'.
-    Left 400 '-'.
-    Left 400 '+'.
-    Left 500 '*'.
-    Left 500 '/'.
-    Left 500 '//'.
-    Left 500 '%'.
-    Left 600 'd'.
-
-    Left 100 'or'.
-    Left 100 'and'.
-    Left 200 '=='.
-    Left 200 '!='.
-    Left 300 '<'.
-    Left 300 '>'.
-    Left 300 '<='.
-    Left 300 '>='.
+    Left 1 'or'.
+    Left 1 'and'.
     
-    Right 700 '^'.
+    Left 2 '=='.
+    Left 2 '!='.
+    
+    Left 3 '<'.
+    Left 3 '>'.
+    Left 3 '<='.
+    Left 3 '>='.
+    
+    Left 4 '++'.
+    
+    Left 5 '-'.
+    Left 5 '+'.
+    
+    Left 6 '*'.
+    Left 6 '/'.
+    Left 6 '//'.
+    Left 6 '%'.
+  
+    Right 7 '^'.
 
-    Right 800 name '(' arguments')'.
-    Unary 800 uminus.
-    Unary 800 uninot.
+    Unary 8 uminus.
+    Unary 8 index.
+    Unary 8 uninot.
+    Unary 9 VAR.
+
+    Unary 10 list.
+    Unary 10 map.
+
+    Unary 11 string.
+    Unary 11 number.
+    Unary 11 boolean.
 
 
 grammar -> code : '$1'.
@@ -54,6 +65,7 @@ code -> error                 : '$1'.
     statement -> assignment             : '$1'.
     statement -> if_statement           : '$1'.
     statement -> assignment_function    : '$1'.
+
 
 
 %functions
@@ -78,15 +90,15 @@ code -> error                 : '$1'.
     enumerable -> variable                                  : {range,'$1'}.
     enumerable -> E'..'E  : {range,{'$1', '$3'}}.
     enumerable -> list                                      : {range,'$1'}.
+    enumerable -> map                                       : {range,'$1'}.
 
 
 % assignment of variables
-    assignment -> name '=' E: {assignment, '$1', '$3'}.
+    assignment -> name '=' statement: {assignment, '$1', '$3'}.
 
 % Expressions
     E -> E '%'   E : {mod,           '$1', '$3'}.
     E -> E '^'   E : {pow,           '$1', '$3'}.
-    E -> E 'd'   E : {dice,          '$1', '$3'}.
     E -> E '/'   E : {divi,          '$1', '$3'}.
     E -> E '*'   E : {mult,          '$1', '$3'}.
     E -> E '+'   E : {plus,          '$1', '$3'}.
@@ -104,12 +116,16 @@ code -> error                 : '$1'.
     E -> '('E')'   : '$2'.
     E -> VAR       : '$1'.
     E -> uminus    : '$1'.
-    E -> string    : '$1'.
     E -> number    : '$1'.
     E -> uninot    : '$1'.
     E -> boolean   : '$1'.
+    E -> map       : '$1'.
     E -> list      : '$1'.
-    
+    E -> string    : '$1'.
+    E -> index     : '$1'.
+
+    index -> E '[' statement ']' : {index, '$1', '$3'}.
+
     uminus -> '-'   E : {negative, '$2'}. 
     uninot -> 'not' E : {not_operation, '$2'}.
 
@@ -127,3 +143,10 @@ code -> error                 : '$1'.
                 items_sequence -> statements ',' items_sequence : {'$1', '$3'}.
                 items_sequence -> statements                    : '$1'.
                 items_sequence -> '$empty'                      : nil.
+
+    map -> '{' map_sequence '}'                             : {map, '$2'}.
+                map_sequence -> map_struct ',' map_sequence : {'$1','$3'}.
+                map_sequence -> map_struct                  : '$1'.
+                map_sequence -> '$empty'           : nil.
+
+    map_struct -> name ':' statements : {'$1','$3'}.

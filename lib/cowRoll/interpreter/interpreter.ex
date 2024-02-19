@@ -3,14 +3,59 @@ defmodule Interpreter do
   use DiceRoller
   import TreeNode
 
-  defp bad_type(function_name, type) do
-    msg = "Error, in " <> function_name <> " operation both factors must be " <> type
-    msg
+  defp bad_type(function_name, type, value1, value2) do
+    case {IEx.Info.info(value1), IEx.Info.info(value2)} do
+      {[{"Data type", type_value1}, _], [{"Data type", type_value2}, _]} ->
+        "Error, in #{function_name} operation both factors must be #{type}, but #{type_value1} and #{type_value2} were found"
+
+      {[
+         {"Data type", _},
+         _,
+         _,
+         _,
+         {"Reference modules", "String, :binary"}
+       ], [{"Data type", type_value2}, _]} ->
+        "Error, in #{function_name} operation both factors must be #{type}, but String and #{type_value2} were found"
+
+      {[{"Data type", type_value2}, _],
+       [
+         {"Data type", _},
+         _,
+         _,
+         _,
+         {"Reference modules", "String, :binary"}
+       ]} ->
+        "Error, in #{function_name} operation both factors must be #{type}, but #{type_value2} and String were found"
+
+      {[
+         {"Data type", _},
+         _,
+         _,
+         _,
+         {"Reference modules", "String, :binary"}
+       ],
+       [
+         {"Data type", _},
+         _,
+         _,
+         _,
+         {"Reference modules", "String, :binary"}
+       ]} ->
+        "Error, in #{function_name} operation both factors must be #{type}, but String and String were found"
+
+      _ ->
+        "Unexpected input format for values in #{function_name}"
+    end
   end
 
-  defp bad_type_unitary(function_name, type) do
-    msg = "Error, in " <> function_name <> " operation the factor must be " <> type
-    msg
+  defp bad_type_unitary(function_name, type, value) do
+    case IEx.Info.info(value) do
+      [{"Data type", type_value}, _] ->
+        throw(
+          {:error,
+           "Error, in #{function_name} operation the factor must be #{type}, but #{type_value} was found"}
+        )
+    end
   end
 
   @type expr_ast ::
@@ -69,6 +114,40 @@ defmodule Interpreter do
     result
   end
 
+  defp throw_error_type(data) do
+    case IEx.Info.info(data) do
+      [{"Data type", type}, _] ->
+        throw({:error, "Invalid type: #{type}. The type must be a list, map, or string."})
+    end
+  end
+
+  defp fech_map(map, index) do
+    case Map.fetch(map, index) do
+      {:ok, value} -> value
+      _ -> nil
+    end
+  end
+
+  defp fech_string(string, index) do
+    case index do
+      index when is_integer(index) ->
+        String.at(string, index)
+
+      _ ->
+        throw({:error, "The index must be an Integer"})
+    end
+  end
+
+  defp fech_list(list, index) do
+    case index do
+      index when is_integer(index) ->
+        Enum.at(list, index)
+
+      _ ->
+        throw({:error, "The index must be an Integer"})
+    end
+  end
+
   # Necesario para analizar más de una sentencia
   defp eval_block(scope, tuple) do
     case tuple do
@@ -82,13 +161,25 @@ defmodule Interpreter do
   end
 
   # Necesario para construir una lista
-  defp eval_list(scope, list) do
-    case list do
+  defp eval_list(scope, elements, list) do
+    case elements do
       {first_element, second_element} when is_tuple(second_element) ->
-        [eval(scope, first_element), eval_list(scope, second_element)]
+        eval_list(scope, second_element, [eval(scope, first_element) | list])
 
       _ ->
-        [eval(scope, list)]
+        [eval(scope, elements) | list]
+    end
+  end
+
+  # Necesario para construir una lista
+  defp eval_map(scope, map, map_list) do
+    case map_list do
+      {{{:name, key}, value}, second_element} when is_tuple(second_element) ->
+        map = Map.put(map, key, eval(scope, value))
+        eval_map(scope, map, second_element)
+
+      {{:name, key}, value} ->
+        Map.put(map, key, eval(scope, value))
     end
   end
 
@@ -106,14 +197,14 @@ defmodule Interpreter do
   defp eval(scope, {:negative, expresion}) do
     case eval(scope, expresion) do
       value when is_integer(value) -> -value
-      _ -> throw({:error, bad_type_unitary("-", "number")})
+      value -> bad_type_unitary("-", "Integer", value)
     end
   end
 
   defp eval(scope, {:not_operation, expresion}) do
     case eval(scope, expresion) do
       value when is_boolean(value) -> not value
-      _ -> throw({:error, bad_type_unitary("not", "boolean")})
+      value -> bad_type_unitary("not", "boolean", value)
     end
   end
 
@@ -127,7 +218,9 @@ defmodule Interpreter do
   defp eval(scope, {:list, list}) do
     case list do
       {first_element, second_element} when is_tuple(first_element) ->
-        List.flatten([eval(scope, first_element), eval_list(scope, second_element)])
+        list = eval_list(scope, second_element, [eval(scope, first_element)])
+        # es más rápido darle la vuelta al final que construirla en orden
+        Enum.reverse(list)
 
       nil ->
         []
@@ -137,54 +230,103 @@ defmodule Interpreter do
     end
   end
 
+  defp eval(scope, {:index, list, index}) do
+    struct = eval(scope, list)
+    index = eval(scope, index)
+
+    case struct do
+      list when is_list(list) ->
+        fech_list(list, index)
+
+      map when is_map(map) ->
+        fech_map(map, index)
+
+      string when is_bitstring(string) ->
+        fech_string(string, index)
+
+      error ->
+        throw_error_type(error)
+    end
+  end
+
+  defp eval(scope, {:map, list}) do
+    case list do
+      {{{:name, key}, value}, second_element} when is_tuple(value) ->
+        map = %{key => eval(scope, value)}
+
+        eval_map(scope, map, second_element)
+
+      nil ->
+        Map.new()
+
+      {{:name, key}, value} ->
+        %{key => eval(scope, value)}
+    end
+  end
+
   defp eval(scope, {:assignment, {_, var_name}, value}) do
     add_variable_to_scope(scope, var_name, eval(scope, value))
   end
 
-  defp eval(scope, {:concat, left_expression, right_expression}),
-    do:
-      do_binary_operation_with_check(
-        [eval(scope, left_expression), eval(scope, right_expression)],
-        &is_bitstring/1,
-        &<>/2,
-        bad_type("++", "string")
-      )
+  defp eval(scope, {:concat, left_expression, right_expression}) do
+    left_expression_evaluated = eval(scope, left_expression)
+    right_expression_evaluated = eval(scope, right_expression)
 
-  defp eval(scope, {:dice, number_of_dices, number_of_faces}),
-    do:
-      do_binary_operation_with_check(
-        [eval(scope, number_of_dices), eval(scope, number_of_faces)],
-        &is_integer/1,
-        &roll_dices/2,
-        bad_type("dice", "numbers")
-      )
+    do_binary_operation_with_check(
+      [left_expression_evaluated, right_expression_evaluated],
+      &is_bitstring/1,
+      &<>/2,
+      bad_type("++", "string", left_expression_evaluated, right_expression_evaluated)
+    )
+  end
 
-  defp eval(scope, {:plus, left_expression, right_expression}),
-    do:
-      do_binary_operation_with_check(
-        [eval(scope, left_expression), eval(scope, right_expression)],
-        &is_integer/1,
-        &+/2,
-        bad_type("+", "numbers")
-      )
+  defp eval(scope, {:dice, number_of_dices, number_of_faces}) do
+    number_of_dices_evaluated = eval(scope, number_of_dices)
+    number_of_faces_evaluated = eval(scope, number_of_faces)
 
-  defp eval(scope, {:minus, left_expression, right_expression}),
-    do:
-      do_binary_operation_with_check(
-        [eval(scope, left_expression), eval(scope, right_expression)],
-        &is_integer/1,
-        &-/2,
-        bad_type("-", "numbers")
-      )
+    do_binary_operation_with_check(
+      [number_of_dices_evaluated, number_of_faces_evaluated],
+      &is_integer/1,
+      &roll_dices/2,
+      bad_type("dice", "Integers", number_of_dices_evaluated, number_of_faces_evaluated)
+    )
+  end
 
-  defp eval(scope, {:mult, left_expression, right_expression}),
-    do:
-      do_binary_operation_with_check(
-        [eval(scope, left_expression), eval(scope, right_expression)],
-        &is_integer/1,
-        &*/2,
-        bad_type("*", "numbers")
-      )
+  defp eval(scope, {:plus, left_expression, right_expression}) do
+    left_expression_evaluated = eval(scope, left_expression)
+    right_expression_evaluated = eval(scope, right_expression)
+
+    do_binary_operation_with_check(
+      [left_expression_evaluated, right_expression_evaluated],
+      &is_integer/1,
+      &+/2,
+      bad_type("+", "Integers", left_expression_evaluated, right_expression_evaluated)
+    )
+  end
+
+  defp eval(scope, {:minus, left_expression, right_expression}) do
+    left_expression_evaluated = eval(scope, left_expression)
+    right_expression_evaluated = eval(scope, right_expression)
+
+    do_binary_operation_with_check(
+      [left_expression_evaluated, right_expression_evaluated],
+      &is_integer/1,
+      &-/2,
+      bad_type("-", "Integers", left_expression_evaluated, right_expression_evaluated)
+    )
+  end
+
+  defp eval(scope, {:mult, left_expression, right_expression}) do
+    left_expression_evaluated = eval(scope, left_expression)
+    right_expression_evaluated = eval(scope, right_expression)
+
+    do_binary_operation_with_check(
+      [left_expression_evaluated, right_expression_evaluated],
+      &is_integer/1,
+      &*/2,
+      bad_type("*", "Integers", left_expression_evaluated, right_expression_evaluated)
+    )
+  end
 
   defp eval(scope, {:divi, left_expression, right_expression}) do
     try do
@@ -200,7 +342,7 @@ defmodule Interpreter do
             [dividend, divider],
             &is_integer/1,
             &div/2,
-            bad_type("/", "numbers")
+            bad_type("/", "Integers", dividend, divider)
           )
       end
     catch
@@ -218,7 +360,12 @@ defmodule Interpreter do
           {:error, "Error: division by 0"}
 
         {dividend, divisor} ->
-          check_type([dividend, divisor], &is_integer/1, bad_type("//", "numbers"))
+          check_type(
+            [dividend, divisor],
+            &is_integer/1,
+            bad_type("//", "Integers", dividend, divisor)
+          )
+
           result = div(dividend, divisor) + ceil(rem(dividend, divisor) / divisor)
 
           result
@@ -242,7 +389,7 @@ defmodule Interpreter do
             [dividend, module],
             &is_integer/1,
             &Integer.mod/2,
-            bad_type("%", "numbers")
+            bad_type("%", "Integers", dividend, module)
           )
       end
     catch
@@ -250,14 +397,17 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:pow, left_expression, right_expression}),
-    do:
-      do_binary_operation_with_check(
-        [eval(scope, left_expression), eval(scope, right_expression)],
-        &is_integer/1,
-        &Integer.pow/2,
-        bad_type("^", "numbers")
-      )
+  defp eval(scope, {:pow, left_expression, right_expression}) do
+    left_expression_evaluated = eval(scope, left_expression)
+    right_expression_evaluated = eval(scope, right_expression)
+
+    do_binary_operation_with_check(
+      [left_expression_evaluated, right_expression_evaluated],
+      &is_integer/1,
+      &Integer.pow/2,
+      bad_type("^", "Integers", left_expression_evaluated, right_expression_evaluated)
+    )
+  end
 
   defp eval(scope, {:stric_more, left_expression, right_expression}),
     do: eval(scope, left_expression) > eval(scope, right_expression)
@@ -277,30 +427,33 @@ defmodule Interpreter do
   defp eval(scope, {:not_equal, left_expression, right_expression}),
     do: eval(scope, left_expression) != eval(scope, right_expression)
 
-  defp eval(scope, {:and_operation, left_expression, right_expression}),
-    do:
-      do_binary_operation_with_check(
-        [eval(scope, left_expression), eval(scope, right_expression)],
-        &is_boolean/1,
-        &and/2,
-        bad_type("and", "boolean")
-      )
+  defp eval(scope, {:and_operation, left_expression, right_expression}) do
+    left_expression_evaluated = eval(scope, left_expression)
+    right_expression_evaluated = eval(scope, right_expression)
 
-  defp eval(scope, {:or_operation, left_expression, right_expression}),
-    do:
-      do_binary_operation_with_check(
-        [eval(scope, left_expression), eval(scope, right_expression)],
-        &is_boolean/1,
-        &or/2,
-        bad_type("or", "boolean")
-      )
+    do_binary_operation_with_check(
+      [left_expression_evaluated, right_expression_evaluated],
+      &is_boolean/1,
+      &and/2,
+      bad_type("and", "boolean", left_expression_evaluated, right_expression_evaluated)
+    )
+  end
+
+  defp eval(scope, {:or_operation, left_expression, right_expression}) do
+    left_expression_evaluated = eval(scope, left_expression)
+    right_expression_evaluated = eval(scope, right_expression)
+
+    do_binary_operation_with_check(
+      [left_expression_evaluated, right_expression_evaluated],
+      &is_boolean/1,
+      &or/2,
+      bad_type("or", "boolean", left_expression_evaluated, right_expression_evaluated)
+    )
+  end
 
   defp eval(scope, {:range, range}) do
     case range do
-      {:list, _} ->
-        eval(scope, range)
-
-      {:name, _} ->
+      {first, _} when is_atom(first) ->
         eval(scope, range)
 
       {first, last} ->
@@ -343,8 +496,8 @@ defmodule Interpreter do
             eval_block(node, else_expression)
           end
 
-        _ ->
-          throw({:error, bad_type_unitary("condition", "boolean")})
+        condition ->
+          bad_type_unitary("condition", "boolean", condition)
       end
 
     remove_scope(:for_loop)

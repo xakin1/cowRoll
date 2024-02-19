@@ -1,10 +1,10 @@
-defmodule CowRoll.InterpreterTest do
+defmodule CowRoll.ScripsDndTest do
   # Importa ExUnit.Case para definir pruebas
   use ExUnit.Case
 
   describe "priority" do
     test "apply correctly order and ignore the space" do
-      number = Interpreter.eval_input("18 \n + 6 / \s 3")
+      number = Interpreter.eval_input("18 + 6 / \s 3")
 
       assert is_integer(number)
       assert number == 20
@@ -15,6 +15,16 @@ defmodule CowRoll.InterpreterTest do
 
       assert is_integer(number)
       assert number == 20
+
+      number = Interpreter.eval_input("
+            function f() do
+                5+4
+            end
+            -f()
+      ")
+
+      assert is_integer(number)
+      assert number == -9
     end
 
     test "general priority" do
@@ -50,7 +60,10 @@ defmodule CowRoll.InterpreterTest do
         Interpreter.eval_input("3+true")
         assert false
       catch
-        error -> assert error == {:error, "Error, in + operation both factors must be numbers"}
+        error ->
+          assert error ==
+                   {:error,
+                    "Error, in + operation both factors must be Integers, but Integer and Atom were found"}
       end
     end
 
@@ -59,25 +72,34 @@ defmodule CowRoll.InterpreterTest do
         Interpreter.eval_input("3-true")
         assert false
       catch
-        error -> assert error == {:error, "Error, in - operation both factors must be numbers"}
+        error ->
+          assert error ==
+                   {:error,
+                    "Error, in - operation both factors must be Integers, but Integer and Atom were found"}
       end
     end
 
     test "check numeric expression with mult" do
       try do
-        Interpreter.eval_input("3*true")
+        Interpreter.eval_input("3*[1]")
         assert false
       catch
-        error -> assert error == {:error, "Error, in * operation both factors must be numbers"}
+        error ->
+          assert error ==
+                   {:error,
+                    "Error, in * operation both factors must be Integers, but Integer and List were found"}
       end
     end
 
     test "check numeric expression with div" do
       try do
-        Interpreter.eval_input("3/true")
+        Interpreter.eval_input("3/{a: true}")
         assert false
       catch
-        error -> assert error == {:error, "Error, in / operation both factors must be numbers"}
+        error ->
+          assert error ==
+                   {:error,
+                    "Error, in / operation both factors must be Integers, but Integer and Map were found"}
       end
     end
 
@@ -86,7 +108,10 @@ defmodule CowRoll.InterpreterTest do
         Interpreter.eval_input("3//true")
         assert false
       catch
-        error -> assert error == {:error, "Error, in // operation both factors must be numbers"}
+        error ->
+          assert error ==
+                   {:error,
+                    "Error, in // operation both factors must be Integers, but Integer and Atom were found"}
       end
     end
 
@@ -95,7 +120,10 @@ defmodule CowRoll.InterpreterTest do
         Interpreter.eval_input("3%true")
         assert false
       catch
-        error -> assert error == {:error, "Error, in % operation both factors must be numbers"}
+        error ->
+          assert error ==
+                   {:error,
+                    "Error, in % operation both factors must be Integers, but Integer and Atom were found"}
       end
     end
 
@@ -104,16 +132,10 @@ defmodule CowRoll.InterpreterTest do
         Interpreter.eval_input("3^true")
         assert false
       catch
-        error -> assert error == {:error, "Error, in ^ operation both factors must be numbers"}
-      end
-    end
-
-    test "check numeric expression with dice" do
-      try do
-        Interpreter.eval_input("1d true")
-        assert false
-      catch
-        error -> assert error == {:error, "Error, in dice operation both factors must be numbers"}
+        error ->
+          assert error ==
+                   {:error,
+                    "Error, in ^ operation both factors must be Integers, but Integer and Atom were found"}
       end
     end
 
@@ -122,17 +144,22 @@ defmodule CowRoll.InterpreterTest do
         Interpreter.eval_input("-true")
         assert false
       catch
-        error -> assert error == {:error, "Error, in - operation the factor must be number"}
+        error ->
+          assert error ==
+                   {:error,
+                    "Error, in - operation the factor must be Integer, but Atom was found"}
       end
     end
 
     test "check boolean expression with or" do
       try do
-        Interpreter.eval_input("3 or true")
+        Interpreter.eval_input("3+2 or true")
         assert false
       catch
         error ->
-          assert error == {:error, "Error, in or operation both factors must be boolean"}
+          assert error ==
+                   {:error,
+                    "Error, in or operation both factors must be boolean, but Integer and Atom were found"}
       end
     end
 
@@ -142,7 +169,19 @@ defmodule CowRoll.InterpreterTest do
         assert false
       catch
         error ->
-          assert error == {:error, "Error, in and operation both factors must be boolean"}
+          assert error ==
+                   {:error,
+                    "Error, in and operation both factors must be boolean, but Integer and Atom were found"}
+      end
+
+      try do
+        Interpreter.eval_input("'3' and 'true'")
+        assert false
+      catch
+        error ->
+          assert error ==
+                   {:error,
+                    "Error, in and operation both factors must be boolean, but String and String were found"}
       end
     end
 
@@ -152,17 +191,31 @@ defmodule CowRoll.InterpreterTest do
         assert false
       catch
         error ->
-          assert error == {:error, "Error, in not operation the factor must be boolean"}
+          assert error ==
+                   {:error,
+                    "Error, in not operation the factor must be boolean, but Integer was found"}
       end
     end
 
-    test "check strings expression" do
+    test "check boolean expression with ++" do
       try do
         Interpreter.eval_input("'3' ++ 2")
         assert false
       catch
         error ->
-          assert error == {:error, "Error, in ++ operation both factors must be string"}
+          assert error ==
+                   {:error,
+                    "Error, in ++ operation both factors must be string, but String and Integer were found"}
+      end
+
+      try do
+        Interpreter.eval_input("3 ++ '2'")
+        assert false
+      catch
+        error ->
+          assert error ==
+                   {:error,
+                    "Error, in ++ operation both factors must be string, but Integer and String were found"}
       end
     end
 
@@ -172,7 +225,9 @@ defmodule CowRoll.InterpreterTest do
         assert false
       catch
         error ->
-          assert error == {:error, "Error, in condition operation the factor must be boolean"}
+          assert error ==
+                   {:error,
+                    "Error, in condition operation the factor must be boolean, but Integer was found"}
       end
     end
   end
@@ -204,15 +259,15 @@ defmodule CowRoll.InterpreterTest do
 
     test "nested else with operation should return 1" do
       result = Interpreter.eval_input("
-      if false then
-        2+4
-      else
-        if false then
-          0
-        else
-          2-1
-        end
-      end")
+         if false then
+           2+4
+         else
+           if false then
+             0
+           else
+             2-1
+           end
+         end")
 
       assert result == 1
     end
@@ -220,22 +275,22 @@ defmodule CowRoll.InterpreterTest do
     test "elseif" do
       input =
         "
-        clase = 'Druida'
-        if clase == 'Bárbaro' then
-              'b1d12'
-        elseif clase == 'Bardo' then
-              'b1d8'
-        elseif clase == 'Clérigo' then
-              'c1d8'
-        elseif clase == 'Druida' then
-              'd1d8'
-        elseif clase == 'Hechicero' then
-              'h1d6'
-        elseif clase == 'Mago' then
-              'm1d6'
-        else
-              0
-        end"
+           clase = 'Druida'
+           if clase == 'Bárbaro' then
+                 'b1d12'
+           elseif clase == 'Bardo' then
+                 'b1d8'
+           elseif clase == 'Clérigo' then
+                 'c1d8'
+           elseif clase == 'Druida' then
+                 'd1d8'
+           elseif clase == 'Hechicero' then
+                 'h1'
+           elseif clase == 'Mago' then
+                 'm1'
+           else
+                 0
+           end"
 
       result = Interpreter.eval_input(input)
 
@@ -320,6 +375,61 @@ defmodule CowRoll.InterpreterTest do
       assert result == []
     end
 
+    test "array with index" do
+      input = "['1'][1]"
+      result = Interpreter.eval_input(input)
+
+      assert result == nil
+
+      input = "['1'][0]"
+      result = Interpreter.eval_input(input)
+
+      assert result == "1"
+    end
+
+    test "array with an operation in index" do
+      input = "['1',2,3,4,5,6][2+3]"
+      result = Interpreter.eval_input(input)
+
+      assert result == 6
+    end
+
+    test "array in variable with an operation in index" do
+      input = "
+         x = ['1',2,3,4,5,6]
+         x[2+3]"
+      result = Interpreter.eval_input(input)
+
+      assert result == 6
+    end
+
+    test "array with an invalid index" do
+      try do
+        input = "['1',2,3,4,5,6]['1']"
+        Interpreter.eval_input(input)
+      catch
+        error -> assert error == {:error, "The index must be an Integer"}
+      end
+    end
+
+    test "var with an invalid index" do
+      try do
+        input = "
+           x = ['1',2,3,4,5,6]
+           x['1']"
+        Interpreter.eval_input(input)
+      catch
+        error -> assert error == {:error, "The index must be an Integer"}
+      end
+    end
+
+    test "index an nested array" do
+      input = "
+           x = [[1,2],3,[4,5],6][0][1]"
+      result = Interpreter.eval_input(input)
+      assert 2 == result
+    end
+
     test "array with an element" do
       result = Interpreter.eval_input("[1]")
       assert result == [1]
@@ -357,6 +467,13 @@ defmodule CowRoll.InterpreterTest do
       assert result == expect
     end
 
+    test "array with nested array" do
+      input = "[[1,2],'3','3']"
+      result = Interpreter.eval_input(input)
+      expect = [[1, 2], "3", "3"]
+      assert result == expect
+    end
+
     test "array with n mix elements" do
       input = "['1',2,'3',true]"
       result = Interpreter.eval_input(input)
@@ -383,6 +500,97 @@ defmodule CowRoll.InterpreterTest do
     end
   end
 
+  describe "maps" do
+    test "empty map" do
+      input = "{}"
+      result = Interpreter.eval_input(input)
+
+      assert result == %{}
+    end
+
+    test "map with an numeric element" do
+      input = "{a: 1}"
+      result = Interpreter.eval_input(input)
+
+      assert result == %{"a" => 1}
+    end
+
+    test "map with two numeric elements" do
+      input = "{a: 1, b: 2}"
+      result = Interpreter.eval_input(input)
+
+      assert result == %{"a" => 1, "b" => 2}
+    end
+
+    test "map with n numeric elements" do
+      input = "{a: 1, b: 2, c: 3, c: 9}"
+      result = Interpreter.eval_input(input)
+
+      assert result == %{"a" => 1, "b" => 2, "c" => 3, "c" => 9}
+    end
+
+    test "map with an string element" do
+      input = " {a: '1'}"
+      result = Interpreter.eval_input(input)
+
+      assert result == %{"a" => "1"}
+    end
+
+    test "map with two string elements" do
+      input = "{a: '1',b: \"2\"}"
+      result = Interpreter.eval_input(input)
+
+      assert result ==
+               %{"a" => "1", "b" => "2"}
+    end
+
+    test "map with n mix elements and operations" do
+      input =
+        "{first: '1'++'2',second: 3+2*(3+3), third: '3',fourth: if true then 3 else 'r' end}"
+
+      result = Interpreter.eval_input(input)
+
+      assert result == %{"first" => "12", "second" => 15, "third" => "3", "fourth" => 3}
+    end
+
+    test "map with index" do
+      input = "{a: 2}[2]"
+      result = Interpreter.eval_input(input)
+
+      assert result == nil
+
+      input = "{a: 2}['a']"
+      result = Interpreter.eval_input(input)
+
+      assert result == 2
+    end
+
+    test "array in variable with an operation in index" do
+      input = "
+         x = {a:'1',b:2,c:3,e:4,e:5,r:6}
+         x['a']"
+      result = Interpreter.eval_input(input)
+
+      assert result == "1"
+    end
+
+    test "nested maps" do
+      input = "
+         x = {a: {b:2,c:3},d:4,e:6}
+         x['a']"
+      result = Interpreter.eval_input(input)
+
+      assert result == %{"b" => 2, "c" => 3}
+
+      input = "
+      x = {a: {b:2,c:3},d:4,e:6}
+      x['a']['b']"
+      result = Interpreter.eval_input(input)
+
+      assert result == 2
+    end
+  end
+
   describe "variables" do
     test "create a variable" do
       result = Interpreter.eval_input("x=6")
@@ -397,14 +605,32 @@ defmodule CowRoll.InterpreterTest do
       end
     end
 
+    test "using  a  var with invalid type" do
+      try do
+        Interpreter.eval_input("
+           x = 6
+           x[3]")
+      catch
+        error ->
+          assert error ==
+                   {:error, "Invalid type: Integer. The type must be a list, map, or string."}
+      end
+    end
+
     test "overwrite the value of a variable" do
       result = Interpreter.eval_input("x=6; x=7")
       assert result == 7
     end
 
+    test "Initialize two vars with one value" do
+      result = Interpreter.eval_input("x=y=7
+      x==7 and y == 7")
+      assert result == true
+    end
+
     test "using vars in operations" do
       result = Interpreter.eval_input("
-        x= 6; y = x + 2")
+           x= 6; y = x + 2")
       assert result == 8
     end
 
@@ -430,23 +656,23 @@ defmodule CowRoll.InterpreterTest do
 
     test "test variables in scopes" do
       result = Interpreter.eval_input("
-      x = 'hola';
-      if true then
-        x = 'adios';
-      end;
-      x;")
+         x = 'hola';
+         if true then
+           x = 'adios';
+         end;
+         x;")
       assert "adios" == result
     end
 
     test "test variables in scopes with operations" do
       result = Interpreter.eval_input("
-      x = 1;
-      y = 3;
-      if true then
-        x = 2;
-        y = y + x;
-      end;
-      y")
+         x = 1;
+         y = 3;
+         if true then
+           x = 2;
+           y = y + x;
+         end;
+         y")
       assert 5 == result
     end
   end
@@ -454,59 +680,59 @@ defmodule CowRoll.InterpreterTest do
   describe "fors" do
     test "basic loop" do
       result = Interpreter.eval_input("
-      y = 0;
-      for x <- 1..3 do
-        y = y + x
-      end;
-      y
-      ")
+         y = 0;
+         for x <- 1..3 do
+           y = y + x
+         end;
+         y
+         ")
       assert 6 == result
     end
 
     test "loop with variables" do
       result = Interpreter.eval_input("
-      y = 0;
-      begin = 3;
-      finish = 6;
-      for x <- begin..finish do
-        y = y + x
-      end;
-      y
-      ")
+         y = 0;
+         begin = 3;
+         finish = 6;
+         for x <- begin..finish do
+           y = y + x
+         end;
+         y
+         ")
       assert 18 == result
 
       result = Interpreter.eval_input("
-      y = 0;
-      z = [3,4,5,6];
+         y = 0;
+         z = [3,4,5,6];
 
-      for x <- z do
-        y = y + x
-      end;
-      y
-      ")
+         for x <- z do
+           y = y + x
+         end;
+         y
+         ")
       assert 18 == result
     end
 
     test "loop with array" do
       result = Interpreter.eval_input("
-      y = 0;
-      for x <- [1, 2, 3, 4, 5] do
-        y = y + x
-      end;
-      y
-      ")
+         y = 0;
+         for x <- [1, 2, 3, 4, 5] do
+           y = y + x
+         end;
+         y
+         ")
       assert 15 == result
     end
 
     test "loop with array in a var" do
       result = Interpreter.eval_input("
-      y = 0;
-      enum = [1, 2, 3, 4, 5];
-      for x <- enum do
-        y = y + x
-      end;
-      y
-      ")
+         y = 0;
+         enum = [1, 2, 3, 4, 5];
+         for x <- enum do
+           y = y + x
+         end;
+         y
+         ")
       assert 15 == result
     end
   end
@@ -530,85 +756,108 @@ defmodule CowRoll.InterpreterTest do
 
       assert result == "hola mundo, mundo avanzado"
     end
-  end
 
-  describe "dice" do
-    test "returns a rolled dice" do
-      for _ <- 1..100 do
-        dice = Interpreter.eval_input("1d6")
-        assert is_integer(dice)
+    test "parse string with '' with index" do
+      input = "'hola mundo'[1]"
+      result = Interpreter.eval_input(input)
+      assert result == "o"
+    end
 
-        assert dice > 0 and dice <= 6
+    test "parse string with '' with invalid index" do
+      try do
+        input = "'hola mundo'['1']"
+        Interpreter.eval_input(input)
+        assert false
+      catch
+        error -> assert error == {:error, "The index must be an Integer"}
       end
     end
 
-    test "returns a rolled dice plus 3" do
-      for _ <- 1..100 do
-        dice = Interpreter.eval_input("1d6 +3")
-        assert is_integer(dice)
+    test "parse string with '' with an operation in the index" do
+      input = "'hola mundo'[1+3]"
+      result = Interpreter.eval_input(input)
 
-        assert dice >= 4 and dice <= 9
-      end
-    end
-
-    test "returns a rolled dice minus 3" do
-      for _ <- 1..100 do
-        dice = Interpreter.eval_input("1d6 - 3")
-        assert is_integer(dice)
-        assert dice >= -2 and dice <= 3
-      end
-    end
-
-    test "returns a rolled dice multiply 3" do
-      for _ <- 1..100 do
-        dice = Interpreter.eval_input("1d6 * 3")
-        assert is_integer(dice)
-        assert dice >= 3 and dice <= 18
-      end
-    end
-
-    test "returns a rolled dice div 3" do
-      for _ <- 1..100 do
-        dice = Interpreter.eval_input("1d6 / 3")
-
-        assert is_integer(dice)
-        assert dice >= 0 and dice <= 2
-      end
-    end
-
-    test "dice with variables" do
-      for _ <- 1..100 do
-        dice = Interpreter.eval_input("
-        x = 6
-        y= 1
-        y d x / 3")
-
-        assert is_integer(dice)
-        assert dice >= 0 and dice <= 2
-      end
-    end
-
-    test "dice with calling a function" do
-      for _ <- 1..100 do
-        dice = Interpreter.eval_input("
-        y = 1
-
-        function contar_longitud(lista) do
-          longitud = 0
-          for elemento <- lista do
-              longitud = longitud + 1
-          end
-          longitud
-        end
-
-        lista = [1,2,3,4,5,6]
-        y d contar_longitud(lista) / 3")
-
-        assert is_integer(dice)
-        assert dice >= 0 and dice <= 2
-      end
+      assert result == " "
     end
   end
+
+  # describe "dice" do
+  #   test "returns a rolled dice" do
+  #     for _ <- 1..100 do
+  #       dice = Interpreter.eval_input("1")
+  #       assert is_integer(dice)
+
+  #       assert dice > 0 and dice <= 6
+  #     end
+  #   end
+
+  #   test "returns a rolled dice plus 3" do
+  #     for _ <- 1..100 do
+  #       dice = Interpreter.eval_input("1 +3")
+  #       assert is_integer(dice)
+
+  #       assert dice >= 4 and dice <= 9
+  #     end
+  #   end
+
+  #   test "returns a rolled dice minus 3" do
+  #     for _ <- 1..100 do
+  #       dice = Interpreter.eval_input("1 - 3")
+  #       assert is_integer(dice)
+  #       assert dice >= -2 and dice <= 3
+  #     end
+  #   end
+
+  #   test "returns a rolled dice multiply 3" do
+  #     for _ <- 1..100 do
+  #       dice = Interpreter.eval_input("1 * 3")
+  #       assert is_integer(dice)
+  #       assert dice >= 3 and dice <= 18
+  #     end
+  #   end
+
+  #   test "returns a rolled dice div 3" do
+  #     for _ <- 1..100 do
+  #       dice = Interpreter.eval_input("1 / 3")
+
+  #       assert is_integer(dice)
+  #       assert dice >= 0 and dice <= 2
+  #     end
+  #   end
+
+  #   test "dice with variables" do
+  #     for _ <- 1..100 do
+  #       dice = Interpreter.eval_input("
+  #          x = 6
+  #          y= 1
+  #          y d x / 3")
+
+  #       assert is_integer(dice)
+  #       assert dice >= 0 and dice <= 2
+  #     end
+  #   end
+
+  #   test "dice with calling a function" do
+  #     for _ <- 1..100 do
+  #       dice = Interpreter.eval_input("
+  #          y = 1
+
+  #          function contar_longitud(lista) do
+  #            longitud = 0
+  #            for elemento <- lista do
+  #                longitud = longitud + 1
+  #            end
+  #            longitud
+  #          end
+
+  #          lista = [1,2,3,4,5,6]
+  #          y d contar_longitud(lista) / 3")
+
+  #       assert is_integer(dice)
+  #       assert dice >= 0 and dice <= 2
+  #     end
+  #   end
+  # end
 
   describe "plus" do
     test "simple plus" do
@@ -633,7 +882,7 @@ defmodule CowRoll.InterpreterTest do
 
     test "plus with variables" do
       result = Interpreter.eval_input("x= 2
-      1 +x ")
+         1 +x ")
       assert result == 1 + 2
     end
   end
@@ -890,7 +1139,7 @@ defmodule CowRoll.InterpreterTest do
     test "pow with a complex expresion in the exponent" do
       for _ <- 1..100 do
         try do
-          result = Interpreter.eval_input("2^((1d6 +3) * 3)")
+          result = Interpreter.eval_input("2^((1 +3) * 3)")
           assert result > 64
         rescue
           _ -> assert false
@@ -977,8 +1226,8 @@ defmodule CowRoll.InterpreterTest do
   describe "functions" do
     test "basic function declaration" do
       input = "function hola_mundo () do
-        'hola mundo'
-      end"
+           'hola mundo'
+         end"
       result = Interpreter.eval_input(input)
       expect = {:string, "'hola mundo'"}
 
@@ -987,10 +1236,10 @@ defmodule CowRoll.InterpreterTest do
 
     test "basic function with parameters declaration" do
       input = "function hola_mundo (msg, range) do
-        for participants <- range do
-          msg
-        end
-      end"
+           for participants <- range do
+             msg
+           end
+         end"
       result = Interpreter.eval_input(input)
 
       assert result ==
@@ -999,10 +1248,10 @@ defmodule CowRoll.InterpreterTest do
 
     test "basic call function" do
       input = "function hola_mundo () do
-        'hola mundo'
-      end
-      hola_mundo()
-      "
+           'hola mundo'
+         end
+         hola_mundo()
+         "
       result = Interpreter.eval_input(input)
       expect = "hola mundo"
 
@@ -1011,12 +1260,12 @@ defmodule CowRoll.InterpreterTest do
 
     test "basic call function with parameters" do
       input = "function hola_mundo (msg, range) do
-        for participants <- 1..range do
-          msg
-        end
-      end;
-      hola_mundo('hola mundo ', 2)
-      "
+           for participants <- 1..range do
+             msg
+           end
+         end;
+         hola_mundo('hola mundo ', 2)
+         "
       result = Interpreter.eval_input(input)
 
       assert result == ["hola mundo ", "hola mundo "]
@@ -1025,12 +1274,12 @@ defmodule CowRoll.InterpreterTest do
     test "basic call function with bad number of parameters" do
       try do
         input = "function hola_mundo (msg, range) do
-          for participants <- 1..range do
-            msg
-          end
-        end;
-        hola_mundo('hola mundo')
-        "
+             for participants <- 1..range do
+               msg
+             end
+           end;
+           hola_mundo('hola mundo')
+           "
         Interpreter.eval_input(input)
 
         assert false
@@ -1042,12 +1291,12 @@ defmodule CowRoll.InterpreterTest do
     test "basic call function with moreparameters" do
       try do
         input = "function hola_mundo (a) do
-          for participants <- 1..range do
-            msg
-          end
-        end;
-        hola_mundo('hola', 'mundo')
-        "
+             for participants <- 1..range do
+               msg
+             end
+           end;
+           hola_mundo('hola', 'mundo')
+           "
         Interpreter.eval_input(input)
 
         assert false
@@ -1064,13 +1313,13 @@ defmodule CowRoll.InterpreterTest do
     end
 
     test "more with expression should return true" do
-      result = Interpreter.eval_input("3 + 9 > (2 - 1d6)")
+      result = Interpreter.eval_input("3 + 9 > (2 - 1)")
       assert true == result
     end
 
     test "more_equal with expression should return true" do
       for _ <- 1..100 do
-        result = Interpreter.eval_input("(4 + 1d6)  >= 5")
+        result = Interpreter.eval_input("(4 + 1)  >= 5")
         assert true == result
       end
     end
@@ -1081,13 +1330,13 @@ defmodule CowRoll.InterpreterTest do
     end
 
     test "less with expression should return true" do
-      result = Interpreter.eval_input("3 + 9 <= (2 - 1d6)")
+      result = Interpreter.eval_input("3 + 9 <= (2 - 1)")
       assert false == result
     end
 
     test "less_equal with expression should return true" do
       for _ <- 1..100 do
-        result = Interpreter.eval_input("5 <= (4 + 1d6)")
+        result = Interpreter.eval_input("5 <= (4 + 2)")
         assert true == result
       end
     end

@@ -4,6 +4,7 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+
     {
       "type": "mix_task",
       "name": "server",
@@ -23,6 +24,16 @@
       "request": "launch",
       "task": "test",
       "taskArgs": ["--trace"],
+      "startApps": true,
+      "projectDir": "${workspaceRoot}",
+      "requireFiles": ["test/**/test_helper.exs", "test/**/*_test.exs"]
+    },
+    {
+      "type": "mix_task",
+      "name": "mix test specific file",
+      "request": "launch",
+      "task": "test",
+      "taskArgs": ["--trace", "/home/xaquin/tfm/phoenix/cowRoll/test/cowRoll/command/scrips_dnd.exs"],
       "startApps": true,
       "projectDir": "${workspaceRoot}",
       "requireFiles": ["test/**/test_helper.exs", "test/**/*_test.exs"]

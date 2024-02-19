@@ -1,30 +1,31 @@
 Definitions.
 
-CONTENT_STRING    = [a-zA-Z0-9_,\-\/\\\.\ssáéíóúÁÉÍÓÚüÜñÑ]*
-STRING            = (\'\s*{CONTENT_STRING}\'|\"\s*{CONTENT_STRING}\")
+CONTENT_STRING      = [a-zA-Z0-9_,\-\/\\\.\\(\)\ssáéíóúÁÉÍÓÚüÜñÑ]*
+STRING              = (\'\s*{CONTENT_STRING}\'|\"\s*{CONTENT_STRING}\")
 % '
-WHITESPACE        = [\n\t\s]
-JUMP              = \n
-IF                = if
-FUNCTION          = function
-THEN              = then
-ELSE              = else
-ELSEIF            = elseif
-FOR               = for
-DO                = do
-END               = end
-TRUE              = true
-FALSE             = false
-AND               = and
-OR                = or
-NOT               = not
-DICE              = d
-LEFT_PARENTHESIS  = \(
-RIGHT_PARENTHESIS = \)
-LEFT_BRACKET      = \[
-RIGHT_BRACKET     = \]
+WHITESPACE          = [\n\t\s]
+JUMP                = \n
+IF                  = if
+FUNCTION            = function
+THEN                = then
+ELSE                = else
+ELSEIF              = elseif
+FOR                 = for
+DO                  = do
+END                 = end
+TRUE                = true
+FALSE               = false
+AND                 = and
+OR                  = or
+NOT                 = not
+LEFT_PARENTHESIS    = \(
+RIGHT_PARENTHESIS   = \)
+LEFT_BRACKET        = \[
+RIGHT_BRACKET       = \]
+LEFT_CURLY_BRACKET  = \{
+RIGHT_CURLY_BRACKET = \}
 % Esto se hace para que evitar que expresiones como 1d743 lo tokenice como number 1 var d743
-NAME              = [a-ce-zA-Z_]|d[^0-9\s*]|[a-zA-Z_][a-zA-Z_]+[a-zA-Z0-9_]*
+NAME              = [a-zA-Z_áéíóúÁÉÍÓÚüÜñÑ]+[a-zA-Z0-9_áéíóúÁÉÍÓÚüÜñÑ]*
 
 RANGE             = \.\.
 NUMBER            = [0-9]+
@@ -35,7 +36,6 @@ Rules.
 
 {WHITESPACE} : skip_token.
 
-{DICE}       : {token, {'d', TokenLine}}.
 {RANGE}      : {token, {'..', to_string(TokenChars)}}.
 
 {NUMBER}     : {token, {number, list_to_integer(TokenChars)}}.
@@ -51,6 +51,10 @@ Rules.
 %% open/close bracket
 {LEFT_BRACKET}     : {token, {'[', TokenLine}}.
 {RIGHT_BRACKET}    : {token, {']', TokenLine}}.
+
+%% open/close bracket
+{LEFT_CURLY_BRACKET}     : {token, { '{', TokenLine}}.
+{RIGHT_CURLY_BRACKET}    : {token, { '}', TokenLine}}.
 
 
 %% arithmetic operators
@@ -90,6 +94,7 @@ Rules.
 {END}   : {token, {'end', TokenLine}}.
 
 \<-     : {token, {'<-', TokenLine}}.
+\:      : {token, {':', TokenLine}}.
 
 {FUNCTION}   : {token, {def_function, to_string(TokenChars)}}.
 {NAME}        : {token, {name, to_string(TokenChars)}}.
