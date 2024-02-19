@@ -36,7 +36,8 @@ Rootsymbol
     Unary 8 uminus.
     Unary 8 index.
     Unary 8 uninot.
-    Unary 9 VAR.
+    Unary 10 name '('arguments')'.
+    Unary 9 variable.
 
     Unary 10 list.
     Unary 10 map.
