@@ -118,13 +118,45 @@ defmodule TreeNode do
   end
 
   # No hace falta el id del nodo pues siempre se declararan como funciones globales
-  @spec add_fuction_to_scope(any(), any(), any()) :: any()
-  def add_fuction_to_scope(function_name, parameters, code) do
+  @spec add_function_to_scope(any(), any(), any()) :: any()
+  def add_function_to_scope(function_name, parameters, code) do
     tree = get_tree()
-    map_with_function = %{function_name => %{parameters: parameters, code: code}}
+
+    map_with_function = %{
+      function_name => %{
+        type: :code,
+        parameters: parameters,
+        code: code
+      }
+    }
+
     tree = %TreeNode{tree | value: Map.merge(tree.value, map_with_function)}
     update_tree(tree)
     code
+  end
+
+  @spec add_function_to_scope(any(), any()) :: any()
+
+  def add_function_to_scope(function_name, parameters) do
+    tree = get_tree()
+
+    map_with_function =
+      case function_name do
+        "rand" ->
+          %{
+            {:name, function_name} => %{
+              type: :erlang,
+              function: "rand",
+              module: :rand,
+              erlang_function: :uniform,
+              parameters: parameters
+            }
+          }
+      end
+
+    tree = %TreeNode{tree | value: Map.merge(tree.value, map_with_function)}
+    update_tree(tree)
+    function_name
   end
 
   defp parent_of_target_node?(node, node_target_id) do
@@ -168,12 +200,28 @@ defmodule TreeNode do
     get_value_recursive(tree, node_id, var_name)
   end
 
+  @spec get_fuction_from_scope(any()) :: {any(), any()} | {any(), any(), any(), any(), any()}
   def get_fuction_from_scope(function_name) do
     tree = get_tree()
 
     case Map.fetch(tree.value, function_name) do
-      {:ok, %{parameters: parameters, code: code}} -> {parameters, code}
-      _ -> false
+      {:ok, %{parameters: parameters, code: code}} ->
+        {parameters, code}
+
+      {:ok,
+       %{
+         function: function_name,
+         module: module,
+         erlang_function: erlang_function,
+         parameters: parameters,
+         type: type
+       }} ->
+        # TODO: Revisar si en algun caso haria falta pasar los parámetros
+        {function_name, erlang_function, module, parameters, type}
+
+      _ ->
+        {_, name} = function_name
+        {false, name}
     end
   end
 

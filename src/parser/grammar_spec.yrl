@@ -96,24 +96,25 @@ code -> error                 : '$1'.
 
 % assignment of variables
     assignment -> name '=' statement: {assignment, '$1', '$3'}.
+    assignment -> index '=' statement: {assignment, '$1', '$3'}.
 
 % Expressions
-    E -> E '%'   E : {mod,           '$1', '$3'}.
-    E -> E '^'   E : {pow,           '$1', '$3'}.
-    E -> E '/'   E : {divi,          '$1', '$3'}.
-    E -> E '*'   E : {mult,          '$1', '$3'}.
-    E -> E '+'   E : {plus,          '$1', '$3'}.
-    E -> E '=='  E : {equal,         '$1', '$3'}.
-    E -> E '-'   E : {minus,         '$1', '$3'}.
-    E -> E '++'  E : {concat,        '$1', '$3'}.
-    E -> E '//'  E : {round_div,     '$1', '$3'}.
-    E -> E '!='  E : {not_equal,     '$1', '$3'}.       
-    E -> E '>'   E : {stric_more,    '$1', '$3'}.
-    E -> E '>='  E : {more_equal,    '$1', '$3'}.
-    E -> E '<='  E : {less_equal,    '$1', '$3'}.
-    E -> E '<'   E : {stric_less,    '$1', '$3'}.
-    E -> E 'or'  E : {or_operation,  '$1', '$3'}.
-    E -> E 'and' E : {and_operation, '$1', '$3'}.
+    E -> E '%'   E : {mod,           {'$1', '$3'}}.
+    E -> E '^'   E : {pow,           {'$1', '$3'}}.
+    E -> E '/'   E : {divi,          {'$1', '$3'}}.
+    E -> E '*'   E : {mult,          {'$1', '$3'}}.
+    E -> E '+'   E : {plus,          {'$1', '$3'}}.
+    E -> E '=='  E : {equal,         {'$1', '$3'}}.
+    E -> E '-'   E : {minus,         {'$1', '$3'}}.
+    E -> E '++'  E : {concat,        {'$1', '$3'}}.
+    E -> E '//'  E : {round_div,     {'$1', '$3'}}.
+    E -> E '!='  E : {not_equal,     {'$1', '$3'}}.       
+    E -> E '>'   E : {stric_more,    {'$1', '$3'}}.
+    E -> E '>='  E : {more_equal,    {'$1', '$3'}}.
+    E -> E '<='  E : {less_equal,    {'$1', '$3'}}.
+    E -> E '<'   E : {stric_less,    {'$1', '$3'}}.
+    E -> E 'or'  E : {or_operation,  {'$1', '$3'}}.
+    E -> E 'and' E : {and_operation, {'$1', '$3'}}.
     E -> '('E')'   : '$2'.
     E -> VAR       : '$1'.
     E -> uminus    : '$1'.
@@ -125,7 +126,7 @@ code -> error                 : '$1'.
     E -> string    : '$1'.
     E -> index     : '$1'.
 
-    index -> E '[' statement ']' : {index, '$1', '$3'}.
+    index -> E '[' statement ']' : {index, {'$1', '$3'}}.
 
     uminus -> '-'   E : {negative, '$2'}. 
     uninot -> 'not' E : {not_operation, '$2'}.

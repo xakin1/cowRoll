@@ -2,6 +2,9 @@ defmodule Interpreter do
   use Parser
   use DiceRoller
   import TreeNode
+  import Tuples
+  import NestedIndexFinder
+  import Arrays
 
   defp bad_type(function_name, type, value1, value2) do
     case {IEx.Info.info(value1), IEx.Info.info(value2)} do
@@ -106,6 +109,7 @@ defmodule Interpreter do
   def eval_input(input) do
     # Creamos un arbol que va a tener el scope de las variables
     node = create_tree()
+    load_modules()
 
     {:ok, list_sentences} = Parser.parse(input)
     result = eval_block(node.id, list_sentences)
@@ -114,10 +118,28 @@ defmodule Interpreter do
     result
   end
 
+  defp load_modules() do
+    add_function_to_scope("rand", "range")
+  end
+
   defp throw_error_type(data) do
     case IEx.Info.info(data) do
       [{"Data type", type}, _] ->
-        throw({:error, "Invalid type: #{type}. The type must be a list, map, or string."})
+        throw(
+          {:error,
+           "Invalid type: '#{data}' it's a/an #{type}. The type must be a list, map, or string."}
+        )
+    end
+  end
+
+  # para evaluar una lista de tuplas y que te devuelva los parametros en un array
+  defp eval_parameters(scope, parameters) do
+    case parameters do
+      {head, tail} when is_tuple(head) ->
+        [eval(scope, head), eval_parameters(scope, tail)]
+
+      _ ->
+        eval(scope, parameters)
     end
   end
 
@@ -230,7 +252,7 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:index, list, index}) do
+  defp eval(scope, {:index, {list, index}}) do
     struct = eval(scope, list)
     index = eval(scope, index)
 
@@ -264,11 +286,28 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:assignment, {_, var_name}, value}) do
-    add_variable_to_scope(scope, var_name, eval(scope, value))
+  defp eval(scope, {:assignment, var, value}) do
+    case var do
+      {:name, var_name} ->
+        add_variable_to_scope(scope, var_name, eval(scope, value))
+
+      {:index, _} ->
+        case find_name_pattern(var) do
+          {:error, error} ->
+            throw({:error, error})
+
+          {{:name, var_name}, index} ->
+            eval_index = Enum.map(index, &eval(scope, &1))
+            var = {:name, var_name}
+            array = eval(scope, var)
+            value_to_update = eval(scope, value)
+            new_array = set_element_at(array, eval_index, value_to_update)
+            add_variable_to_scope(scope, var_name, new_array)
+        end
+    end
   end
 
-  defp eval(scope, {:concat, left_expression, right_expression}) do
+  defp eval(scope, {:concat, {left_expression, right_expression}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -280,19 +319,7 @@ defmodule Interpreter do
     )
   end
 
-  defp eval(scope, {:dice, number_of_dices, number_of_faces}) do
-    number_of_dices_evaluated = eval(scope, number_of_dices)
-    number_of_faces_evaluated = eval(scope, number_of_faces)
-
-    do_binary_operation_with_check(
-      [number_of_dices_evaluated, number_of_faces_evaluated],
-      &is_integer/1,
-      &roll_dices/2,
-      bad_type("dice", "Integers", number_of_dices_evaluated, number_of_faces_evaluated)
-    )
-  end
-
-  defp eval(scope, {:plus, left_expression, right_expression}) do
+  defp eval(scope, {:plus, {left_expression, right_expression}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -304,7 +331,7 @@ defmodule Interpreter do
     )
   end
 
-  defp eval(scope, {:minus, left_expression, right_expression}) do
+  defp eval(scope, {:minus, {left_expression, right_expression}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -316,7 +343,7 @@ defmodule Interpreter do
     )
   end
 
-  defp eval(scope, {:mult, left_expression, right_expression}) do
+  defp eval(scope, {:mult, {left_expression, right_expression}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -328,7 +355,7 @@ defmodule Interpreter do
     )
   end
 
-  defp eval(scope, {:divi, left_expression, right_expression}) do
+  defp eval(scope, {:divi, {left_expression, right_expression}}) do
     try do
       dividend = eval(scope, left_expression)
       divider = eval(scope, right_expression)
@@ -350,7 +377,7 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:round_div, left_expression, right_expression}) do
+  defp eval(scope, {:round_div, {left_expression, right_expression}}) do
     try do
       dividend = eval(scope, left_expression)
       divisor = eval(scope, right_expression)
@@ -375,7 +402,7 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:mod, left_expression, right_expression}) do
+  defp eval(scope, {:mod, {left_expression, right_expression}}) do
     try do
       dividend = eval(scope, left_expression)
       module = eval(scope, right_expression)
@@ -397,7 +424,7 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:pow, left_expression, right_expression}) do
+  defp eval(scope, {:pow, {left_expression, right_expression}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -409,25 +436,25 @@ defmodule Interpreter do
     )
   end
 
-  defp eval(scope, {:stric_more, left_expression, right_expression}),
+  defp eval(scope, {:stric_more, {left_expression, right_expression}}),
     do: eval(scope, left_expression) > eval(scope, right_expression)
 
-  defp eval(scope, {:more_equal, left_expression, right_expression}),
+  defp eval(scope, {:more_equal, {left_expression, right_expression}}),
     do: eval(scope, left_expression) >= eval(scope, right_expression)
 
-  defp eval(scope, {:stric_less, left_expression, right_expression}),
+  defp eval(scope, {:stric_less, {left_expression, right_expression}}),
     do: eval(scope, left_expression) < eval(scope, right_expression)
 
-  defp eval(scope, {:less_equal, left_expression, right_expression}),
+  defp eval(scope, {:less_equal, {left_expression, right_expression}}),
     do: eval(scope, left_expression) <= eval(scope, right_expression)
 
-  defp eval(scope, {:equal, left_expression, right_expression}),
+  defp eval(scope, {:equal, {left_expression, right_expression}}),
     do: eval(scope, left_expression) == eval(scope, right_expression)
 
-  defp eval(scope, {:not_equal, left_expression, right_expression}),
+  defp eval(scope, {:not_equal, {left_expression, right_expression}}),
     do: eval(scope, left_expression) != eval(scope, right_expression)
 
-  defp eval(scope, {:and_operation, left_expression, right_expression}) do
+  defp eval(scope, {:and_operation, {left_expression, right_expression}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -439,7 +466,7 @@ defmodule Interpreter do
     )
   end
 
-  defp eval(scope, {:or_operation, left_expression, right_expression}) do
+  defp eval(scope, {:or_operation, {left_expression, right_expression}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -509,19 +536,41 @@ defmodule Interpreter do
          {:assignment_function, {:function_name, function_name}, {:parameters, parameters},
           {:function_code, function_code}}
        ) do
-    add_fuction_to_scope(function_name, parameters, function_code)
+    add_function_to_scope(function_name, parameters, function_code)
   end
 
   defp eval(
          scope,
          {:call_function, function_name, {:parameters, parameters}}
        ) do
-    {parameters_to_replace, code} = get_fuction_from_scope(function_name)
-    node = add_scope(scope, function_name)
+    case get_fuction_from_scope(function_name) do
+      {false, name} ->
+        throw({:error, "Función: '#{name}' no encontrada"})
+
+      {parameters_to_replace, code} ->
+        call_function(scope, function_name, parameters, parameters_to_replace, code)
+
+      {_, erlang_function, module, _, :erlang} ->
+        # Necesario para llamar a las funciones de erlang
+        array_parameters =
+          case parameters do
+            {head, _} when is_tuple(head) -> eval_parameters(scope, parameters)
+            parameters -> [eval(scope, parameters)]
+          end
+
+        apply(module, erlang_function, array_parameters)
+    end
+  end
+
+  defp call_function(scope, {:name, function_name}, parameters, parameters_to_replace, code) do
+    node = add_scope(scope, {:name, function_name})
 
     case initialize_function(scope, parameters_to_replace, parameters) do
-      {:error, error} ->
-        throw({:error, error})
+      :error ->
+        throw(
+          {:error,
+           "bad number of parameters on #{function_name} expected #{count_tuples(parameters_to_replace)} but got #{count_tuples(parameters)}"}
+        )
 
       _ ->
         result = eval_block(node, code)
@@ -532,13 +581,18 @@ defmodule Interpreter do
 
   defp initialize_function(scope, parameters_to_replace, parameters) do
     case {parameters_to_replace, parameters} do
+      {{parameter_to_replace_head, _}, {parameter_head, _}}
+      when is_atom(parameter_to_replace_head) and is_atom(parameter_head) ->
+        eval(scope, {:assignment, parameters_to_replace, parameters})
+        initialize_function(scope, {}, {})
+
       {{parameter_to_replace_head, tail}, {parameter_head, _}}
-      when is_tuple(parameter_to_replace_head) and not is_tuple(parameter_head) ->
+      when is_tuple(parameter_to_replace_head) and is_atom(parameter_head) ->
         eval(scope, {:assignment, parameter_to_replace_head, parameters})
         initialize_function(scope, tail, {})
 
       {{parameter_to_replace_head, _}, {parameter_head, tail}}
-      when not is_tuple(parameter_to_replace_head) and is_tuple(parameter_head) ->
+      when is_atom(parameter_to_replace_head) and is_tuple(parameter_head) ->
         eval(scope, {:assignment, parameters_to_replace, parameter_head})
         initialize_function(scope, {}, tail)
 
@@ -547,11 +601,6 @@ defmodule Interpreter do
         eval(scope, {:assignment, parameter_to_replace_head, parameter_head})
         initialize_function(scope, tail_to_replace, tail)
 
-      {{parameter_to_replace_head, _}, {parameter_head, _}}
-      when not is_tuple(parameter_to_replace_head) and not is_tuple(parameter_head) ->
-        eval(scope, {:assignment, parameters_to_replace, parameters})
-        initialize_function(scope, {}, {})
-
       {{}, {}} ->
         :ok
 
@@ -559,7 +608,7 @@ defmodule Interpreter do
         :ok
 
       _ ->
-        {:error, "bad number of parameters"}
+        :error
     end
   end
 

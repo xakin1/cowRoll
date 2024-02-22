@@ -27,11 +27,11 @@ defmodule CowRoll.AttackTest do
         "bonus" => "5 + 4",
         "additionalDice" => [
           %{
-            "dice" => "1d4",
+            "dice" => "roll_dices(1,4)",
             "dmgType" => "phisical poison"
           }
         ],
-        "attackRoll" => "1d20"
+        "attackRoll" => "roll_dices(1,20)"
       }
     }
   }
@@ -72,7 +72,7 @@ defmodule CowRoll.AttackTest do
             "bonus" => "5 + 4",
             "additionalDice" => [
               %{
-                "dice" => "1d4",
+                "dice" => "roll_dices(1,4)",
                 "dmgType" => "phisical poison"
               }
             ],
@@ -109,11 +109,11 @@ defmodule CowRoll.AttackTest do
             "bonus" => "5 + 4",
             "additionalDice" => [
               %{
-                "dice" => "1d4",
+                "dice" => "roll_dices(1,4)",
                 "dmgType" => "phisical poison"
               }
             ],
-            "attackRoll" => "1d10"
+            "attackRoll" => "roll_dices(1,10)"
           }
         }
       }
@@ -146,11 +146,11 @@ defmodule CowRoll.AttackTest do
             "bonus" => "5 + 4",
             "additionalDice" => [
               %{
-                "dice" => "1d4",
+                "dice" => "roll_dices(1,4)",
                 "dmgType" => "phisical poison"
               }
             ],
-            "attackRoll" => "1d10"
+            "attackRoll" => "roll_dices(1,10)"
           }
         }
       }
@@ -185,11 +185,11 @@ defmodule CowRoll.AttackTest do
             "bonus" => "5 + 4",
             "additionalDice" => [
               %{
-                "dice" => "1d4",
+                "dice" => "roll_dices(1,4)",
                 "dmgType" => "phisical poison"
               }
             ],
-            "attackRoll" => "12d20"
+            "attackRoll" => "roll_dices(12,20)"
           }
         }
       }
@@ -234,7 +234,7 @@ defmodule CowRoll.AttackTest do
             "bonus" => "5 + 4",
             "additionalDice" => [
               %{
-                "dice" => "1dx",
+                "dice" => "roll_dices(1,x)",
                 "dmgType" => "phisical poison"
               }
             ],
@@ -271,7 +271,7 @@ defmodule CowRoll.AttackTest do
             "bonus" => "5 + 4",
             "additionalDice" => [
               %{
-                "dice" => "1d4",
+                "dice" => "roll_dices(1,4",
                 "dmgType" => "phisical fire"
               }
             ],
@@ -303,6 +303,43 @@ defmodule CowRoll.AttackTest do
       :rand.seed(:exsplus, {1, 2, 3})
 
       input = "
+        function roll_dices(number_of_dices, number_of_face) do
+          if (number_of_dices<=0 or number_of_face <0 ) then
+            -1
+          else
+            roll = rand(number_of_face) - 1
+            roll + roll_dices(number_of_dices - 1, number_of_face)
+          end
+        end
+
+        function roll_ability_score() do
+          rolls = [0,0,0,0]
+          for x <- 0..3 do
+              rolls[x] = roll_dices(1,6)
+          end
+
+          min_index = 0
+          for i <- 0..3 do
+            if (rolls[i] < rolls[min_index]) then
+              min_index = i
+            end
+          end
+
+          result = [0,0,0]
+          result_index = 0
+          for i <- 0..3 do
+            if (i != min_index) then
+                  result[result_index] = rolls[i];
+                  result_index = result_index + 1;
+            end
+          end
+
+          result
+        end
+
+
+
+
         clases = {
           barbaro: {
               vida_inicial: 12,
@@ -467,7 +504,7 @@ defmodule CowRoll.AttackTest do
                       habilidades_especiales: ['resistencia a fuego', 'llamas de thamaturgia']
                   }
               }
-          },
+          }
         }
 
         clases_nombres = ['barbaro', 'bardo', 'clerigo', 'druida', 'hechicero', 'mago', 'monje', 'paladin', 'explorador', 'brujo']
@@ -475,102 +512,122 @@ defmodule CowRoll.AttackTest do
 
 
         function contar_longitud(lista) do
-          longitud = 0
+          longitud = -1
           for elemento <- lista do
               longitud = longitud + 1
           end
+          if longitud == -1 then nil else longitud end
           longitud
         end
 
          function obtener_vida_por_nivel(clase) do
-             if clase == 'Bárbaro' then
-                  1d12
-             elseif clase == 'Bardo' then
-                  1d8
-             elseif clase == 'Clérigo' then
-                  1d8
-             elseif clase == 'Druida' then
-                  1d8
-             elseif clase == 'Hechicero' then
-                  1d6
-             elseif clase == 'Mago' then
-                  1d6
-             elseif clase == 'Monje' then
-                  1d8
-             elseif clase == 'Paladín' then
-                  1d10
-             elseif clase == 'Pícaro' then
-                  1d8
-             elseif clase == 'Ranger' then
-                  1d10
-             elseif clase == 'Sorcerer' then
-                  1d6
-             elseif clase == 'Warlock' then
-                  1d8
-             elseif clase == 'Wizard' then
-                  1d6
+             if clase == 'barbaro' then
+                  roll_dices(1,12)
+             elseif clase == 'bardo' then
+                  roll_dices(1,8)
+             elseif clase == 'clerigo' then
+                  roll_dices(1,8)
+             elseif clase == 'fruida' then
+                  roll_dices(1,8)
+             elseif clase == 'hechicero' then
+                  roll_dices(1,6)
+             elseif clase == 'mago' then
+                  roll_dices(1,6)
+             elseif clase == 'monje' then
+                  roll_dices(1,8)
+             elseif clase == 'paladín' then
+                  roll_dices(1,10)
+             elseif clase == 'pícaro' then
+                  roll_dices(1,8)
+             elseif clase == 'ranger' then
+                  roll_dices(1,10)
+             elseif clase == 'brujo' then
+                  roll_dices(1,8)
              else
                   0
              end
          end
 
          function generar_estadisticas_base() do
-            fuerza = 10
-            destreza = 10
-            constitución = 10
-            inteligencia = 10
-            sabiduria = 10
-            carisma = 10
+            fuerza = roll_ability_score()
+            destreza = roll_ability_score()
+            constitución = roll_ability_score()
+            inteligencia = roll_ability_score()
+            sabiduria = roll_ability_score()
+            carisma = roll_ability_score()
 
             {fuerza: fuerza, destreza: destreza, constitucion: constitución, inteligencia: inteligencia, sabiduria: sabiduria, carisma: carisma }
          end
 
          function generar_ficha(nombre) do
             nombre = nombre
-            edad = 1d20 + 10
+            edad = roll_dices(1,20 + 10)
             estadisticas = generar_estadisticas_base()
 
             numero_de_clases = contar_longitud(clases_nombres)
             numero_de_razas = contar_longitud(razas_nombres)
-            clase_aleatoria = razas[1d numero_de_clases]
-            raza_aleatoria = clases[1d numero_de_razas]
+            nombre_de_clase = clases_nombres[numero_de_clases]
+            nombre_de_raza = razas_nombres[numero_de_razas]
+            clase_aleatoria = clases[nombre_de_clase]
+            raza_aleatoria =razas[nombre_de_raza]
 
-            vida_por_nivel = obtener_vida_por_nivel(clase)
+            vida_por_nivel = obtener_vida_por_nivel(clase_aleatoria)
             nivel = 1
 
-            vida_total = obtener_vida(estadisticas)
-
-            pasivas_raza = obtener_pasivas_raza(raza)
             {nombre: nombre, edad: edad, estadisticas: estadisticas ,
-              raza:  razas[raraza_aleatoriaza], clase: clases[clase_aleatoria], nivel: nivel, vida_total: vida_total}
+              raza: {nombre_de_raza: nombre_de_raza, detalle: raza_aleatoria}, clase: {nombre: nombre_de_clase, detalle: clase_aleatoria}, nivel: nivel, vida_total: clase_aleatoria['vida_inicial'] + obtener_vida_por_nivel(nombre_de_clase)}
          end
 
          generar_ficha('PRUEBA')
          "
 
-      try do
-        result = Interpreter.eval_input(input)
+      result = Interpreter.eval_input(input)
 
-        assert result == %{
-                 "clase" => "Ranger",
-                 "edad" => 24,
-                 "estadisticas" => %{
-                   "carisma" => 10,
-                   "constitucion" => 10,
-                   "destreza" => 10,
-                   "fuerza" => 10,
-                   "inteligencia" => 10,
-                   "sabiduria" => 10
+      assert result == %{
+               "clase" => %{
+                 "detalle" => %{
+                   "competencias_armaduras" => [],
+                   "competencias_armas" => ["dagas", "dardos", "hondas", "ballesta ligera"],
+                   "habilidades" => ["pacto arcana", "invocaciones"],
+                   "vida_inicial" => 8
                  },
-                 "nivel" => 1,
-                 "nombre" => "PRUEBA",
-                 "pasivas_raza" => ["Aliento de dragón", "Resistencia al daño"],
-                 "raza" => "Dragonborn",
-                 "vida_total" => 6
-               }
-      rescue
-        error -> assert false == error
-      end
+                 "nombre" => "brujo"
+               },
+               "edad" => 22,
+               "estadisticas" => %{
+                 "carisma" => 10,
+                 "constitucion" => 10,
+                 "destreza" => 10,
+                 "fuerza" => 10,
+                 "inteligencia" => 10,
+                 "sabiduria" => 10
+               },
+               "nivel" => 1,
+               "nombre" => "PRUEBA",
+               "raza" => %{
+                 "detalle" => %{
+                   "proficiencias_armaduras" => [],
+                   "proficiencias_armas" => ["espada larga", "espada corta"],
+                   "subrazas" => %{
+                     "asmodeus" => %{
+                       "habilidades_especiales" => [
+                         "resistencia a fuego",
+                         "conjuro de prestidigitación"
+                       ]
+                     },
+                     "mefistófeles" => %{
+                       "habilidades_especiales" => [
+                         "resistencia a fuego",
+                         "llamas de thamaturgia"
+                       ]
+                     }
+                   },
+                   "velocidad" => 30
+                 },
+                 "nombre_de_raza" => "tiefling"
+               },
+               "vida_total" => 11
+             }
     end
   end
 end

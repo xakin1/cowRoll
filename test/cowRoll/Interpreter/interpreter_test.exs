@@ -394,10 +394,49 @@ defmodule CowRoll.ScripsDndTest do
       assert result == 6
     end
 
+    test "array assignment with index" do
+      input = "x = ['1',2,3,4,5,6]
+      x[0] = 3
+      x"
+      result = Interpreter.eval_input(input)
+
+      assert result == [3, 2, 3, 4, 5, 6]
+    end
+
+    test "array assignment with nested index" do
+      input = "x = [['1',2],3,4,5,6]
+      x[0][1] = '2'
+      x"
+      result = Interpreter.eval_input(input)
+
+      assert result == [["1", "2"], 3, 4, 5, 6]
+    end
+
+    test "array assignment with 4 nested index" do
+      input = "x = [[[['1',2] , 3], 4, 5],3,4,5,6]
+      x[0][0][0][1] = '2'
+      x"
+      result = Interpreter.eval_input(input)
+
+      assert result == [[[["1", "2"], 3], 4, 5], 3, 4, 5, 6]
+    end
+
+    test "var array with an operation in index" do
+      input = "
+      rolls = [0,0,0,0]
+      for x <- 0..3 do
+        rolls[x] = x
+      end
+      rolls"
+      result = Interpreter.eval_input(input)
+
+      assert result == [0, 1, 2, 3]
+    end
+
     test "array in variable with an operation in index" do
       input = "
          x = ['1',2,3,4,5,6]
-         x[2+3]"
+         x[2+3] "
       result = Interpreter.eval_input(input)
 
       assert result == 6
@@ -583,11 +622,11 @@ defmodule CowRoll.ScripsDndTest do
       assert result == %{"b" => 2, "c" => 3}
 
       input = "
-      x = {a: {b:2,c:3},d:4,e:6}
-      x['a']['b']"
+      x = {a: {b: {vida_total : 12},c:3},d:4,e:6}
+      x['a']['b']['vida_total']"
       result = Interpreter.eval_input(input)
 
-      assert result == 2
+      assert result == 12
     end
   end
 
@@ -780,84 +819,6 @@ defmodule CowRoll.ScripsDndTest do
       assert result == " "
     end
   end
-
-  # describe "dice" do
-  #   test "returns a rolled dice" do
-  #     for _ <- 1..100 do
-  #       dice = Interpreter.eval_input("1")
-  #       assert is_integer(dice)
-
-  #       assert dice > 0 and dice <= 6
-  #     end
-  #   end
-
-  #   test "returns a rolled dice plus 3" do
-  #     for _ <- 1..100 do
-  #       dice = Interpreter.eval_input("1 +3")
-  #       assert is_integer(dice)
-
-  #       assert dice >= 4 and dice <= 9
-  #     end
-  #   end
-
-  #   test "returns a rolled dice minus 3" do
-  #     for _ <- 1..100 do
-  #       dice = Interpreter.eval_input("1 - 3")
-  #       assert is_integer(dice)
-  #       assert dice >= -2 and dice <= 3
-  #     end
-  #   end
-
-  #   test "returns a rolled dice multiply 3" do
-  #     for _ <- 1..100 do
-  #       dice = Interpreter.eval_input("1 * 3")
-  #       assert is_integer(dice)
-  #       assert dice >= 3 and dice <= 18
-  #     end
-  #   end
-
-  #   test "returns a rolled dice div 3" do
-  #     for _ <- 1..100 do
-  #       dice = Interpreter.eval_input("1 / 3")
-
-  #       assert is_integer(dice)
-  #       assert dice >= 0 and dice <= 2
-  #     end
-  #   end
-
-  #   test "dice with variables" do
-  #     for _ <- 1..100 do
-  #       dice = Interpreter.eval_input("
-  #          x = 6
-  #          y= 1
-  #          y d x / 3")
-
-  #       assert is_integer(dice)
-  #       assert dice >= 0 and dice <= 2
-  #     end
-  #   end
-
-  #   test "dice with calling a function" do
-  #     for _ <- 1..100 do
-  #       dice = Interpreter.eval_input("
-  #          y = 1
-
-  #          function contar_longitud(lista) do
-  #            longitud = 0
-  #            for elemento <- lista do
-  #                longitud = longitud + 1
-  #            end
-  #            longitud
-  #          end
-
-  #          lista = [1,2,3,4,5,6]
-  #          y d contar_longitud(lista) / 3")
-
-  #       assert is_integer(dice)
-  #       assert dice >= 0 and dice <= 2
-  #     end
-  #   end
-  # end
 
   describe "plus" do
     test "simple plus" do
@@ -1234,6 +1195,34 @@ defmodule CowRoll.ScripsDndTest do
       assert result == expect
     end
 
+    test "basic rand" do
+      for _ <- 1..100 do
+        result = Interpreter.eval_input("rand(2)")
+        assert result >= 1 and result <= 2
+      end
+    end
+
+    test "parse recursivity" do
+      :rand.seed(:exsplus, {1, 2, 3})
+
+      for _ <- 1..20 do
+        input = "
+        function roll_dices(number_of_dices, number_of_face) do
+          if (number_of_dices<=0 or number_of_face <0 ) then
+            -1
+          else
+            roll = rand(number_of_face)
+            roll + roll_dices(number_of_dices - 1, number_of_face)
+          end
+        end
+        roll_dices(2,6)
+        "
+        result = Interpreter.eval_input(input)
+
+        assert result >= 2 and result <= 12
+      end
+    end
+
     test "basic function with parameters declaration" do
       input = "function hola_mundo (msg, range) do
            for participants <- range do
@@ -1284,7 +1273,8 @@ defmodule CowRoll.ScripsDndTest do
 
         assert false
       catch
-        error -> assert error == {:error, "bad number of parameters"}
+        error ->
+          assert error == {:error, "bad number of parameters on hola_mundo expected 2 but got 1"}
       end
     end
 
@@ -1301,7 +1291,8 @@ defmodule CowRoll.ScripsDndTest do
 
         assert false
       catch
-        error -> assert error == {:error, "bad number of parameters"}
+        error ->
+          assert error == {:error, "bad number of parameters on hola_mundo expected 1 but got 2"}
       end
     end
   end
