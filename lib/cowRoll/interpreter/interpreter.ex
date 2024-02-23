@@ -143,6 +143,26 @@ defmodule Interpreter do
     end
   end
 
+  defp fech(nil, _) do
+    nil
+  end
+
+  defp fech(list, [index | tail]) do
+    result =
+      case list do
+        list when is_list(list) -> fech_list(list, index)
+        string when is_bitstring(string) -> fech_string(string, index)
+        map when is_map(map) -> fech_map(map, index)
+        error -> throw_error_type(error)
+      end
+
+    fech(result, tail)
+  end
+
+  defp fech(list, []) do
+    list
+  end
+
   defp fech_map(map, index) do
     case Map.fetch(map, index) do
       {:ok, value} -> value
@@ -252,23 +272,11 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:index, {list, index}}) do
+  defp eval(scope, {:index, {index, list}}) do
     struct = eval(scope, list)
-    index = eval(scope, index)
-
-    case struct do
-      list when is_list(list) ->
-        fech_list(list, index)
-
-      map when is_map(map) ->
-        fech_map(map, index)
-
-      string when is_bitstring(string) ->
-        fech_string(string, index)
-
-      error ->
-        throw_error_type(error)
-    end
+    index = find_index_pattern(index)
+    eval_index = Enum.map(index, &eval(scope, &1))
+    fech(struct, eval_index)
   end
 
   defp eval(scope, {:map, list}) do

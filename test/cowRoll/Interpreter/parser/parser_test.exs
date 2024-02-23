@@ -604,13 +604,13 @@ defmodule CowRoll.ParserTest do
     test "parse string with '' with index" do
       input = "'hola mundo'[1]"
       {:ok, token} = Parser.parse(input)
-      assert token == {:index, {{:string, "'hola mundo'"}, {:number, 1}}}
+      assert token == {:index, {{:number, 1}, {:string, "'hola mundo'"}}}
     end
 
     test "parse string with '' with an operation in the index" do
       input = "'hola mundo'[1+3]"
       {:ok, token} = Parser.parse(input)
-      assert token == {:index, {{:string, "'hola mundo'"}, {:plus, {{:number, 1}, {:number, 3}}}}}
+      assert token == {:index, {{:plus, {{:number, 1}, {:number, 3}}}, {:string, "'hola mundo'"}}}
     end
 
     test "parse string with a number" do
@@ -691,7 +691,19 @@ defmodule CowRoll.ParserTest do
       input = "[1-1][2]"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:index, {{:list, {:minus, {{:number, 1}, {:number, 1}}}}, {:number, 2}}}
+      assert token == {:index, {{:number, 2}, {:list, {:minus, {{:number, 1}, {:number, 1}}}}}}
+    end
+
+    test "array with an operation in the index" do
+      input = "['1',2,3,4,5,6][2+3]"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:index,
+                {{:plus, {{:number, 2}, {:number, 3}}},
+                 {:list,
+                  {{:string, "'1'"},
+                   {{:number, 2}, {{:number, 3}, {{:number, 4}, {{:number, 5}, {:number, 6}}}}}}}}}
     end
 
     test "ifs with index" do
@@ -699,23 +711,21 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:if_then_else,
-                {:stric_less,
-                 {{:index, {{:name, "rolls"}, {:name, "i"}}},
-                  {:index, {{:name, "rolls"}, {:name, "min_index"}}}}}}
+               {:stric_less,
+                {{:index, {{:name, "i"}, {:name, "rolls"}}},
+                 {:index, {{:name, "min_index"}, {:name, "rolls"}}}}}
     end
 
     test "index an nested array" do
-      input = "[[1,2],3,[4,5],6][1][1]"
+      input = "[[1,2],3,[4,5],6][1][0]"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
                {:index,
-                {{:index,
-                  {{:list,
-                    {{:list, {{:number, 1}, {:number, 2}}},
-                     {{:number, 3}, {{:list, {{:number, 4}, {:number, 5}}}, {:number, 6}}}}},
-                   {:number, 1}}}, {:number, 1}}}
+                {{:index, {{:number, 1}, {:number, 0}}},
+                 {:list,
+                  {{:list, {{:number, 1}, {:number, 2}}},
+                   {{:number, 3}, {{:list, {{:number, 4}, {:number, 5}}}, {:number, 6}}}}}}}
     end
 
     test "array with an operator in index" do
@@ -727,14 +737,15 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:assignment, {:name, "raza"},
-                {:index, {{:name, "razas"}, {:plus, {{:number, 3}, {:number, 5}}}}}}
+                {:index, {{:plus, {{:number, 3}, {:number, 5}}}, {:name, "razas"}}}}
     end
 
     test "array with an operation in index" do
       input = "['1'][2+3]"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:index, {{:list, {:string, "'1'"}}, {:plus, {{:number, 2}, {:number, 3}}}}}
+      assert token ==
+               {:index, {{:plus, {{:number, 2}, {:number, 3}}}, {:list, {:string, "'1'"}}}}
     end
 
     test "array with two string elements" do
@@ -1143,7 +1154,7 @@ defmodule CowRoll.ParserTest do
                  {:list,
                   {{:string, "'1'"},
                    {{:number, 2}, {{:number, 3}, {{:number, 4}, {{:number, 5}, {:number, 6}}}}}}}},
-                {{:assignment, {:index, {{:name, "x"}, {:number, 0}}}, {:number, 1}},
+                {{:assignment, {:index, {{:number, 0}, {:name, "x"}}}, {:number, 1}},
                  {:name, "x"}}}
     end
 
@@ -1155,13 +1166,6 @@ defmodule CowRoll.ParserTest do
                {:assignment, {:name, "numero_de_razas"},
                 {:call_function, {:name, "contar_longitud"}, {:parameters, {:name, "razas"}}}}
     end
-
-    # test "parse dice with variables" do
-    #   input = "1d numero_de_razas"
-    #   {:ok, token} = Parser.parse(input)
-
-    #   assert token == {:dice, {:number, 1}, {:name, "numero_de_razas"}}
-    # end
   end
 
   describe "functions" do

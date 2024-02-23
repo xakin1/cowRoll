@@ -1,9 +1,9 @@
 Nonterminals
 arguments assignment assignment_function code else_code enumerable
 function for_loop grammar index if_statement items_sequence list map parameters statement statements
-map_sequence uminus uninot variable map_struct VAR E.
+map_sequence uminus uninot variable map_struct enums indexation VAR E.
 
-Terminals 'if' 'then' 'else' error not_defined boolean number name 'end' 'elseif' 'and' 'for' '..' '<-' 'd' 'do' 'or' 'not' '+' '++' '>'
+Terminals 'if' 'then' 'else' error not_defined boolean number name 'end' 'elseif' 'and' 'for' '..' '<-' 'do' 'or' 'not' '+' '++' '>'
  '=' '>=' '<' ';' ':' ',' '<=' '==' '!=' '-' '%' '*' '/' '//'  '[' ']' '{' '}' '(' ')' '^' string def_function.
 
 Rootsymbol
@@ -34,17 +34,19 @@ Rootsymbol
     Right 7 '^'.
 
     Unary 8 uminus.
-    Unary 8 index.
     Unary 8 uninot.
     Unary 10 name '('arguments')'.
     Unary 9 variable.
 
     Unary 10 list.
     Unary 10 map.
+    Unary 11 VAR.
+    Unary 12 index.
 
-    Unary 11 string.
-    Unary 11 number.
-    Unary 11 boolean.
+
+    Unary 13 string.
+    Unary 13 number.
+    Unary 13 boolean.
 
 
 grammar -> code : '$1'.
@@ -116,17 +118,22 @@ code -> error                 : '$1'.
     E -> E 'or'  E : {or_operation,  {'$1', '$3'}}.
     E -> E 'and' E : {and_operation, {'$1', '$3'}}.
     E -> '('E')'   : '$2'.
-    E -> VAR       : '$1'.
     E -> uminus    : '$1'.
     E -> number    : '$1'.
     E -> uninot    : '$1'.
     E -> boolean   : '$1'.
-    E -> map       : '$1'.
-    E -> list      : '$1'.
-    E -> string    : '$1'.
     E -> index     : '$1'.
+    E -> enums     : '$1'.
 
-    index -> E '[' statement ']' : {index, {'$1', '$3'}}.
+    enums -> map       : '$1'.
+    enums -> list      : '$1'.
+    enums -> string    : '$1'.
+    enums -> VAR       : '$1'.
+
+    indexation -> '['statement']' : '$2'.
+    indexation -> '['statement']' indexation : {index, {'$2', '$4'}}.
+    index -> enums indexation : {index, {'$2','$1'}}.
+
 
     uminus -> '-'   E : {negative, '$2'}. 
     uninot -> 'not' E : {not_operation, '$2'}.

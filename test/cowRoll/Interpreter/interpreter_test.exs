@@ -376,7 +376,7 @@ defmodule CowRoll.ScripsDndTest do
     end
 
     test "array with index" do
-      input = "['1'][1]"
+      input = "['1'][1][0][2]"
       result = Interpreter.eval_input(input)
 
       assert result == nil
@@ -652,7 +652,8 @@ defmodule CowRoll.ScripsDndTest do
       catch
         error ->
           assert error ==
-                   {:error, "Invalid type: Integer. The type must be a list, map, or string."}
+                   {:error,
+                    "Invalid type: '6' it's a/an Integer. The type must be a list, map, or string."}
       end
     end
 
