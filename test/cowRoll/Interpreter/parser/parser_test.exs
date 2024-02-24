@@ -264,6 +264,25 @@ defmodule CowRoll.ParserTest do
                {:for_loop, {:name, "x"}, {:range, {{:name, "y"}, {:name, "z"}}},
                 {:assignment, {:name, "x"}, {:plus, {{:number, 2}, {:number, 1}}}}}
     end
+
+    test "fors with arrays" do
+      input = "
+      for i <- 0..3 do
+        if (rolls[i] < rolls[min_index]) then
+          min_index = i
+        end
+      end"
+
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:for_loop, {:name, "i"}, {:range, {{:number, 0}, {:number, 3}}},
+                {:if_then_else,
+                 {:stric_less,
+                  {{:index, {{:name, "i"}, {:name, "rolls"}}},
+                   {:index, {{:name, "min_index"}, {:name, "rolls"}}}}},
+                 {:assignment, {:name, "min_index"}, {:name, "i"}}, nil}}
+    end
   end
 
   describe "maps" do

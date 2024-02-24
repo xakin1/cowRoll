@@ -325,20 +325,17 @@ defmodule CowRoll.AttackTest do
             end
           end
 
-          result = [0,0,0]
-          result_index = 0
+          result = 0
           for i <- 0..3 do
             if (i != min_index) then
-                  result[result_index] = rolls[i];
-                  result_index = result_index + 1;
+              result = result + rolls[i];
             end
           end
 
           result
         end
-
-
-
+        
+        
 
         clases = {
           barbaro: {
@@ -595,12 +592,12 @@ defmodule CowRoll.AttackTest do
                },
                "edad" => 22,
                "estadisticas" => %{
-                 "carisma" => 10,
-                 "constitucion" => 10,
-                 "destreza" => 10,
-                 "fuerza" => 10,
-                 "inteligencia" => 10,
-                 "sabiduria" => 10
+                 "carisma" => 7,
+                 "constitucion" => 7,
+                 "destreza" => 11,
+                 "fuerza" => 9,
+                 "inteligencia" => 6,
+                 "sabiduria" => 6
                },
                "nivel" => 1,
                "nombre" => "PRUEBA",

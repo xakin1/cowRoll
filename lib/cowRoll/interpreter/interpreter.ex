@@ -518,6 +518,9 @@ defmodule Interpreter do
     result
   end
 
+  defp eval(_, nil) do
+  end
+
   defp eval(scope, {:if_then_else, condition, then_expression, else_expression}) do
     node = add_scope(scope, :for_loop)
     condition = eval(scope, condition)
