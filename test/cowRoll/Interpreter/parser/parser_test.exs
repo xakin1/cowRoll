@@ -142,72 +142,47 @@ defmodule CowRoll.ParserTest do
 
   describe "errors" do
     test "missing parenthesis" do
-      try do
-        input = "(3+1"
+      input = "(3+1"
 
+      assert_raise(RuntimeError, "Error: Missing ')' on line 1", fn ->
         Parser.parse(input)
-      catch
-        error ->
-          assert {:error,
-                  "Error de sintaxis en la línea 1: Falta un paréntesis o hay un problema de sintaxis."} ==
-                   error
-      end
+      end)
 
-      try do
-        input = "3+1)"
+      input = "3+1)"
 
+      assert_raise(RuntimeError, "Error: Missing '(' on line 1", fn ->
         Parser.parse(input)
-      catch
-        error ->
-          assert {:error,
-                  "Error de sintaxis en la línea 1: Falta un paréntesis o hay un problema de sintaxis."} ==
-                   error
-      end
+      end)
     end
 
-    test "missing statements - if-" do
-      try do
-        input = "
-        x=true
-        x then 3 end"
+    test "missing end statements" do
+      input = "if x then
+      3"
 
+      assert_raise(RuntimeError, "Error: Missing 'end' for 'if' on line 1", fn ->
         Parser.parse(input)
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error de sintaxis en la línea 3: Falta un if o hay un problema de sintaxis."}
-      end
-    end
+      end)
 
-    test "missing statements - for-" do
-      try do
-        input = "
-        x=true
-        y <- x do 3 end"
+      input = "for y <- x do 3"
 
+      assert_raise(RuntimeError, "Error: Missing 'end' for 'for' on line 1", fn ->
         Parser.parse(input)
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error de sintaxis en la línea 3: Falta un for o hay un problema de sintaxis."}
-      end
-    end
+      end)
 
-    test "missing statements - generic error-" do
-      try do
-        input = "
-        x=true
-        if x then elseif 2 end "
+      input = "if true then
+        for y <- x do 3
+        end"
 
+      assert_raise(RuntimeError, "Error: Missing 'end' for 'if' on line 1", fn ->
         Parser.parse(input)
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error, "Error de sintaxis en la línea 3"}
-      end
+      end)
+
+      input = "x+3
+      end"
+
+      assert_raise(RuntimeError, "Error: Unexpected 'end' on line 2", fn ->
+        Parser.parse(input)
+      end)
     end
   end
 
