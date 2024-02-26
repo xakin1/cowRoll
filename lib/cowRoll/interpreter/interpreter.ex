@@ -301,9 +301,6 @@ defmodule Interpreter do
 
       {:index, _} ->
         case find_name_pattern(var) do
-          {:error, error} ->
-            throw({:error, error})
-
           {{:name, var_name, line}, index} ->
             eval_index = Enum.map(index, &eval(scope, &1))
             var = {:name, var_name, line}
@@ -569,6 +566,7 @@ defmodule Interpreter do
         array_parameters =
           case parameters do
             {head, _} when is_tuple(head) -> eval_parameters(scope, parameters)
+            nil -> []
             parameters -> [eval(scope, parameters)]
           end
 

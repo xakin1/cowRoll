@@ -11,12 +11,4 @@ defmodule Arrays do
     element_to_update = Enum.at(list, index)
     List.replace_at(list, index, set_element_at_aux(element_to_update, rest, new_value))
   end
-
-  defp set_element_at_aux(list, [], _) do
-    list
-  end
-
-  defp set_element_at_aux([], _index, _value) do
-    throw({:error, "Invalid index"})
-  end
 end

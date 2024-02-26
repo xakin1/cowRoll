@@ -1193,6 +1193,13 @@ defmodule CowRoll.ScripsDndTest do
       end
     end
 
+    test "rand without params" do
+      for _ <- 1..100 do
+        result = Interpreter.eval_input("rand()")
+        assert result > 0 and result < 1
+      end
+    end
+
     test "parse recursivity" do
       :rand.seed(:exsplus, {1, 2, 3})
 
@@ -1224,6 +1231,19 @@ defmodule CowRoll.ScripsDndTest do
       expect = "hola mundo"
 
       assert result == expect
+    end
+
+    test "not found" do
+      try do
+        input = "hola_mundo()"
+        result = Interpreter.eval_input(input)
+        expect = "hola mundo"
+
+        assert false
+      catch
+        error ->
+          assert error == {:error, "Error en la linea 1: Función: 'hola_mundo' no encontrada"}
+      end
     end
 
     test "basic call function with parameters" do
