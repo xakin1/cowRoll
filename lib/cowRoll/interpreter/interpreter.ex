@@ -3,60 +3,23 @@ defmodule Interpreter do
   use DiceRoller
   import TreeNode
   import Tuples
+  import TypesUtils
   import NestedIndexFinder
   import Arrays
 
   defp bad_type(function_name, type, value1, value2, line) do
-    case {IEx.Info.info(value1), IEx.Info.info(value2)} do
-      {[{"Data type", type_value1}, _], [{"Data type", type_value2}, _]} ->
-        "Error at line #{line} in #{function_name} operation both factors must be #{type}, but #{type_value1} and #{type_value2} were found"
-
-      {[
-         {"Data type", _},
-         _,
-         _,
-         _,
-         {"Reference modules", "String, :binary"}
-       ], [{"Data type", type_value2}, _]} ->
-        "Error at line #{line} in #{function_name} operation both factors must be #{type}, but String and #{type_value2} were found"
-
-      {[{"Data type", type_value2}, _],
-       [
-         {"Data type", _},
-         _,
-         _,
-         _,
-         {"Reference modules", "String, :binary"}
-       ]} ->
-        "Error at line #{line} in #{function_name} operation both factors must be #{type}, but #{type_value2} and String were found"
-
-      {[
-         {"Data type", _},
-         _,
-         _,
-         _,
-         {"Reference modules", "String, :binary"}
-       ],
-       [
-         {"Data type", _},
-         _,
-         _,
-         _,
-         {"Reference modules", "String, :binary"}
-       ]} ->
-        "Error at line #{line} in #{function_name} operation both factors must be #{type}, but String and String were found"
-
-      _ ->
-        "Unexpected input format for values in #{function_name} at #{line}"
+    case {get_type(value1), get_type(value2)} do
+      {type_value1, type_value2} ->
+        "Error at line #{line} in #{function_name} operation, both factors must be #{type}, but #{type_value1} and #{type_value2} were found"
     end
   end
 
   defp bad_type_unitary(function_name, type, value, line) do
-    case IEx.Info.info(value) do
-      [{"Data type", type_value}, _] ->
+    case get_type(value) do
+      type_value ->
         throw(
           {:error,
-           "Error at line #{line} in #{function_name} operation the factor must be #{type}, but #{type_value} was found"}
+           "Error at line #{line} in #{function_name} operation, the factor must be #{type}, but #{type_value} was found"}
         )
     end
   end

@@ -24,7 +24,6 @@ LEFT_BRACKET        = \[
 RIGHT_BRACKET       = \]
 LEFT_CURLY_BRACKET  = \{
 RIGHT_CURLY_BRACKET = \}
-% Esto se hace para que evitar que expresiones como 1d743 lo tokenice como number 1 var d743
 NAME              = [a-zA-Z_áéíóúÁÉÍÓÚüÜñÑ]+[a-zA-Z0-9_áéíóúÁÉÍÓÚüÜñÑ]*
 
 RANGE             = \.\.
