@@ -2543,15 +2543,15 @@ yystate(S, Ics, Line, Col, Tlen, Action, Alen) ->
 
 yyaction(0, _, _, _, _) ->
     yyaction_0();
-yyaction(1, TokenLen, YYtcs, _, _) ->
+yyaction(1, TokenLen, YYtcs, TokenLine, _) ->
     TokenChars = yypre(YYtcs, TokenLen),
-    yyaction_1(TokenChars);
-yyaction(2, TokenLen, YYtcs, _, _) ->
+    yyaction_1(TokenChars, TokenLine);
+yyaction(2, TokenLen, YYtcs, TokenLine, _) ->
     TokenChars = yypre(YYtcs, TokenLen),
-    yyaction_2(TokenChars);
-yyaction(3, TokenLen, YYtcs, _, _) ->
+    yyaction_2(TokenChars, TokenLine);
+yyaction(3, TokenLen, YYtcs, TokenLine, _) ->
     TokenChars = yypre(YYtcs, TokenLen),
-    yyaction_3(TokenChars);
+    yyaction_3(TokenChars, TokenLine);
 yyaction(4, _, _, TokenLine, _) ->
     yyaction_4(TokenLine);
 yyaction(5, _, _, TokenLine, _) ->
@@ -2594,10 +2594,10 @@ yyaction(23, _, _, TokenLine, _) ->
     yyaction_23(TokenLine);
 yyaction(24, _, _, TokenLine, _) ->
     yyaction_24(TokenLine);
-yyaction(25, _, _, _, _) ->
-    yyaction_25();
-yyaction(26, _, _, _, _) ->
-    yyaction_26();
+yyaction(25, _, _, TokenLine, _) ->
+    yyaction_25(TokenLine);
+yyaction(26, _, _, TokenLine, _) ->
+    yyaction_26(TokenLine);
 yyaction(27, _, _, TokenLine, _) ->
     yyaction_27(TokenLine);
 yyaction(28, _, _, TokenLine, _) ->
@@ -2626,12 +2626,12 @@ yyaction(39, _, _, TokenLine, _) ->
     yyaction_39(TokenLine);
 yyaction(40, _, _, TokenLine, _) ->
     yyaction_40(TokenLine);
-yyaction(41, TokenLen, YYtcs, _, _) ->
+yyaction(41, TokenLen, YYtcs, TokenLine, _) ->
     TokenChars = yypre(YYtcs, TokenLen),
-    yyaction_41(TokenChars);
-yyaction(42, TokenLen, YYtcs, _, _) ->
+    yyaction_41(TokenChars, TokenLine);
+yyaction(42, TokenLen, YYtcs, TokenLine, _) ->
     TokenChars = yypre(YYtcs, TokenLen),
-    yyaction_42(TokenChars);
+    yyaction_42(TokenChars, TokenLine);
 yyaction(_, _, _, _, _) -> error.
 
 -compile({inline,yyaction_0/0}).
@@ -2639,20 +2639,20 @@ yyaction(_, _, _, _, _) -> error.
 yyaction_0() ->
      skip_token .
 
--compile({inline,yyaction_1/1}).
+-compile({inline,yyaction_1/2}).
 -file("src/lexer/lexical_analysis.xrl", 37).
-yyaction_1(TokenChars) ->
-     { token, { '..', to_string (TokenChars) } } .
+yyaction_1(TokenChars, TokenLine) ->
+     { token, { '..', to_string (TokenChars), TokenLine } } .
 
--compile({inline,yyaction_2/1}).
+-compile({inline,yyaction_2/2}).
 -file("src/lexer/lexical_analysis.xrl", 39).
-yyaction_2(TokenChars) ->
-     { token, { number, list_to_integer (TokenChars) } } .
+yyaction_2(TokenChars, TokenLine) ->
+     { token, { number, list_to_integer (TokenChars), TokenLine } } .
 
--compile({inline,yyaction_3/1}).
+-compile({inline,yyaction_3/2}).
 -file("src/lexer/lexical_analysis.xrl", 43).
-yyaction_3(TokenChars) ->
-     { token, { string, to_string (TokenChars) } } .
+yyaction_3(TokenChars, TokenLine) ->
+     { token, { string, to_string (TokenChars), TokenLine } } .
 
 -compile({inline,yyaction_4/1}).
 -file("src/lexer/lexical_analysis.xrl", 46).
@@ -2759,15 +2759,15 @@ yyaction_23(TokenLine) ->
 yyaction_24(TokenLine) ->
      { token, { elseif, TokenLine } } .
 
--compile({inline,yyaction_25/0}).
+-compile({inline,yyaction_25/1}).
 -file("src/lexer/lexical_analysis.xrl", 76).
-yyaction_25() ->
-     { token, { boolean, true } } .
+yyaction_25(TokenLine) ->
+     { token, { boolean, true, TokenLine } } .
 
--compile({inline,yyaction_26/0}).
+-compile({inline,yyaction_26/1}).
 -file("src/lexer/lexical_analysis.xrl", 77).
-yyaction_26() ->
-     { token, { boolean, false } } .
+yyaction_26(TokenLine) ->
+     { token, { boolean, false, TokenLine } } .
 
 -compile({inline,yyaction_27/1}).
 -file("src/lexer/lexical_analysis.xrl", 78).
@@ -2839,13 +2839,13 @@ yyaction_39(TokenLine) ->
 yyaction_40(TokenLine) ->
      { token, { ':', TokenLine } } .
 
--compile({inline,yyaction_41/1}).
+-compile({inline,yyaction_41/2}).
 -file("src/lexer/lexical_analysis.xrl", 97).
-yyaction_41(TokenChars) ->
-     { token, { def_function, to_string (TokenChars) } } .
+yyaction_41(TokenChars, TokenLine) ->
+     { token, { def_function, to_string (TokenChars), TokenLine } } .
 
--compile({inline,yyaction_42/1}).
+-compile({inline,yyaction_42/2}).
 -file("src/lexer/lexical_analysis.xrl", 98).
-yyaction_42(TokenChars) ->
-     { token, { name, to_string (TokenChars) } } .
+yyaction_42(TokenChars, TokenLine) ->
+     { token, { name, to_string (TokenChars), TokenLine } } .
 -file("/home/xaquin/.asdf/installs/erlang/26.1/lib/parsetools-2.5/include/leexinc.hrl", 344).

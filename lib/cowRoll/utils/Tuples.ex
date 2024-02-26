@@ -8,6 +8,10 @@ defmodule Tuples do
     count_tuples(tail, acc + 1)
   end
 
+  defp count_tuples({_, _, _}, acc) do
+    count_tuples([], acc + 1)
+  end
+
   defp count_tuples(_, acc) do
     acc
   end

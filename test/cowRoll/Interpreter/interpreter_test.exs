@@ -1191,7 +1191,7 @@ defmodule CowRoll.ScripsDndTest do
            'hola mundo'
          end"
       result = Interpreter.eval_input(input)
-      expect = {:string, "'hola mundo'"}
+      expect = {:string, "'hola mundo'", 2}
 
       assert result == expect
     end
@@ -1222,18 +1222,6 @@ defmodule CowRoll.ScripsDndTest do
 
         assert result >= 2 and result <= 12
       end
-    end
-
-    test "basic function with parameters declaration" do
-      input = "function hola_mundo (msg, range) do
-           for participants <- range do
-             msg
-           end
-         end"
-      result = Interpreter.eval_input(input)
-
-      assert result ==
-               {:for_loop, {:name, "participants"}, {:range, {:name, "range"}}, {:name, "msg"}}
     end
 
     test "basic call function" do

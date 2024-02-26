@@ -9,8 +9,6 @@ defmodule NestedIndexFinder do
     [var_or_name]
   end
 
-  {:index, {{:number, 0}, {:number, 1}}}
-
   defp get_index({:index, {var_or_name1, var_or_name2}}) do
     get_index(var_or_name1) ++ get_index(var_or_name2)
   end
@@ -19,9 +17,9 @@ defmodule NestedIndexFinder do
     [var_or_name]
   end
 
-  def find_name_pattern({:index, {number_or_var, {:name, var_name}}}) do
+  def find_name_pattern({:index, {number_or_var, {:name, var_name, line}}}) do
     indexes = get_index(number_or_var)
-    {{:name, var_name}, indexes}
+    {{:name, var_name, line}, indexes}
   end
 
   def find_name_pattern({:index, {nested, number_or_var}}) do

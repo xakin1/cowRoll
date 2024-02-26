@@ -36,13 +36,13 @@ Rules.
 
 {WHITESPACE} : skip_token.
 
-{RANGE}      : {token, {'..', to_string(TokenChars)}}.
+{RANGE}      : {token, {'..', to_string(TokenChars),TokenLine}}.
 
-{NUMBER}     : {token, {number, list_to_integer(TokenChars)}}.
+{NUMBER}     : {token, {number, list_to_integer(TokenChars),TokenLine}}.
 
 %% String
 
-{STRING} : {token, {string, to_string(TokenChars)}}. 
+{STRING} : {token, {string, to_string(TokenChars),TokenLine}}. 
 
 %% open/close parens
 {LEFT_PARENTHESIS}     : {token, {'(', TokenLine}}.
@@ -75,8 +75,8 @@ Rules.
 {THEN}   : {token, {'then', TokenLine}}.
 {ELSE}   : {token, {'else', TokenLine}}.
 {ELSEIF} : {token, {'elseif', TokenLine}}.
-{TRUE}   : {token, {boolean, true}}.
-{FALSE}  : {token, {boolean, false}}.
+{TRUE}   : {token, {boolean, true,TokenLine}}.
+{FALSE}  : {token, {boolean, false,TokenLine}}.
 {AND}    : {token, {'and', TokenLine}}.
 {OR}     : {token, {'or', TokenLine}}.
 {NOT}    : {token, {'not', TokenLine}}.
@@ -96,8 +96,8 @@ Rules.
 \<-     : {token, {'<-', TokenLine}}.
 \:      : {token, {':', TokenLine}}.
 
-{FUNCTION}   : {token, {def_function, to_string(TokenChars)}}.
-{NAME}        : {token, {name, to_string(TokenChars)}}.
+{FUNCTION}   : {token, {def_function, to_string(TokenChars),TokenLine}}.
+{NAME}        : {token, {name, to_string(TokenChars),TokenLine}}.
 
 Erlang code.
 

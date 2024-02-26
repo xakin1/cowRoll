@@ -150,7 +150,7 @@ defmodule Interpreter do
   defp fech(list, [index | tail]) do
     result =
       case list do
-        list when is_list(list) -> fech_list(list, index)
+        list when is_list(list) -> fech_line(list, index)
         string when is_bitstring(string) -> fech_string(string, index)
         map when is_map(map) -> fech_map(map, index)
         error -> throw_error_type(error)
@@ -180,7 +180,7 @@ defmodule Interpreter do
     end
   end
 
-  defp fech_list(list, index) do
+  defp fech_line(list, index) do
     case index do
       index when is_integer(index) ->
         Enum.at(list, index)
@@ -203,10 +203,10 @@ defmodule Interpreter do
   end
 
   # Necesario para construir una lista
-  defp eval_list(scope, elements, list) do
+  defp eval_line(scope, elements, list) do
     case elements do
       {first_element, second_element} when is_tuple(second_element) ->
-        eval_list(scope, second_element, [eval(scope, first_element) | list])
+        eval_line(scope, second_element, [eval(scope, first_element) | list])
 
       _ ->
         [eval(scope, elements) | list]
@@ -214,22 +214,22 @@ defmodule Interpreter do
   end
 
   # Necesario para construir una lista
-  defp eval_map(scope, map, map_list) do
-    case map_list do
-      {{{:name, key}, value}, second_element} when is_tuple(second_element) ->
+  defp eval_map(scope, map, map_line) do
+    case map_line do
+      {{{:name, key, _line}, value}, second_element} when is_tuple(second_element) ->
         map = Map.put(map, key, eval(scope, value))
         eval_map(scope, map, second_element)
 
-      {{:name, key}, value} ->
+      {{:name, key, _line}, value} ->
         Map.put(map, key, eval(scope, value))
     end
   end
 
-  defp eval(_, {:number, number}), do: number
+  defp eval(_, {:number, number, _line}), do: number
 
-  defp eval(_, {:boolean, bool}), do: bool
+  defp eval(_, {:boolean, bool, _line}), do: bool
 
-  defp eval(_, {:string, string}) do
+  defp eval(_, {:string, string, _line}) do
     case String.match?(string, ~r/^'.*'$/) do
       true -> String.trim(string, "'")
       false -> String.trim(string, "\"")
@@ -250,7 +250,7 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:name, variable}) do
+  defp eval(scope, {:name, variable, _line}) do
     case get_variable_from_scope(scope, variable) do
       false -> throw({:error, "Variable '#{variable}' is not defined"})
       value -> value
@@ -260,7 +260,7 @@ defmodule Interpreter do
   defp eval(scope, {:list, list}) do
     case list do
       {first_element, second_element} when is_tuple(first_element) ->
-        list = eval_list(scope, second_element, [eval(scope, first_element)])
+        list = eval_line(scope, second_element, [eval(scope, first_element)])
         # es más rápido darle la vuelta al final que construirla en orden
         Enum.reverse(list)
 
@@ -281,7 +281,7 @@ defmodule Interpreter do
 
   defp eval(scope, {:map, list}) do
     case list do
-      {{{:name, key}, value}, second_element} when is_tuple(value) ->
+      {{{:name, key, _line}, value}, second_element} when is_tuple(value) ->
         map = %{key => eval(scope, value)}
 
         eval_map(scope, map, second_element)
@@ -289,14 +289,14 @@ defmodule Interpreter do
       nil ->
         Map.new()
 
-      {{:name, key}, value} ->
+      {{:name, key, _line}, value} ->
         %{key => eval(scope, value)}
     end
   end
 
   defp eval(scope, {:assignment, var, value}) do
     case var do
-      {:name, var_name} ->
+      {:name, var_name, _line} ->
         add_variable_to_scope(scope, var_name, eval(scope, value))
 
       {:index, _} ->
@@ -304,9 +304,9 @@ defmodule Interpreter do
           {:error, error} ->
             throw({:error, error})
 
-          {{:name, var_name}, index} ->
+          {{:name, var_name, line}, index} ->
             eval_index = Enum.map(index, &eval(scope, &1))
-            var = {:name, var_name}
+            var = {:name, var_name, line}
             array = eval(scope, var)
             value_to_update = eval(scope, value)
             new_array = set_element_at(array, eval_index, value_to_update)
@@ -491,12 +491,15 @@ defmodule Interpreter do
       {first, _} when is_atom(first) ->
         eval(scope, range)
 
+      {first, _, _} when is_atom(first) ->
+        eval(scope, range)
+
       {first, last} ->
         {eval(scope, first), eval(scope, last)}
     end
   end
 
-  defp eval(scope, {:for_loop, {:name, var_name}, range, expresion}) do
+  defp eval(scope, {:for_loop, {:name, var_name, _line}, range, expresion}) do
     scope = add_scope(scope, :for_loop)
 
     result =
@@ -555,8 +558,8 @@ defmodule Interpreter do
          {:call_function, function_name, {:parameters, parameters}}
        ) do
     case get_fuction_from_scope(function_name) do
-      {false, name} ->
-        throw({:error, "Función: '#{name}' no encontrada"})
+      {false, name, line} ->
+        throw({:error, "Error en la linea #{line}: Función: '#{name}' no encontrada"})
 
       {parameters_to_replace, code} ->
         call_function(scope, function_name, parameters, parameters_to_replace, code)
@@ -573,14 +576,20 @@ defmodule Interpreter do
     end
   end
 
-  defp call_function(scope, {:name, function_name}, parameters, parameters_to_replace, code) do
+  defp call_function(
+         scope,
+         {:name, function_name, line},
+         parameters,
+         parameters_to_replace,
+         code
+       ) do
     node = add_scope(scope, {:name, function_name})
 
     case initialize_function(scope, parameters_to_replace, parameters) do
       :error ->
         throw(
           {:error,
-           "bad number of parameters on #{function_name} expected #{count_tuples(parameters_to_replace)} but got #{count_tuples(parameters)}"}
+           " Error at line #{line}: bad number of parameters on #{function_name} expected #{count_tuples(parameters_to_replace)} but got #{count_tuples(parameters)}"}
         )
 
       _ ->
@@ -592,17 +601,17 @@ defmodule Interpreter do
 
   defp initialize_function(scope, parameters_to_replace, parameters) do
     case {parameters_to_replace, parameters} do
-      {{parameter_to_replace_head, _}, {parameter_head, _}}
+      {{parameter_to_replace_head, _, _}, {parameter_head, _, _}}
       when is_atom(parameter_to_replace_head) and is_atom(parameter_head) ->
         eval(scope, {:assignment, parameters_to_replace, parameters})
         initialize_function(scope, {}, {})
 
-      {{parameter_to_replace_head, tail}, {parameter_head, _}}
+      {{parameter_to_replace_head, tail}, {parameter_head, _, _}}
       when is_tuple(parameter_to_replace_head) and is_atom(parameter_head) ->
         eval(scope, {:assignment, parameter_to_replace_head, parameters})
         initialize_function(scope, tail, {})
 
-      {{parameter_to_replace_head, _}, {parameter_head, tail}}
+      {{parameter_to_replace_head, _, _}, {parameter_head, tail}}
       when is_atom(parameter_to_replace_head) and is_tuple(parameter_head) ->
         eval(scope, {:assignment, parameters_to_replace, parameter_head})
         initialize_function(scope, {}, tail)

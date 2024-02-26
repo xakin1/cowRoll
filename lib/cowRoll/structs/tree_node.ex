@@ -119,11 +119,11 @@ defmodule TreeNode do
 
   # No hace falta el id del nodo pues siempre se declararan como funciones globales
   @spec add_function_to_scope(any(), any(), any()) :: any()
-  def add_function_to_scope(function_name, parameters, code) do
+  def add_function_to_scope({:name, function_name, _}, parameters, code) do
     tree = get_tree()
 
     map_with_function = %{
-      function_name => %{
+      {:name, function_name} => %{
         type: :code,
         parameters: parameters,
         code: code
@@ -200,11 +200,12 @@ defmodule TreeNode do
     get_value_recursive(tree, node_id, var_name)
   end
 
-  @spec get_fuction_from_scope(any()) :: {any(), any()} | {any(), any(), any(), any(), any()}
-  def get_fuction_from_scope(function_name) do
+  @spec get_fuction_from_scope(any()) ::
+          {any(), any()} | {false, any(), any()} | {any(), any(), any(), any(), any()}
+  def get_fuction_from_scope({:name, function_name, line}) do
     tree = get_tree()
 
-    case Map.fetch(tree.value, function_name) do
+    case Map.fetch(tree.value, {:name, function_name}) do
       {:ok, %{parameters: parameters, code: code}} ->
         {parameters, code}
 
@@ -220,8 +221,7 @@ defmodule TreeNode do
         {function_name, erlang_function, module, parameters, type}
 
       _ ->
-        {_, name} = function_name
-        {false, name}
+        {false, function_name, line}
     end
   end
 
