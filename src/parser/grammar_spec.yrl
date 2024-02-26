@@ -81,10 +81,10 @@ code -> error                 : '$1'.
 
 %ifs
     if_statement -> 'if' E 'then' code else_code 'end'
-    : {if_then_else, '$2', '$4', '$5'}.
+    : {if_then_else, '$2', '$4', '$5', '$1'}.
 
     else_code -> 'else' code     : '$2'.
-    else_code -> 'elseif' E 'then' code else_code   : {if_then_else, '$2', '$4', '$5'}.
+    else_code -> 'elseif' E 'then' code else_code   : {if_then_else, '$2', '$4', '$5', '$1'}.
     else_code -> '$empty' : nil.
 
 %fors
@@ -101,22 +101,22 @@ code -> error                 : '$1'.
     assignment -> index '=' statement: {assignment, '$1', '$3'}.
 
 % Expressions
-    E -> E '%'   E : {mod,           {'$1', '$3'}}.
-    E -> E '^'   E : {pow,           {'$1', '$3'}}.
-    E -> E '/'   E : {divi,          {'$1', '$3'}}.
-    E -> E '*'   E : {mult,          {'$1', '$3'}}.
-    E -> E '+'   E : {plus,          {'$1', '$3'}}.
-    E -> E '=='  E : {equal,         {'$1', '$3'}}.
-    E -> E '-'   E : {minus,         {'$1', '$3'}}.
-    E -> E '++'  E : {concat,        {'$1', '$3'}}.
-    E -> E '//'  E : {round_div,     {'$1', '$3'}}.
-    E -> E '!='  E : {not_equal,     {'$1', '$3'}}.       
-    E -> E '>'   E : {stric_more,    {'$1', '$3'}}.
-    E -> E '>='  E : {more_equal,    {'$1', '$3'}}.
-    E -> E '<='  E : {less_equal,    {'$1', '$3'}}.
-    E -> E '<'   E : {stric_less,    {'$1', '$3'}}.
-    E -> E 'or'  E : {or_operation,  {'$1', '$3'}}.
-    E -> E 'and' E : {and_operation, {'$1', '$3'}}.
+    E -> E '%'   E : {mod,           {'$1', '$3'}, '$2'}.
+    E -> E '^'   E : {pow,           {'$1', '$3'}, '$2'}.
+    E -> E '/'   E : {divi,          {'$1', '$3'}, '$2'}.
+    E -> E '*'   E : {mult,          {'$1', '$3'}, '$2'}.
+    E -> E '+'   E : {plus,          {'$1', '$3'}, '$2'}.
+    E -> E '=='  E : {equal,         {'$1', '$3'}, '$2'}.
+    E -> E '-'   E : {minus,         {'$1', '$3'}, '$2'}.
+    E -> E '++'  E : {concat,        {'$1', '$3'}, '$2'}.
+    E -> E '//'  E : {round_div,     {'$1', '$3'}, '$2'}.
+    E -> E '!='  E : {not_equal,     {'$1', '$3'}, '$2'}.       
+    E -> E '>'   E : {stric_more,    {'$1', '$3'}, '$2'}.
+    E -> E '>='  E : {more_equal,    {'$1', '$3'}, '$2'}.
+    E -> E '<='  E : {less_equal,    {'$1', '$3'}, '$2'}.
+    E -> E '<'   E : {stric_less,    {'$1', '$3'}, '$2'}.
+    E -> E 'or'  E : {or_operation,  {'$1', '$3'}, '$2'}.
+    E -> E 'and' E : {and_operation, {'$1', '$3'}, '$2'}.
     E -> '('E')'   : '$2'.
     E -> uminus    : '$1'.
     E -> number    : '$1'.
@@ -135,8 +135,8 @@ code -> error                 : '$1'.
     index -> enums indexation : {index, {'$2','$1'}}.
 
 
-    uminus -> '-'   E : {negative, '$2'}. 
-    uninot -> 'not' E : {not_operation, '$2'}.
+    uminus -> '-'   E : {negative, '$2', '$1'}. 
+    uninot -> 'not' E : {not_operation, '$2', '$1'}.
 
     VAR -> function   : '$1'.
     VAR -> variable   : '$1'.

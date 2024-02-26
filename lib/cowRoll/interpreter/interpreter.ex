@@ -6,10 +6,10 @@ defmodule Interpreter do
   import NestedIndexFinder
   import Arrays
 
-  defp bad_type(function_name, type, value1, value2) do
+  defp bad_type(function_name, type, value1, value2, line) do
     case {IEx.Info.info(value1), IEx.Info.info(value2)} do
       {[{"Data type", type_value1}, _], [{"Data type", type_value2}, _]} ->
-        "Error, in #{function_name} operation both factors must be #{type}, but #{type_value1} and #{type_value2} were found"
+        "Error at line #{line} in #{function_name} operation both factors must be #{type}, but #{type_value1} and #{type_value2} were found"
 
       {[
          {"Data type", _},
@@ -18,7 +18,7 @@ defmodule Interpreter do
          _,
          {"Reference modules", "String, :binary"}
        ], [{"Data type", type_value2}, _]} ->
-        "Error, in #{function_name} operation both factors must be #{type}, but String and #{type_value2} were found"
+        "Error at line #{line} in #{function_name} operation both factors must be #{type}, but String and #{type_value2} were found"
 
       {[{"Data type", type_value2}, _],
        [
@@ -28,7 +28,7 @@ defmodule Interpreter do
          _,
          {"Reference modules", "String, :binary"}
        ]} ->
-        "Error, in #{function_name} operation both factors must be #{type}, but #{type_value2} and String were found"
+        "Error at line #{line} in #{function_name} operation both factors must be #{type}, but #{type_value2} and String were found"
 
       {[
          {"Data type", _},
@@ -44,19 +44,19 @@ defmodule Interpreter do
          _,
          {"Reference modules", "String, :binary"}
        ]} ->
-        "Error, in #{function_name} operation both factors must be #{type}, but String and String were found"
+        "Error at line #{line} in #{function_name} operation both factors must be #{type}, but String and String were found"
 
       _ ->
-        "Unexpected input format for values in #{function_name}"
+        "Unexpected input format for values in #{function_name} at #{line}"
     end
   end
 
-  defp bad_type_unitary(function_name, type, value) do
+  defp bad_type_unitary(function_name, type, value, line) do
     case IEx.Info.info(value) do
       [{"Data type", type_value}, _] ->
         throw(
           {:error,
-           "Error, in #{function_name} operation the factor must be #{type}, but #{type_value} was found"}
+           "Error at line #{line} in #{function_name} operation the factor must be #{type}, but #{type_value} was found"}
         )
     end
   end
@@ -236,17 +236,17 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:negative, expresion}) do
+  defp eval(scope, {:negative, expresion, {_simbol, line}}) do
     case eval(scope, expresion) do
       value when is_integer(value) -> -value
-      value -> bad_type_unitary("-", "Integer", value)
+      value -> bad_type_unitary("-", "Integer", value, line)
     end
   end
 
-  defp eval(scope, {:not_operation, expresion}) do
+  defp eval(scope, {:not_operation, expresion, {_simbol, line}}) do
     case eval(scope, expresion) do
       value when is_boolean(value) -> not value
-      value -> bad_type_unitary("not", "boolean", value)
+      value -> bad_type_unitary("not", "boolean", value, line)
     end
   end
 
@@ -315,7 +315,7 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:concat, {left_expression, right_expression}}) do
+  defp eval(scope, {:concat, {left_expression, right_expression}, {_simbol, line}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -323,11 +323,11 @@ defmodule Interpreter do
       [left_expression_evaluated, right_expression_evaluated],
       &is_bitstring/1,
       &<>/2,
-      bad_type("++", "string", left_expression_evaluated, right_expression_evaluated)
+      bad_type("++", "string", left_expression_evaluated, right_expression_evaluated, line)
     )
   end
 
-  defp eval(scope, {:plus, {left_expression, right_expression}}) do
+  defp eval(scope, {:plus, {left_expression, right_expression}, {_simbol, line}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -335,11 +335,11 @@ defmodule Interpreter do
       [left_expression_evaluated, right_expression_evaluated],
       &is_integer/1,
       &+/2,
-      bad_type("+", "Integers", left_expression_evaluated, right_expression_evaluated)
+      bad_type("+", "Integers", left_expression_evaluated, right_expression_evaluated, line)
     )
   end
 
-  defp eval(scope, {:minus, {left_expression, right_expression}}) do
+  defp eval(scope, {:minus, {left_expression, right_expression}, {_simbol, line}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -347,11 +347,11 @@ defmodule Interpreter do
       [left_expression_evaluated, right_expression_evaluated],
       &is_integer/1,
       &-/2,
-      bad_type("-", "Integers", left_expression_evaluated, right_expression_evaluated)
+      bad_type("-", "Integers", left_expression_evaluated, right_expression_evaluated, line)
     )
   end
 
-  defp eval(scope, {:mult, {left_expression, right_expression}}) do
+  defp eval(scope, {:mult, {left_expression, right_expression}, {_simbol, line}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -359,11 +359,11 @@ defmodule Interpreter do
       [left_expression_evaluated, right_expression_evaluated],
       &is_integer/1,
       &*/2,
-      bad_type("*", "Integers", left_expression_evaluated, right_expression_evaluated)
+      bad_type("*", "Integers", left_expression_evaluated, right_expression_evaluated, line)
     )
   end
 
-  defp eval(scope, {:divi, {left_expression, right_expression}}) do
+  defp eval(scope, {:divi, {left_expression, right_expression}, {_simbol, line}}) do
     try do
       dividend = eval(scope, left_expression)
       divider = eval(scope, right_expression)
@@ -377,7 +377,7 @@ defmodule Interpreter do
             [dividend, divider],
             &is_integer/1,
             &div/2,
-            bad_type("/", "Integers", dividend, divider)
+            bad_type("/", "Integers", dividend, divider, line)
           )
       end
     catch
@@ -385,7 +385,7 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:round_div, {left_expression, right_expression}}) do
+  defp eval(scope, {:round_div, {left_expression, right_expression}, {_simbol, line}}) do
     try do
       dividend = eval(scope, left_expression)
       divisor = eval(scope, right_expression)
@@ -398,7 +398,7 @@ defmodule Interpreter do
           check_type(
             [dividend, divisor],
             &is_integer/1,
-            bad_type("//", "Integers", dividend, divisor)
+            bad_type("//", "Integers", dividend, divisor, line)
           )
 
           result = div(dividend, divisor) + ceil(rem(dividend, divisor) / divisor)
@@ -410,7 +410,7 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:mod, {left_expression, right_expression}}) do
+  defp eval(scope, {:mod, {left_expression, right_expression}, {_simbol, line}}) do
     try do
       dividend = eval(scope, left_expression)
       module = eval(scope, right_expression)
@@ -424,7 +424,7 @@ defmodule Interpreter do
             [dividend, module],
             &is_integer/1,
             &Integer.mod/2,
-            bad_type("%", "Integers", dividend, module)
+            bad_type("%", "Integers", dividend, module, line)
           )
       end
     catch
@@ -432,7 +432,7 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:pow, {left_expression, right_expression}}) do
+  defp eval(scope, {:pow, {left_expression, right_expression}, {_simbol, line}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -440,29 +440,29 @@ defmodule Interpreter do
       [left_expression_evaluated, right_expression_evaluated],
       &is_integer/1,
       &Integer.pow/2,
-      bad_type("^", "Integers", left_expression_evaluated, right_expression_evaluated)
+      bad_type("^", "Integers", left_expression_evaluated, right_expression_evaluated, line)
     )
   end
 
-  defp eval(scope, {:stric_more, {left_expression, right_expression}}),
+  defp eval(scope, {:stric_more, {left_expression, right_expression}, {_simbol, _line}}),
     do: eval(scope, left_expression) > eval(scope, right_expression)
 
-  defp eval(scope, {:more_equal, {left_expression, right_expression}}),
+  defp eval(scope, {:more_equal, {left_expression, right_expression}, {_simbol, _line}}),
     do: eval(scope, left_expression) >= eval(scope, right_expression)
 
-  defp eval(scope, {:stric_less, {left_expression, right_expression}}),
+  defp eval(scope, {:stric_less, {left_expression, right_expression}, {_simbol, _line}}),
     do: eval(scope, left_expression) < eval(scope, right_expression)
 
-  defp eval(scope, {:less_equal, {left_expression, right_expression}}),
+  defp eval(scope, {:less_equal, {left_expression, right_expression}, {_simbol, _line}}),
     do: eval(scope, left_expression) <= eval(scope, right_expression)
 
-  defp eval(scope, {:equal, {left_expression, right_expression}}),
+  defp eval(scope, {:equal, {left_expression, right_expression}, {_simbol, _line}}),
     do: eval(scope, left_expression) == eval(scope, right_expression)
 
-  defp eval(scope, {:not_equal, {left_expression, right_expression}}),
+  defp eval(scope, {:not_equal, {left_expression, right_expression}, {_simbol, _line}}),
     do: eval(scope, left_expression) != eval(scope, right_expression)
 
-  defp eval(scope, {:and_operation, {left_expression, right_expression}}) do
+  defp eval(scope, {:and_operation, {left_expression, right_expression}, {_simbol, line}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -470,11 +470,11 @@ defmodule Interpreter do
       [left_expression_evaluated, right_expression_evaluated],
       &is_boolean/1,
       &and/2,
-      bad_type("and", "boolean", left_expression_evaluated, right_expression_evaluated)
+      bad_type("and", "boolean", left_expression_evaluated, right_expression_evaluated, line)
     )
   end
 
-  defp eval(scope, {:or_operation, {left_expression, right_expression}}) do
+  defp eval(scope, {:or_operation, {left_expression, right_expression}, {_simbol, line}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -482,7 +482,7 @@ defmodule Interpreter do
       [left_expression_evaluated, right_expression_evaluated],
       &is_boolean/1,
       &or/2,
-      bad_type("or", "boolean", left_expression_evaluated, right_expression_evaluated)
+      bad_type("or", "boolean", left_expression_evaluated, right_expression_evaluated, line)
     )
   end
 
@@ -524,7 +524,7 @@ defmodule Interpreter do
   defp eval(_, nil) do
   end
 
-  defp eval(scope, {:if_then_else, condition, then_expression, else_expression}) do
+  defp eval(scope, {:if_then_else, condition, then_expression, else_expression, {_simbol, line}}) do
     node = add_scope(scope, :for_loop)
     condition = eval(scope, condition)
 
@@ -538,7 +538,7 @@ defmodule Interpreter do
           end
 
         condition ->
-          bad_type_unitary("condition", "boolean", condition)
+          bad_type_unitary("condition", "boolean", condition, line)
       end
 
     remove_scope(:for_loop)
@@ -589,7 +589,7 @@ defmodule Interpreter do
       :error ->
         throw(
           {:error,
-           " Error at line #{line}: bad number of parameters on #{function_name} expected #{count_tuples(parameters_to_replace)} but got #{count_tuples(parameters)}"}
+           "Error at line #{line}: bad number of parameters on #{function_name} expected #{count_tuples(parameters_to_replace)} but got #{count_tuples(parameters)}"}
         )
 
       _ ->

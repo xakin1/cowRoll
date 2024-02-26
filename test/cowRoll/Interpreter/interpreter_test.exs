@@ -63,7 +63,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in + operation both factors must be Integers, but Integer and Atom were found"}
+                    "Error at line 1 in + operation both factors must be Integers, but Integer and Atom were found"}
       end
     end
 
@@ -75,7 +75,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in - operation both factors must be Integers, but Integer and Atom were found"}
+                    "Error at line 1 in - operation both factors must be Integers, but Integer and Atom were found"}
       end
     end
 
@@ -87,7 +87,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in * operation both factors must be Integers, but Integer and List were found"}
+                    "Error at line 1 in * operation both factors must be Integers, but Integer and List were found"}
       end
     end
 
@@ -99,7 +99,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in / operation both factors must be Integers, but Integer and Map were found"}
+                    "Error at line 1 in / operation both factors must be Integers, but Integer and Map were found"}
       end
     end
 
@@ -111,7 +111,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in // operation both factors must be Integers, but Integer and Atom were found"}
+                    "Error at line 1 in // operation both factors must be Integers, but Integer and Atom were found"}
       end
     end
 
@@ -123,7 +123,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in % operation both factors must be Integers, but Integer and Atom were found"}
+                    "Error at line 1 in % operation both factors must be Integers, but Integer and Atom were found"}
       end
     end
 
@@ -135,7 +135,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in ^ operation both factors must be Integers, but Integer and Atom were found"}
+                    "Error at line 1 in ^ operation both factors must be Integers, but Integer and Atom were found"}
       end
     end
 
@@ -147,7 +147,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in - operation the factor must be Integer, but Atom was found"}
+                    "Error at line 1 in - operation the factor must be Integer, but Atom was found"}
       end
     end
 
@@ -159,7 +159,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in or operation both factors must be boolean, but Integer and Atom were found"}
+                    "Error at line 1 in or operation both factors must be boolean, but Integer and Atom were found"}
       end
     end
 
@@ -171,7 +171,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in and operation both factors must be boolean, but Integer and Atom were found"}
+                    "Error at line 1 in and operation both factors must be boolean, but Integer and Atom were found"}
       end
 
       try do
@@ -181,7 +181,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in and operation both factors must be boolean, but String and String were found"}
+                    "Error at line 1 in and operation both factors must be boolean, but String and String were found"}
       end
     end
 
@@ -193,7 +193,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in not operation the factor must be boolean, but Integer was found"}
+                    "Error at line 1 in not operation the factor must be boolean, but Integer was found"}
       end
     end
 
@@ -205,7 +205,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in ++ operation both factors must be string, but String and Integer were found"}
+                    "Error at line 1 in ++ operation both factors must be string, but String and Integer were found"}
       end
 
       try do
@@ -215,7 +215,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in ++ operation both factors must be string, but Integer and String were found"}
+                    "Error at line 1 in ++ operation both factors must be string, but Integer and String were found"}
       end
     end
 
@@ -227,7 +227,7 @@ defmodule CowRoll.ScripsDndTest do
         error ->
           assert error ==
                    {:error,
-                    "Error, in condition operation the factor must be boolean, but Integer was found"}
+                    "Error at line 1 in condition operation the factor must be boolean, but Integer was found"}
       end
     end
   end
@@ -296,16 +296,6 @@ defmodule CowRoll.ScripsDndTest do
 
       assert result == "d1d8"
     end
-
-    # test "empty body should return fail" do
-    #   try do
-    #     Interpreter.eval_input("if true then else if false then 0 else 2-1 end")
-    #     assert false
-    #   rescue
-    #     _ ->
-    #       assert true
-    #   end
-    # end
 
     test "test if with boolean operation" do
       result = Interpreter.eval_input("if (5 == 1) then true else false end")
@@ -1263,7 +1253,9 @@ defmodule CowRoll.ScripsDndTest do
         assert false
       catch
         error ->
-          assert error == {:error, "bad number of parameters on hola_mundo expected 2 but got 1"}
+          assert error ==
+                   {:error,
+                    "Error at line 6: bad number of parameters on hola_mundo expected 2 but got 1"}
       end
     end
 
@@ -1281,7 +1273,9 @@ defmodule CowRoll.ScripsDndTest do
         assert false
       catch
         error ->
-          assert error == {:error, "bad number of parameters on hola_mundo expected 1 but got 2"}
+          assert error ==
+                   {:error,
+                    "Error at line 6: bad number of parameters on hola_mundo expected 1 but got 2"}
       end
     end
   end

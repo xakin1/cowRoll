@@ -9,7 +9,7 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:if_then_else, {:boolean, false, 1}, {:number, 2, 1}, nil}
+               {:if_then_else, {:boolean, false, 1}, {:number, 2, 1}, nil, {:if, 1}}
     end
 
     test "parse if_then_else statemen" do
@@ -17,8 +17,9 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:if_then_else, {:or_operation, {{:boolean, false, 1}, {:boolean, true, 1}}},
-                {:number, 2, 1}, nil}
+               {:if_then_else,
+                {:or_operation, {{:boolean, false, 1}, {:boolean, true, 1}}, {:or, 1}},
+                {:number, 2, 1}, nil, {:if, 1}}
     end
 
     test "parse if_then statemen with conditions" do
@@ -28,9 +29,9 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:if_then_else,
                 {:equal,
-                 {{:stric_more, {{:number, 4, 1}, {:number, 7, 1}}},
-                  {:or_operation, {{:boolean, true, 1}, {:boolean, false, 1}}}}}, {:number, 2, 1},
-                nil}
+                 {{:stric_more, {{:number, 4, 1}, {:number, 7, 1}}, {:>, 1}},
+                  {:or_operation, {{:boolean, true, 1}, {:boolean, false, 1}}, {:or, 1}}},
+                 {:==, 1}}, {:number, 2, 1}, nil, {:if, 1}}
     end
 
     test "parse if_then statemen with code" do
@@ -48,8 +49,8 @@ defmodule CowRoll.ParserTest do
                 {{:assignment, {:name, "y", 3}, {:number, 3, 3}},
                  {:if_then_else, {:boolean, true, 4},
                   {{:assignment, {:name, "x", 5}, {:number, 2, 5}},
-                   {:assignment, {:name, "y", 6}, {:plus, {{:name, "y", 6}, {:name, "x", 6}}}}},
-                  nil}}}
+                   {:assignment, {:name, "y", 6},
+                    {:plus, {{:name, "y", 6}, {:name, "x", 6}}, {:+, 6}}}}, nil, {:if, 4}}}}
     end
 
     test "parse if_then_else statemen with conditions and returning differents types" do
@@ -59,9 +60,9 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:if_then_else,
                 {:equal,
-                 {{:stric_more, {{:number, 4, 1}, {:number, 7, 1}}},
-                  {:or_operation, {{:boolean, true, 1}, {:boolean, false, 1}}}}}, {:number, 2, 1},
-                {:string, "'3'", 1}}
+                 {{:stric_more, {{:number, 4, 1}, {:number, 7, 1}}, {:>, 1}},
+                  {:or_operation, {{:boolean, true, 1}, {:boolean, false, 1}}, {:or, 1}}},
+                 {:==, 1}}, {:number, 2, 1}, {:string, "'3'", 1}, {:if, 1}}
     end
 
     test "parse if_then_else statemen with conditions and nested if_then_else in the if" do
@@ -71,10 +72,11 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:if_then_else,
                 {:equal,
-                 {{:stric_more, {{:number, 4, 1}, {:number, 7, 1}}},
-                  {:or_operation, {{:boolean, true, 1}, {:boolean, false, 1}}}}},
-                {:if_then_else, {:boolean, true, 1}, {:number, 2, 1}, {:number, 1, 1}},
-                {:plus, {{:number, 3, 1}, {:number, 5, 1}}}}
+                 {{:stric_more, {{:number, 4, 1}, {:number, 7, 1}}, {:>, 1}},
+                  {:or_operation, {{:boolean, true, 1}, {:boolean, false, 1}}, {:or, 1}}},
+                 {:==, 1}},
+                {:if_then_else, {:boolean, true, 1}, {:number, 2, 1}, {:number, 1, 1}, {:if, 1}},
+                {:plus, {{:number, 3, 1}, {:number, 5, 1}}, {:+, 1}}, {:if, 1}}
     end
 
     test "parse if_then_else statemen with conditions and nested if_then_else in the if and else" do
@@ -86,11 +88,13 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:if_then_else,
                 {:equal,
-                 {{:stric_more, {{:number, 4, 1}, {:number, 7, 1}}},
-                  {:or_operation, {{:boolean, true, 1}, {:boolean, false, 1}}}}},
-                {:if_then_else, {:boolean, true, 1}, {:number, 2, 1}, {:number, 1, 1}},
-                {:if_then_else, {:boolean, false, 1}, {:plus, {{:number, 3, 1}, {:number, 5, 1}}},
-                 {:number, 0, 1}}}
+                 {{:stric_more, {{:number, 4, 1}, {:number, 7, 1}}, {:>, 1}},
+                  {:or_operation, {{:boolean, true, 1}, {:boolean, false, 1}}, {:or, 1}}},
+                 {:==, 1}},
+                {:if_then_else, {:boolean, true, 1}, {:number, 2, 1}, {:number, 1, 1}, {:if, 1}},
+                {:if_then_else, {:boolean, false, 1},
+                 {:plus, {{:number, 3, 1}, {:number, 5, 1}}, {:+, 1}}, {:number, 0, 1}, {:if, 1}},
+                {:if, 1}}
     end
 
     test "parse elseif" do
@@ -114,18 +118,25 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:if_then_else, {:equal, {{:name, "clase", 1}, {:string, "'Bárbaro'", 1}}},
+               {:if_then_else,
+                {:equal, {{:name, "clase", 1}, {:string, "'Bárbaro'", 1}}, {:==, 1}},
                 {:number, 1, 2},
-                {:if_then_else, {:equal, {{:name, "clase", 3}, {:string, "'Bardo'", 3}}},
+                {:if_then_else,
+                 {:equal, {{:name, "clase", 3}, {:string, "'Bardo'", 3}}, {:==, 3}},
                  {:number, 2, 4},
-                 {:if_then_else, {:equal, {{:name, "clase", 5}, {:string, "'Clérigo'", 5}}},
+                 {:if_then_else,
+                  {:equal, {{:name, "clase", 5}, {:string, "'Clérigo'", 5}}, {:==, 5}},
                   {:number, 3, 6},
-                  {:if_then_else, {:equal, {{:name, "clase", 7}, {:string, "'Druida'", 7}}},
+                  {:if_then_else,
+                   {:equal, {{:name, "clase", 7}, {:string, "'Druida'", 7}}, {:==, 7}},
                    {:number, 4, 8},
-                   {:if_then_else, {:equal, {{:name, "clase", 9}, {:string, "'Hechicero'", 9}}},
+                   {:if_then_else,
+                    {:equal, {{:name, "clase", 9}, {:string, "'Hechicero'", 9}}, {:==, 9}},
                     {:number, 5, 10},
-                    {:if_then_else, {:equal, {{:name, "clase", 11}, {:string, "'Mago'", 11}}},
-                     {:number, 6, 12}, {:number, 0, 14}}}}}}}
+                    {:if_then_else,
+                     {:equal, {{:name, "clase", 11}, {:string, "'Mago'", 11}}, {:==, 11}},
+                     {:number, 6, 12}, {:number, 0, 14}, {:elseif, 11}}, {:elseif, 9}},
+                   {:elseif, 7}}, {:elseif, 5}}, {:elseif, 3}}, {:if, 1}}
     end
   end
 
@@ -211,7 +222,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:for_loop, {:name, "x", 2}, {:range, {:name, "y", 2}},
-                {:assignment, {:name, "x", 3}, {:plus, {{:number, 2, 3}, {:number, 1, 3}}}}}
+                {:assignment, {:name, "x", 3},
+                 {:plus, {{:number, 2, 3}, {:number, 1, 3}}, {:+, 3}}}}
 
       input = "for x <- 1..3 do
                   x = 2 + 1
@@ -221,7 +233,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:for_loop, {:name, "x", 1}, {:range, {{:number, 1, 1}, {:number, 3, 1}}},
-                {:assignment, {:name, "x", 2}, {:plus, {{:number, 2, 2}, {:number, 1, 2}}}}}
+                {:assignment, {:name, "x", 2},
+                 {:plus, {{:number, 2, 2}, {:number, 1, 2}}, {:+, 2}}}}
 
       input = "for x <- [1,2,3] do
                   y = 2 + x
@@ -232,7 +245,8 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:for_loop, {:name, "x", 1},
                 {:range, {:list, {{:number, 1, 1}, {{:number, 2, 1}, {:number, 3, 1}}}}},
-                {:assignment, {:name, "y", 2}, {:plus, {{:number, 2, 2}, {:name, "x", 2}}}}}
+                {:assignment, {:name, "y", 2},
+                 {:plus, {{:number, 2, 2}, {:name, "x", 2}}, {:+, 2}}}}
 
       input = "for x <- {a: 1,b: 2,c: 3} do
                   y = 2 + x
@@ -246,7 +260,8 @@ defmodule CowRoll.ParserTest do
                  {:map,
                   {{{:name, "a", 1}, {:number, 1, 1}},
                    {{{:name, "b", 1}, {:number, 2, 1}}, {{:name, "c", 1}, {:number, 3, 1}}}}}},
-                {:assignment, {:name, "y", 2}, {:plus, {{:number, 2, 2}, {:name, "x", 2}}}}}
+                {:assignment, {:name, "y", 2},
+                 {:plus, {{:number, 2, 2}, {:name, "x", 2}}, {:+, 2}}}}
 
       input = "for x <- y..3 do
                   x = 2 + 1
@@ -256,7 +271,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:for_loop, {:name, "x", 1}, {:range, {{:name, "y", 1}, {:number, 3, 1}}},
-                {:assignment, {:name, "x", 2}, {:plus, {{:number, 2, 2}, {:number, 1, 2}}}}}
+                {:assignment, {:name, "x", 2},
+                 {:plus, {{:number, 2, 2}, {:number, 1, 2}}, {:+, 2}}}}
 
       input = "for x <- y..z do
                   x = 2 + 1
@@ -266,7 +282,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:for_loop, {:name, "x", 1}, {:range, {{:name, "y", 1}, {:name, "z", 1}}},
-                {:assignment, {:name, "x", 2}, {:plus, {{:number, 2, 2}, {:number, 1, 2}}}}}
+                {:assignment, {:name, "x", 2},
+                 {:plus, {{:number, 2, 2}, {:number, 1, 2}}, {:+, 2}}}}
     end
 
     test "fors with arrays" do
@@ -284,8 +301,8 @@ defmodule CowRoll.ParserTest do
                 {:if_then_else,
                  {:stric_less,
                   {{:index, {{:name, "i", 3}, {:name, "rolls", 3}}},
-                   {:index, {{:name, "min_index", 3}, {:name, "rolls", 3}}}}},
-                 {:assignment, {:name, "min_index", 4}, {:name, "i", 4}}, nil}}
+                   {:index, {{:name, "min_index", 3}, {:name, "rolls", 3}}}}, {:<, 3}},
+                 {:assignment, {:name, "min_index", 4}, {:name, "i", 4}}, nil, {:if, 3}}}
     end
   end
 
@@ -366,14 +383,18 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:map,
-                {{{:name, "first", 1}, {:concat, {{:string, "'1'", 1}, {:string, "'2'", 1}}}},
+                {{{:name, "first", 1},
+                  {:concat, {{:string, "'1'", 1}, {:string, "'2'", 1}}, {:++, 1}}},
                  {{{:name, "second", 1},
                    {:plus,
                     {{:number, 3, 1},
-                     {:mult, {{:number, 2, 1}, {:plus, {{:number, 3, 1}, {:number, 3, 1}}}}}}}},
+                     {:mult,
+                      {{:number, 2, 1}, {:plus, {{:number, 3, 1}, {:number, 3, 1}}, {:+, 1}}},
+                      {:*, 1}}}, {:+, 1}}},
                   {{{:name, "third", 1}, {:string, "'3'", 1}},
                    {{:name, "fourth", 1},
-                    {:if_then_else, {:boolean, true, 1}, {:number, 3, 1}, {:string, "'r'", 1}}}}}}}
+                    {:if_then_else, {:boolean, true, 1}, {:number, 3, 1}, {:string, "'r'", 1},
+                     {:if, 1}}}}}}}
     end
   end
 
@@ -401,7 +422,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:and_operation,
-                {{:stric_more, {{:number, 3, 1}, {:number, 4, 1}}}, {:boolean, false, 1}}}
+                {{:stric_more, {{:number, 3, 1}, {:number, 4, 1}}, {:>, 1}},
+                 {:boolean, false, 1}}, {:and, 1}}
     end
 
     test "parse and with multiples factors" do
@@ -410,8 +432,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:and_operation,
-                {{:and_operation, {{:boolean, false, 1}, {:boolean, false, 1}}},
-                 {:boolean, false, 1}}}
+                {{:and_operation, {{:boolean, false, 1}, {:boolean, false, 1}}, {:and, 1}},
+                 {:boolean, false, 1}}, {:and, 1}}
 
       input = "(3>4) and false and (4<3 and true)"
       {:ok, token} = Parser.parse(input)
@@ -419,31 +441,35 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:and_operation,
                 {{:and_operation,
-                  {{:stric_more, {{:number, 3, 1}, {:number, 4, 1}}}, {:boolean, false, 1}}},
+                  {{:stric_more, {{:number, 3, 1}, {:number, 4, 1}}, {:>, 1}},
+                   {:boolean, false, 1}}, {:and, 1}},
                  {:and_operation,
-                  {{:stric_less, {{:number, 4, 1}, {:number, 3, 1}}}, {:boolean, true, 1}}}}}
+                  {{:stric_less, {{:number, 4, 1}, {:number, 3, 1}}, {:<, 1}},
+                   {:boolean, true, 1}}, {:and, 1}}}, {:and, 1}}
     end
 
     test "parse or" do
       input = "true or true"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:or_operation, {{:boolean, true, 1}, {:boolean, true, 1}}}
+      assert token == {:or_operation, {{:boolean, true, 1}, {:boolean, true, 1}}, {:or, 1}}
 
       input = "(3 > 4) or false"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
                {:or_operation,
-                {{:stric_more, {{:number, 3, 1}, {:number, 4, 1}}}, {:boolean, false, 1}}}
+                {{:stric_more, {{:number, 3, 1}, {:number, 4, 1}}, {:>, 1}},
+                 {:boolean, false, 1}}, {:or, 1}}
 
       input = "(4>7) == (true or false)"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
                {:equal,
-                {{:stric_more, {{:number, 4, 1}, {:number, 7, 1}}},
-                 {:or_operation, {{:boolean, true, 1}, {:boolean, false, 1}}}}}
+                {{:stric_more, {{:number, 4, 1}, {:number, 7, 1}}, {:>, 1}},
+                 {:or_operation, {{:boolean, true, 1}, {:boolean, false, 1}}, {:or, 1}}},
+                {:==, 1}}
     end
 
     test "parse or with multiples factors" do
@@ -452,8 +478,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:or_operation,
-                {{:or_operation, {{:boolean, false, 1}, {:boolean, false, 1}}},
-                 {:boolean, false, 1}}}
+                {{:or_operation, {{:boolean, false, 1}, {:boolean, false, 1}}, {:or, 1}},
+                 {:boolean, false, 1}}, {:or, 1}}
 
       input = "(3>4) or false or (4<3 or true)"
       {:ok, token} = Parser.parse(input)
@@ -461,21 +487,23 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:or_operation,
                 {{:or_operation,
-                  {{:stric_more, {{:number, 3, 1}, {:number, 4, 1}}}, {:boolean, false, 1}}},
+                  {{:stric_more, {{:number, 3, 1}, {:number, 4, 1}}, {:>, 1}},
+                   {:boolean, false, 1}}, {:or, 1}},
                  {:or_operation,
-                  {{:stric_less, {{:number, 4, 1}, {:number, 3, 1}}}, {:boolean, true, 1}}}}}
+                  {{:stric_less, {{:number, 4, 1}, {:number, 3, 1}}, {:<, 1}},
+                   {:boolean, true, 1}}, {:or, 1}}}, {:or, 1}}
     end
 
     test "parse not" do
       input = "not true"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:not_operation, {:boolean, true, 1}}
+      assert token == {:not_operation, {:boolean, true, 1}, {:not, 1}}
 
       input = "not false"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:not_operation, {:boolean, false, 1}}
+      assert token == {:not_operation, {:boolean, false, 1}, {:not, 1}}
     end
 
     test "parse not with operation" do
@@ -484,57 +512,60 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:not_operation,
-                {:equal, {{:boolean, true, 1}, {:stric_less, {{:number, 5, 1}, {:number, 6, 1}}}}}}
+                {:equal,
+                 {{:boolean, true, 1},
+                  {:stric_less, {{:number, 5, 1}, {:number, 6, 1}}, {:<, 1}}}, {:==, 1}},
+                {:not, 1}}
     end
 
     test "parse compare" do
       input = "true < false"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:stric_less, {{:boolean, true, 1}, {:boolean, false, 1}}}
+      assert token == {:stric_less, {{:boolean, true, 1}, {:boolean, false, 1}}, {:<, 1}}
 
       input = "true > false"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:stric_more, {{:boolean, true, 1}, {:boolean, false, 1}}}
+      assert token == {:stric_more, {{:boolean, true, 1}, {:boolean, false, 1}}, {:>, 1}}
 
       input = "true >= false"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:more_equal, {{:boolean, true, 1}, {:boolean, false, 1}}}
+      assert token == {:more_equal, {{:boolean, true, 1}, {:boolean, false, 1}}, {:>=, 1}}
 
       input = "true <= false"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:less_equal, {{:boolean, true, 1}, {:boolean, false, 1}}}
+      assert token == {:less_equal, {{:boolean, true, 1}, {:boolean, false, 1}}, {:<=, 1}}
 
       input = "3 > 4"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:stric_more, {{:number, 3, 1}, {:number, 4, 1}}}
+      assert token == {:stric_more, {{:number, 3, 1}, {:number, 4, 1}}, {:>, 1}}
 
       input = "3 < 4"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:stric_less, {{:number, 3, 1}, {:number, 4, 1}}}
+      assert token == {:stric_less, {{:number, 3, 1}, {:number, 4, 1}}, {:<, 1}}
 
       input = "3 >= 4"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:more_equal, {{:number, 3, 1}, {:number, 4, 1}}}
+      assert token == {:more_equal, {{:number, 3, 1}, {:number, 4, 1}}, {:>=, 1}}
 
       input = "3 <= 4"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:less_equal, {{:number, 3, 1}, {:number, 4, 1}}}
+      assert token == {:less_equal, {{:number, 3, 1}, {:number, 4, 1}}, {:<=, 1}}
 
       input = "3 + 9 <= (2 - 1)"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
                {:less_equal,
-                {{:plus, {{:number, 3, 1}, {:number, 9, 1}}},
-                 {:minus, {{:number, 2, 1}, {:number, 1, 1}}}}}
+                {{:plus, {{:number, 3, 1}, {:number, 9, 1}}, {:+, 1}},
+                 {:minus, {{:number, 2, 1}, {:number, 1, 1}}, {:-, 1}}}, {:<=, 1}}
     end
 
     test "parse compare multiple factors" do
@@ -543,28 +574,33 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:less_equal,
-                {{:stric_more, {{:number, 4, 1}, {:plus, {{:number, 3, 1}, {:number, 9, 1}}}}},
-                 {:minus, {{:number, 2, 1}, {:number, 1, 1}}}}}
+                {{:stric_more,
+                  {{:number, 4, 1}, {:plus, {{:number, 3, 1}, {:number, 9, 1}}, {:+, 1}}},
+                  {:>, 1}}, {:minus, {{:number, 2, 1}, {:number, 1, 1}}, {:-, 1}}}, {:<=, 1}}
     end
 
     test "parse equals" do
       input = "3 == 3"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:equal, {{:number, 3, 1}, {:number, 3, 1}}}
+      assert token == {:equal, {{:number, 3, 1}, {:number, 3, 1}}, {:==, 1}}
 
       input = "3 == (5>6)"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:equal, {{:number, 3, 1}, {:stric_more, {{:number, 5, 1}, {:number, 6, 1}}}}}
+               {:equal,
+                {{:number, 3, 1}, {:stric_more, {{:number, 5, 1}, {:number, 6, 1}}, {:>, 1}}},
+                {:==, 1}}
     end
 
     test "parse equals with multiple factors" do
       input = "3==3==4"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:equal, {{:equal, {{:number, 3, 1}, {:number, 3, 1}}}, {:number, 4, 1}}}
+      assert token ==
+               {:equal, {{:equal, {{:number, 3, 1}, {:number, 3, 1}}, {:==, 1}}, {:number, 4, 1}},
+                {:==, 1}}
     end
 
     test "parse equals string number and boolean" do
@@ -573,8 +609,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:equal,
-                {{:equal, {{:string, "'no soy igual'", 1}, {:number, 3, 1}}},
-                 {:boolean, false, 1}}}
+                {{:equal, {{:string, "'no soy igual'", 1}, {:number, 3, 1}}, {:==, 1}},
+                 {:boolean, false, 1}}, {:==, 1}}
     end
 
     test "parse parenthesis" do
@@ -586,21 +622,24 @@ defmodule CowRoll.ParserTest do
       input = "(false or true) "
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:or_operation, {{:boolean, false, 1}, {:boolean, true, 1}}}
+      assert token == {:or_operation, {{:boolean, false, 1}, {:boolean, true, 1}}, {:or, 1}}
 
       input = "(true == (5<6))"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:equal, {{:boolean, true, 1}, {:stric_less, {{:number, 5, 1}, {:number, 6, 1}}}}}
+               {:equal,
+                {{:boolean, true, 1}, {:stric_less, {{:number, 5, 1}, {:number, 6, 1}}, {:<, 1}}},
+                {:==, 1}}
 
       input = "(4 > 3 + 9 <= (2 - 1))"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
                {:less_equal,
-                {{:stric_more, {{:number, 4, 1}, {:plus, {{:number, 3, 1}, {:number, 9, 1}}}}},
-                 {:minus, {{:number, 2, 1}, {:number, 1, 1}}}}}
+                {{:stric_more,
+                  {{:number, 4, 1}, {:plus, {{:number, 3, 1}, {:number, 9, 1}}, {:+, 1}}},
+                  {:>, 1}}, {:minus, {{:number, 2, 1}, {:number, 1, 1}}, {:-, 1}}}, {:<=, 1}}
     end
 
     test "parse complex boolean expression" do
@@ -612,10 +651,14 @@ defmodule CowRoll.ParserTest do
                 {{:equal,
                   {{:plus,
                     {{:divi,
-                      {{:plus, {{:number, 3, 1}, {:mult, {{:number, 5, 1}, {:number, 2, 1}}}}},
-                       {:pow, {{:number, 2, 1}, {:number, 3, 1}}}}},
-                     {:mod, {{:number, 9, 1}, {:number, 17, 1}}}}}, {:number, 1, 1}}},
-                 {:more_equal, {{:minus, {{:number, 6, 1}, {:number, 2, 1}}}, {:number, 3, 1}}}}}
+                      {{:plus,
+                        {{:number, 3, 1}, {:mult, {{:number, 5, 1}, {:number, 2, 1}}, {:*, 1}}},
+                        {:+, 1}}, {:pow, {{:number, 2, 1}, {:number, 3, 1}}, {:^, 1}}}, {:/, 1}},
+                     {:mod, {{:number, 9, 1}, {:number, 17, 1}}, {:%, 1}}}, {:+, 1}},
+                   {:number, 1, 1}}, {:==, 1}},
+                 {:more_equal,
+                  {{:minus, {{:number, 6, 1}, {:number, 2, 1}}, {:-, 1}}, {:number, 3, 1}},
+                  {:>=, 1}}}, {:and, 1}}
     end
   end
 
@@ -644,7 +687,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:index,
-                {{:plus, {{:number, 1, 1}, {:number, 3, 1}}}, {:string, "'hola mundo'", 1}}}
+                {{:plus, {{:number, 1, 1}, {:number, 3, 1}}, {:+, 1}},
+                 {:string, "'hola mundo'", 1}}}
     end
 
     test "parse string with a number" do
@@ -662,7 +706,7 @@ defmodule CowRoll.ParserTest do
     test "concat string" do
       input = "\"hola \" ++ \"mundo\""
       {:ok, token} = Parser.parse(input)
-      assert token == {:concat, {{:string, "\"hola \"", 1}, {:string, "\"mundo\"", 1}}}
+      assert token == {:concat, {{:string, "\"hola \"", 1}, {:string, "\"mundo\"", 1}}, {:++, 1}}
     end
 
     test "concat n strings" do
@@ -672,8 +716,8 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:concat,
                 {{:concat,
-                  {{:concat, {{:string, "\"hola \"", 1}, {:string, "\"mundo\"", 1}}},
-                   {:string, "\", 2\"", 1}}}, {:string, "\"\"", 1}}}
+                  {{:concat, {{:string, "\"hola \"", 1}, {:string, "\"mundo\"", 1}}, {:++, 1}},
+                   {:string, "\", 2\"", 1}}, {:++, 1}}, {:string, "\"\"", 1}}, {:++, 1}}
     end
   end
 
@@ -726,7 +770,8 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:index, {{:number, 2, 1}, {:list, {:minus, {{:number, 1, 1}, {:number, 1, 1}}}}}}
+               {:index,
+                {{:number, 2, 1}, {:list, {:minus, {{:number, 1, 1}, {:number, 1, 1}}, {:-, 1}}}}}
     end
 
     test "array with an operation in the index" do
@@ -735,7 +780,7 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:index,
-                {{:plus, {{:number, 2, 1}, {:number, 3, 1}}},
+                {{:plus, {{:number, 2, 1}, {:number, 3, 1}}, {:+, 1}},
                  {:list,
                   {{:string, "'1'", 1},
                    {{:number, 2, 1},
@@ -749,7 +794,7 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:stric_less,
                 {{:index, {{:name, "i", 1}, {:name, "rolls", 1}}},
-                 {:index, {{:name, "min_index", 1}, {:name, "rolls", 1}}}}}
+                 {:index, {{:name, "min_index", 1}, {:name, "rolls", 1}}}}, {:<, 1}}
     end
 
     test "index an nested array" do
@@ -774,7 +819,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:assignment, {:name, "raza", 2},
-                {:index, {{:plus, {{:number, 3, 2}, {:number, 5, 2}}}, {:name, "razas", 2}}}}
+                {:index,
+                 {{:plus, {{:number, 3, 2}, {:number, 5, 2}}, {:+, 2}}, {:name, "razas", 2}}}}
     end
 
     test "array with an operation in index" do
@@ -783,7 +829,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:index,
-                {{:plus, {{:number, 2, 1}, {:number, 3, 1}}}, {:list, {:string, "'1'", 1}}}}
+                {{:plus, {{:number, 2, 1}, {:number, 3, 1}}, {:+, 1}},
+                 {:list, {:string, "'1'", 1}}}}
     end
 
     test "array with two string elements" do
@@ -819,12 +866,15 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:list,
-                {{:concat, {{:string, "'1'", 1}, {:string, "'2'", 1}}},
+                {{:concat, {{:string, "'1'", 1}, {:string, "'2'", 1}}, {:++, 1}},
                  {{:plus,
                    {{:number, 3, 1},
-                    {:mult, {{:number, 2, 1}, {:plus, {{:number, 3, 1}, {:number, 3, 1}}}}}}},
+                    {:mult,
+                     {{:number, 2, 1}, {:plus, {{:number, 3, 1}, {:number, 3, 1}}, {:+, 1}}},
+                     {:*, 1}}}, {:+, 1}},
                   {{:string, "'3'", 1},
-                   {:if_then_else, {:boolean, true, 1}, {:number, 3, 1}, {:string, "'r'", 1}}}}}}
+                   {:if_then_else, {:boolean, true, 1}, {:number, 3, 1}, {:string, "'r'", 1},
+                    {:if, 1}}}}}}
     end
   end
 
@@ -833,32 +883,32 @@ defmodule CowRoll.ParserTest do
       input = "1+1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:plus, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:plus, {{:number, 1, 1}, {:number, 1, 1}}, {:+, 1}}
 
       input = "1+ 1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:plus, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:plus, {{:number, 1, 1}, {:number, 1, 1}}, {:+, 1}}
 
       input = "1 +1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:plus, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:plus, {{:number, 1, 1}, {:number, 1, 1}}, {:+, 1}}
 
       input = "1 + 1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:plus, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:plus, {{:number, 1, 1}, {:number, 1, 1}}, {:+, 1}}
 
       input = " 1 + 1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:plus, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:plus, {{:number, 1, 1}, {:number, 1, 1}}, {:+, 1}}
 
       input = " 1 + 1 "
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:plus, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:plus, {{:number, 1, 1}, {:number, 1, 1}}, {:+, 1}}
     end
 
     test "parse plus operation with n operators" do
@@ -867,8 +917,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:plus,
-                {{:plus, {{:plus, {{:number, 1, 1}, {:number, 1, 1}}}, {:number, 3, 1}}},
-                 {:number, 4, 1}}}
+                {{:plus, {{:plus, {{:number, 1, 1}, {:number, 1, 1}}, {:+, 1}}, {:number, 3, 1}},
+                  {:+, 1}}, {:number, 4, 1}}, {:+, 1}}
     end
   end
 
@@ -877,28 +927,28 @@ defmodule CowRoll.ParserTest do
       input = "- 1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:negative, {:number, 1, 1}}
+      assert token == {:negative, {:number, 1, 1}, {:-, 1}}
     end
 
     test "parse negation of negation" do
       input = "- - 1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:negative, {:negative, {:number, 1, 1}}}
+      assert token == {:negative, {:negative, {:number, 1, 1}, {:-, 1}}, {:-, 1}}
     end
 
     test "parse negation inside parenthesis" do
       input = "(- 1)"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:negative, {:number, 1, 1}}
+      assert token == {:negative, {:number, 1, 1}, {:-, 1}}
     end
 
     test "parse negation outside parenthesis" do
       input = "-( 1)"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:negative, {:number, 1, 1}}
+      assert token == {:negative, {:number, 1, 1}, {:-, 1}}
     end
 
     test "test negative in a operation with and without parenthesis" do
@@ -909,8 +959,9 @@ defmodule CowRoll.ParserTest do
                {:plus,
                 {{:minus,
                   {{:plus,
-                    {{:plus, {{:number, 1, 1}, {:negative, {:number, 3, 1}}}}, {:number, 3, 1}}},
-                   {:number, 2, 1}}}, {:number, 4, 1}}}
+                    {{:plus, {{:number, 1, 1}, {:negative, {:number, 3, 1}, {:-, 1}}}, {:+, 1}},
+                     {:number, 3, 1}}, {:+, 1}}, {:number, 2, 1}}, {:-, 1}}, {:number, 4, 1}},
+                {:+, 1}}
     end
   end
 
@@ -919,7 +970,7 @@ defmodule CowRoll.ParserTest do
       input = "1 - 1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:minus, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:minus, {{:number, 1, 1}, {:number, 1, 1}}, {:-, 1}}
     end
 
     test "parse minus minus operation" do
@@ -928,8 +979,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:minus,
-                {{:plus, {{:negative, {:number, 3, 1}}, {:number, 3, 1}}},
-                 {:mult, {{:number, 2, 1}, {:number, 3, 1}}}}}
+                {{:plus, {{:negative, {:number, 3, 1}, {:-, 1}}, {:number, 3, 1}}, {:+, 1}},
+                 {:mult, {{:number, 2, 1}, {:number, 3, 1}}, {:*, 1}}}, {:-, 1}}
     end
 
     test "parse minus operation with n operators" do
@@ -938,8 +989,9 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:minus,
-                {{:minus, {{:minus, {{:number, 1, 1}, {:number, 1, 1}}}, {:number, 3, 1}}},
-                 {:number, 4, 1}}}
+                {{:minus,
+                  {{:minus, {{:number, 1, 1}, {:number, 1, 1}}, {:-, 1}}, {:number, 3, 1}},
+                  {:-, 1}}, {:number, 4, 1}}, {:-, 1}}
     end
   end
 
@@ -948,32 +1000,32 @@ defmodule CowRoll.ParserTest do
       input = "1*1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:mult, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:mult, {{:number, 1, 1}, {:number, 1, 1}}, {:*, 1}}
 
       input = "1* 1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:mult, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:mult, {{:number, 1, 1}, {:number, 1, 1}}, {:*, 1}}
 
       input = "1 *1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:mult, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:mult, {{:number, 1, 1}, {:number, 1, 1}}, {:*, 1}}
 
       input = "1 * 1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:mult, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:mult, {{:number, 1, 1}, {:number, 1, 1}}, {:*, 1}}
 
       input = " 1 * 1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:mult, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:mult, {{:number, 1, 1}, {:number, 1, 1}}, {:*, 1}}
 
       input = " 1 * 1 "
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:mult, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:mult, {{:number, 1, 1}, {:number, 1, 1}}, {:*, 1}}
     end
 
     test "parse mult operation with n operators" do
@@ -983,8 +1035,9 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:plus,
                 {{:mult,
-                  {{:mult, {{:mult, {{:number, 1, 1}, {:number, 1, 1}}}, {:number, 3, 1}}},
-                   {:number, 4, 1}}}, {:number, 5, 1}}}
+                  {{:mult,
+                    {{:mult, {{:number, 1, 1}, {:number, 1, 1}}, {:*, 1}}, {:number, 3, 1}},
+                    {:*, 1}}, {:number, 4, 1}}, {:*, 1}}, {:number, 5, 1}}, {:+, 1}}
     end
   end
 
@@ -993,32 +1046,32 @@ defmodule CowRoll.ParserTest do
       input = "1/1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:divi, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:divi, {{:number, 1, 1}, {:number, 1, 1}}, {:/, 1}}
 
       input = "1/ 1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:divi, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:divi, {{:number, 1, 1}, {:number, 1, 1}}, {:/, 1}}
 
       input = "1 /1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:divi, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:divi, {{:number, 1, 1}, {:number, 1, 1}}, {:/, 1}}
 
       input = "1 / 1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:divi, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:divi, {{:number, 1, 1}, {:number, 1, 1}}, {:/, 1}}
 
       input = " 1 / 1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:divi, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:divi, {{:number, 1, 1}, {:number, 1, 1}}, {:/, 1}}
 
       input = " 1 / 1 "
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:divi, {{:number, 1, 1}, {:number, 1, 1}}}
+      assert token == {:divi, {{:number, 1, 1}, {:number, 1, 1}}, {:/, 1}}
     end
   end
 
@@ -1027,22 +1080,25 @@ defmodule CowRoll.ParserTest do
       input = "2^3"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:pow, {{:number, 2, 1}, {:number, 3, 1}}}
+      assert token == {:pow, {{:number, 2, 1}, {:number, 3, 1}}, {:^, 1}}
 
       input = "2^-1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:pow, {{:number, 2, 1}, {:negative, {:number, 1, 1}}}}
+      assert token == {:pow, {{:number, 2, 1}, {:negative, {:number, 1, 1}, {:-, 1}}}, {:^, 1}}
 
       input = "-2^1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:pow, {{:negative, {:number, 2, 1}}, {:number, 1, 1}}}
+      assert token == {:pow, {{:negative, {:number, 2, 1}, {:-, 1}}, {:number, 1, 1}}, {:^, 1}}
 
       input = "-2^-1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:pow, {{:negative, {:number, 2, 1}}, {:negative, {:number, 1, 1}}}}
+      assert token ==
+               {:pow,
+                {{:negative, {:number, 2, 1}, {:-, 1}}, {:negative, {:number, 1, 1}, {:-, 1}}},
+                {:^, 1}}
     end
 
     test "parse concat pows" do
@@ -1052,7 +1108,8 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:pow,
                 {{:number, 2, 1},
-                 {:pow, {{:number, 2, 1}, {:pow, {{:number, 2, 1}, {:number, 2, 1}}}}}}}
+                 {:pow, {{:number, 2, 1}, {:pow, {{:number, 2, 1}, {:number, 2, 1}}, {:^, 1}}},
+                  {:^, 1}}}, {:^, 1}}
     end
 
     test "parse pows with operations" do
@@ -1060,13 +1117,15 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:pow, {{:plus, {{:number, 3, 1}, {:number, 2, 1}}}, {:number, 2, 1}}}
+               {:pow, {{:plus, {{:number, 3, 1}, {:number, 2, 1}}, {:+, 1}}, {:number, 2, 1}},
+                {:^, 1}}
 
       input = "2^(3+2)"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:pow, {{:number, 2, 1}, {:plus, {{:number, 3, 1}, {:number, 2, 1}}}}}
+               {:pow, {{:number, 2, 1}, {:plus, {{:number, 3, 1}, {:number, 2, 1}}, {:+, 1}}},
+                {:^, 1}}
 
       input = "2^(3+2)^2"
       {:ok, token} = Parser.parse(input)
@@ -1074,7 +1133,8 @@ defmodule CowRoll.ParserTest do
       assert token ==
                {:pow,
                 {{:number, 2, 1},
-                 {:pow, {{:plus, {{:number, 3, 1}, {:number, 2, 1}}}, {:number, 2, 1}}}}}
+                 {:pow, {{:plus, {{:number, 3, 1}, {:number, 2, 1}}, {:+, 1}}, {:number, 2, 1}},
+                  {:^, 1}}}, {:^, 1}}
     end
   end
 
@@ -1083,22 +1143,25 @@ defmodule CowRoll.ParserTest do
       input = "2%3"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:mod, {{:number, 2, 1}, {:number, 3, 1}}}
+      assert token == {:mod, {{:number, 2, 1}, {:number, 3, 1}}, {:%, 1}}
 
       input = "2%-1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:mod, {{:number, 2, 1}, {:negative, {:number, 1, 1}}}}
+      assert token == {:mod, {{:number, 2, 1}, {:negative, {:number, 1, 1}, {:-, 1}}}, {:%, 1}}
 
       input = "-2%1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:mod, {{:negative, {:number, 2, 1}}, {:number, 1, 1}}}
+      assert token == {:mod, {{:negative, {:number, 2, 1}, {:-, 1}}, {:number, 1, 1}}, {:%, 1}}
 
       input = "-2%-1"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:mod, {{:negative, {:number, 2, 1}}, {:negative, {:number, 1, 1}}}}
+      assert token ==
+               {:mod,
+                {{:negative, {:number, 2, 1}, {:-, 1}}, {:negative, {:number, 1, 1}, {:-, 1}}},
+                {:%, 1}}
     end
 
     test "parse concat mods" do
@@ -1107,8 +1170,8 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {:mod,
-                {{:mod, {{:mod, {{:number, 2, 1}, {:number, 2, 1}}}, {:number, 3, 1}}},
-                 {:number, 4, 1}}}
+                {{:mod, {{:mod, {{:number, 2, 1}, {:number, 2, 1}}, {:%, 1}}, {:number, 3, 1}},
+                  {:%, 1}}, {:number, 4, 1}}, {:%, 1}}
     end
 
     test "parse mods with operations" do
@@ -1116,21 +1179,23 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:mod, {{:plus, {{:number, 3, 1}, {:number, 2, 1}}}, {:number, 2, 1}}}
+               {:mod, {{:plus, {{:number, 3, 1}, {:number, 2, 1}}, {:+, 1}}, {:number, 2, 1}},
+                {:%, 1}}
 
       input = "2%(3+2)"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:mod, {{:number, 2, 1}, {:plus, {{:number, 3, 1}, {:number, 2, 1}}}}}
+               {:mod, {{:number, 2, 1}, {:plus, {{:number, 3, 1}, {:number, 2, 1}}, {:+, 1}}},
+                {:%, 1}}
 
       input = "2%(3+2)%2"
       {:ok, token} = Parser.parse(input)
 
       assert token ==
                {:mod,
-                {{:mod, {{:number, 2, 1}, {:plus, {{:number, 3, 1}, {:number, 2, 1}}}}},
-                 {:number, 2, 1}}}
+                {{:mod, {{:number, 2, 1}, {:plus, {{:number, 3, 1}, {:number, 2, 1}}, {:+, 1}}},
+                  {:%, 1}}, {:number, 2, 1}}, {:%, 1}}
     end
   end
 
@@ -1139,32 +1204,32 @@ defmodule CowRoll.ParserTest do
       input = "1//2"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:round_div, {{:number, 1, 1}, {:number, 2, 1}}}
+      assert token == {:round_div, {{:number, 1, 1}, {:number, 2, 1}}, {:"//", 1}}
 
       input = "1//2"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:round_div, {{:number, 1, 1}, {:number, 2, 1}}}
+      assert token == {:round_div, {{:number, 1, 1}, {:number, 2, 1}}, {:"//", 1}}
 
       input = "1 //2"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:round_div, {{:number, 1, 1}, {:number, 2, 1}}}
+      assert token == {:round_div, {{:number, 1, 1}, {:number, 2, 1}}, {:"//", 1}}
 
       input = "1 // 2"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:round_div, {{:number, 1, 1}, {:number, 2, 1}}}
+      assert token == {:round_div, {{:number, 1, 1}, {:number, 2, 1}}, {:"//", 1}}
 
       input = " 1 // 2"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:round_div, {{:number, 1, 1}, {:number, 2, 1}}}
+      assert token == {:round_div, {{:number, 1, 1}, {:number, 2, 1}}, {:"//", 1}}
 
       input = " 1 // 2 "
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:round_div, {{:number, 1, 1}, {:number, 2, 1}}}
+      assert token == {:round_div, {{:number, 1, 1}, {:number, 2, 1}}, {:"//", 1}}
     end
   end
 
@@ -1250,9 +1315,9 @@ defmodule CowRoll.ParserTest do
                 {:function_code,
                  {:if_then_else,
                   {:or_operation,
-                   {{:stric_less, {{:name, "number_of_dices", 3}, {:number, 0, 3}}},
-                    {:stric_less, {{:name, "number_of_face", 3}, {:number, 0, 3}}}}},
-                  {:negative, {:number, 1, 4}},
+                   {{:stric_less, {{:name, "number_of_dices", 3}, {:number, 0, 3}}, {:<, 3}},
+                    {:stric_less, {{:name, "number_of_face", 3}, {:number, 0, 3}}, {:<, 3}}},
+                   {:or, 3}}, {:negative, {:number, 1, 4}, {:-, 4}},
                   {{:assignment, {:name, "roll", 6},
                     {:call_function, {:name, "rand", 6},
                      {:parameters, {:name, "number_of_face", 6}}}},
@@ -1260,8 +1325,8 @@ defmodule CowRoll.ParserTest do
                     {{:name, "roll", 7},
                      {:call_function, {:name, "roll_dices", 7},
                       {:parameters,
-                       {{:minus, {{:name, "number_of_dices", 7}, {:number, 1, 7}}},
-                        {:name, "number_of_face", 7}}}}}}}}}}
+                       {{:minus, {{:name, "number_of_dices", 7}, {:number, 1, 7}}, {:-, 7}},
+                        {:name, "number_of_face", 7}}}}}, {:+, 7}}}, {:if, 3}}}}
     end
 
     test "parse basic function with parameters" do
@@ -1290,8 +1355,9 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {{:assignment_function, {:function_name, {:name, "f", 2}}, {:parameters, nil},
-                 {:function_code, {:plus, {{:number, 5, 3}, {:number, 4, 3}}}}},
-                {:minus, {{:number, 1, 5}, {:call_function, {:name, "f", 5}, {:parameters, nil}}}}}
+                 {:function_code, {:plus, {{:number, 5, 3}, {:number, 4, 3}}, {:+, 3}}}},
+                {:minus, {{:number, 1, 5}, {:call_function, {:name, "f", 5}, {:parameters, nil}}},
+                 {:-, 5}}}
     end
 
     test "parse basic call function without parameters" do
@@ -1324,7 +1390,7 @@ defmodule CowRoll.ParserTest do
       expect =
         {{:assignment, {:name, "x", 1}, {:number, 2, 1}},
          {{:assignment, {:name, "y", 2}, {:number, 3, 2}},
-          {:assignment, {:name, "z", 3}, {:plus, {{:number, 4, 3}, {:name, "x", 3}}}}}}
+          {:assignment, {:name, "z", 3}, {:plus, {{:number, 4, 3}, {:name, "x", 3}}, {:+, 3}}}}}
 
       assert token == expect
 
@@ -1343,9 +1409,12 @@ defmodule CowRoll.ParserTest do
 
       assert token ==
                {{:assignment, {:name, "x", 1}, {:number, 6, 1}},
-                {{:assignment, {:name, "y", 1}, {:plus, {{:name, "x", 1}, {:number, 2, 1}}}},
-                 {{:assignment, {:name, "x", 1}, {:plus, {{:name, "x", 1}, {:number, 2, 1}}}},
-                  {:assignment, {:name, "z", 1}, {:plus, {{:name, "x", 1}, {:name, "y", 1}}}}}}}
+                {{:assignment, {:name, "y", 1},
+                  {:plus, {{:name, "x", 1}, {:number, 2, 1}}, {:+, 1}}},
+                 {{:assignment, {:name, "x", 1},
+                   {:plus, {{:name, "x", 1}, {:number, 2, 1}}, {:+, 1}}},
+                  {:assignment, {:name, "z", 1},
+                   {:plus, {{:name, "x", 1}, {:name, "y", 1}}, {:+, 1}}}}}}
     end
   end
 
@@ -1377,7 +1446,7 @@ defmodule CowRoll.ParserTest do
       x+y"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:plus, {{:name, "x", 2}, {:name, "y", 2}}}
+      assert token == {:plus, {{:name, "x", 2}, {:name, "y", 2}}, {:+, 2}}
     end
 
     test "parse with functions" do
@@ -1386,7 +1455,8 @@ defmodule CowRoll.ParserTest do
       {:ok, token} = Parser.parse(input)
 
       assert token ==
-               {:mult, {{:name, "x", 2}, {:call_function, {:name, "y", 2}, {:parameters, nil}}}}
+               {:mult, {{:name, "x", 2}, {:call_function, {:name, "y", 2}, {:parameters, nil}}},
+                {:*, 2}}
     end
 
     test "parse with assignment" do
@@ -1394,7 +1464,9 @@ defmodule CowRoll.ParserTest do
       z= 4+x"
       {:ok, token} = Parser.parse(input)
 
-      assert token == {:assignment, {:name, "z", 2}, {:plus, {{:number, 4, 2}, {:name, "x", 2}}}}
+      assert token ==
+               {:assignment, {:name, "z", 2},
+                {:plus, {{:number, 4, 2}, {:name, "x", 2}}, {:+, 2}}}
     end
   end
 end
