@@ -174,6 +174,14 @@ defmodule CowRoll.ParserTest do
       end)
     end
 
+    test "missing end statements with functions" do
+      input = "function hola() do x +3"
+
+      assert_raise(RuntimeError, "Error: Missing 'end' for 'function hola' on line 1", fn ->
+        Parser.parse(input)
+      end)
+    end
+
     test "missing end statements with nested blocks" do
       input = "if true then
         for y <- x do 3

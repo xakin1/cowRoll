@@ -40,6 +40,17 @@ defmodule SyntaxAnalyzer do
     analyze_aux(rest, records_updated)
   end
 
+  defp analyze_aux(
+         [{:def_function, simbol, linea}, {:name, function_name, _line} | rest],
+         records
+       ) do
+    records_updated =
+      Map.update!(records, :open_blocks, &(&1 + 1))
+      |> Map.update!(:start_missing_blocks, &[{linea, "#{simbol} #{function_name}"} | &1])
+
+    analyze_aux(rest, records_updated)
+  end
+
   defp analyze_aux([{:end, linea} | rest], records) do
     open_b = Map.get(records, :open_blocks, 0)
     close_b = Map.get(records, :close_blocks, 0)
