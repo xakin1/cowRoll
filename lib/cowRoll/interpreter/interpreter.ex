@@ -17,10 +17,8 @@ defmodule Interpreter do
   defp bad_type_unitary(function_name, type, value, line) do
     case get_type(value) do
       type_value ->
-        throw(
-          {:error,
-           "Error at line #{line} in #{function_name} operation, the factor must be #{type}, but #{type_value} was found"}
-        )
+        raise RuntimeError,
+              "Error at line #{line} in #{function_name} operation, the factor must be #{type}, but #{type_value} was found"
     end
   end
 
@@ -86,12 +84,10 @@ defmodule Interpreter do
   end
 
   defp throw_error_type(data) do
-    case IEx.Info.info(data) do
-      [{"Data type", type}, _] ->
-        throw(
-          {:error,
-           "Invalid type: '#{data}' it's a/an #{type}. The type must be a list, map, or string."}
-        )
+    case get_type(data) do
+      type ->
+        raise RuntimeError,
+              "Invalid type: '#{data}' it's a/an #{type}. The type must be a list, map, or string."
     end
   end
 
@@ -213,9 +209,9 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:name, variable, _line}) do
+  defp eval(scope, {:name, variable, line}) do
     case get_variable_from_scope(scope, variable) do
-      false -> throw({:error, "Variable '#{variable}' is not defined"})
+      false -> raise RuntimeError, "Variable '#{variable}' is not defined on line #{line}"
       value -> value
     end
   end
@@ -260,7 +256,20 @@ defmodule Interpreter do
   defp eval(scope, {:assignment, var, value}) do
     case var do
       {:name, var_name, _line} ->
-        add_variable_to_scope(scope, var_name, eval(scope, value))
+        case value do
+          {:assignment_function, {:function_name, {:name, _, _line}}, {:parameters, parameters},
+           {:function_code, code}} ->
+            eval(
+              scope,
+              {:assignment_function, {:function_name, {:name, var_name, 1}},
+               {:parameters, parameters}, {:function_code, code}}
+            )
+
+            nil
+
+          _ ->
+            add_variable_to_scope(scope, var_name, eval(scope, value))
+        end
 
       {:index, _} ->
         case find_name_pattern(var) do
@@ -330,7 +339,7 @@ defmodule Interpreter do
 
       case {dividend, divider} do
         {_, 0} ->
-          {:error, "Error: division by 0"}
+          raise RuntimeError, "Error: division by 0"
 
         {dividend, divider} ->
           do_binary_operation_with_check(
@@ -341,7 +350,7 @@ defmodule Interpreter do
           )
       end
     catch
-      {:error, error} -> throw({:error, error})
+      {:error, error} -> raise RuntimeError, error
     end
   end
 
@@ -352,7 +361,7 @@ defmodule Interpreter do
 
       case {dividend, divisor} do
         {_, 0} ->
-          {:error, "Error: division by 0"}
+          raise RuntimeError, "Error: division by 0"
 
         {dividend, divisor} ->
           check_type(
@@ -377,7 +386,7 @@ defmodule Interpreter do
 
       case {dividend, module} do
         {_, 0} ->
-          throw({:error, "Error: division by 0"})
+          raise RuntimeError, "Error: division by 0"
 
         {dividend, module} ->
           do_binary_operation_with_check(
@@ -519,7 +528,7 @@ defmodule Interpreter do
        ) do
     case get_fuction_from_scope(function_name) do
       {false, name, line} ->
-        throw({:error, "Error en la linea #{line}: Función: '#{name}' no encontrada"})
+        raise RuntimeError, "Error en la linea #{line}: Función: '#{name}' no encontrada"
 
       {parameters_to_replace, code} ->
         call_function(scope, function_name, parameters, parameters_to_replace, code)
@@ -548,10 +557,8 @@ defmodule Interpreter do
 
     case initialize_function(scope, parameters_to_replace, parameters) do
       :error ->
-        throw(
-          {:error,
-           "Error at line #{line}: bad number of parameters on #{function_name} expected #{count_tuples(parameters_to_replace)} but got #{count_tuples(parameters)}"}
-        )
+        raise RuntimeError,
+              "Error at line #{line}: bad number of parameters on #{function_name} expected #{count_tuples(parameters_to_replace)} but got #{count_tuples(parameters)}"
 
       _ ->
         result = eval_block(node, code)
@@ -613,7 +620,7 @@ defmodule Interpreter do
       end)
 
     if !is_correct_type do
-      throw({:error, error})
+      raise RuntimeError, error
     end
   end
 end

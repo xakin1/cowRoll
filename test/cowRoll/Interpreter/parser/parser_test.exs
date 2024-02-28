@@ -157,6 +157,23 @@ defmodule CowRoll.ParserTest do
       end)
     end
 
+    test "missing right curly bracket" do
+      input = "{3: 1"
+
+      assert_raise(RuntimeError, "Error: Missing '}' on line 1", fn ->
+        Parser.parse(input)
+      end)
+    end
+
+    test "missing left curly bracket" do
+      input = "
+      3: 1}"
+
+      assert_raise(RuntimeError, "Error: Missing '{' on line 2", fn ->
+        Parser.parse(input)
+      end)
+    end
+
     test "missing end statements with if" do
       input = "if x then
       3"
@@ -653,7 +670,7 @@ defmodule CowRoll.ParserTest do
     end
   end
 
-  describe "string expressions" do
+  describe "strings" do
     test "parse string with \"" do
       input = "\"hola mundo\""
       {:ok, token} = Parser.parse(input)
@@ -1366,6 +1383,16 @@ defmodule CowRoll.ParserTest do
       assert tokens ==
                {:call_function, {:name, "hola_mundo", 1},
                 {:parameters, {{:string, "'hola mundo '", 1}, {:number, 2, 1}}}}
+    end
+
+    test "function in an assignament" do
+      input = "x = function hola() do 1 end"
+      {:ok, result} = Parser.parse(input)
+
+      assert result =
+               {:assignment, {:name, "x", 1},
+                {:assignment_function, {:function_name, {:name, "hola", 1}}, {:parameters, nil},
+                 {:function_code, {:number, 1, 1}}}}
     end
   end
 

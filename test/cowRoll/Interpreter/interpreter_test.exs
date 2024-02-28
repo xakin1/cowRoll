@@ -56,179 +56,149 @@ defmodule CowRoll.ScripsDndTest do
 
   describe "checking types" do
     test "check numeric expression with plus" do
-      try do
-        Interpreter.eval_input("3+true")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in + operation, both factors must be Integers, but Integer and Boolean were found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in + operation, both factors must be Integers, but Integer and Boolean were found",
+        fn ->
+          Interpreter.eval_input("3+true")
+        end
+      )
     end
 
     test "check numeric expression with minus" do
-      try do
-        Interpreter.eval_input("3-true")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in - operation, both factors must be Integers, but Integer and Boolean were found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in - operation, both factors must be Integers, but Integer and Boolean were found",
+        fn ->
+          Interpreter.eval_input("3-true")
+        end
+      )
     end
 
     test "check numeric expression with mult" do
-      try do
-        Interpreter.eval_input("3*[1]")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in * operation, both factors must be Integers, but Integer and List were found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in * operation, both factors must be Integers, but Integer and List were found",
+        fn ->
+          Interpreter.eval_input("3*[1]")
+        end
+      )
     end
 
     test "check numeric expression with div" do
-      try do
-        Interpreter.eval_input("3/{a: true}")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in / operation, both factors must be Integers, but Integer and Map were found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in / operation, both factors must be Integers, but Integer and Map were found",
+        fn ->
+          Interpreter.eval_input("3/{a: true}")
+        end
+      )
     end
 
     test "check numeric expression with round div" do
-      try do
-        Interpreter.eval_input("3//true")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in // operation, both factors must be Integers, but Integer and Boolean were found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in // operation, both factors must be Integers, but Integer and Boolean were found",
+        fn ->
+          Interpreter.eval_input("3//true")
+        end
+      )
     end
 
     test "check numeric expression with round mod" do
-      try do
-        Interpreter.eval_input("3%true")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in % operation, both factors must be Integers, but Integer and Boolean were found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in % operation, both factors must be Integers, but Integer and Boolean were found",
+        fn ->
+          Interpreter.eval_input("3%true")
+        end
+      )
     end
 
     test "check numeric expression with pow" do
-      try do
-        Interpreter.eval_input("3^true")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in ^ operation, both factors must be Integers, but Integer and Boolean were found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in ^ operation, both factors must be Integers, but Integer and Boolean were found",
+        fn ->
+          Interpreter.eval_input("3^true")
+        end
+      )
     end
 
     test "check numeric expression with unitary -" do
-      try do
-        Interpreter.eval_input("-true")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in - operation, the factor must be Integer, but Boolean was found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in - operation, the factor must be Integer, but Boolean was found",
+        fn ->
+          Interpreter.eval_input("-true")
+        end
+      )
     end
 
     test "check boolean expression with or" do
-      try do
-        Interpreter.eval_input("3+2 or true")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in or operation, both factors must be boolean, but Integer and Boolean were found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in or operation, both factors must be boolean, but Integer and Boolean were found",
+        fn ->
+          Interpreter.eval_input("3+2 or true")
+        end
+      )
     end
 
     test "check boolean expression with and" do
-      try do
-        Interpreter.eval_input("3 and true")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in and operation, both factors must be boolean, but Integer and Boolean were found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in and operation, both factors must be boolean, but Integer and Boolean were found",
+        fn ->
+          Interpreter.eval_input("3 and true")
+        end
+      )
 
-      try do
-        Interpreter.eval_input("'3' and 'true'")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in and operation, both factors must be boolean, but String and String were found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in and operation, both factors must be boolean, but String and String were found",
+        fn ->
+          Interpreter.eval_input("'3' and 'true'")
+        end
+      )
     end
 
     test "check boolean expression with not" do
-      try do
-        Interpreter.eval_input("not 3")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in not operation, the factor must be boolean, but Integer was found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in not operation, the factor must be boolean, but Integer was found",
+        fn ->
+          Interpreter.eval_input("not 3")
+        end
+      )
     end
 
     test "check boolean expression with ++" do
-      try do
-        Interpreter.eval_input("'3' ++ 2")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in ++ operation, both factors must be string, but String and Integer were found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in ++ operation, both factors must be string, but String and Integer were found",
+        fn ->
+          Interpreter.eval_input("'3' ++ 2")
+        end
+      )
 
-      try do
-        Interpreter.eval_input("3 ++ '2'")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in ++ operation, both factors must be string, but Integer and String were found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in ++ operation, both factors must be string, but Integer and String were found",
+        fn ->
+          Interpreter.eval_input("3 ++ '2'")
+        end
+      )
     end
 
     test "check condition of if" do
-      try do
-        Interpreter.eval_input("if 3 then 3 end")
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 1 in condition operation, the factor must be boolean, but Integer was found"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in condition operation, the factor must be boolean, but Integer was found",
+        fn ->
+          Interpreter.eval_input("if 3 then 3 end")
+        end
+      )
     end
   end
 
@@ -627,24 +597,25 @@ defmodule CowRoll.ScripsDndTest do
     end
 
     test "using  a variable without initializing" do
-      try do
-        Interpreter.eval_input("x = x + 6")
-      catch
-        error -> assert error == {:error, "Variable 'x' is not defined"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Variable 'x' is not defined on line 1",
+        fn ->
+          Interpreter.eval_input("x = x + 6")
+        end
+      )
     end
 
     test "using  a  var with invalid type" do
-      try do
-        Interpreter.eval_input("
-           x = 6
-           x[3]")
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Invalid type: '6' it's a/an Integer. The type must be a list, map, or string."}
-      end
+      assert_raise(
+        RuntimeError,
+        "Invalid type: '6' it's a/an Integer. The type must be a list, map, or string.",
+        fn ->
+          Interpreter.eval_input("
+          x = 6
+          x[3]")
+        end
+      )
     end
 
     test "overwrite the value of a variable" do
@@ -918,47 +889,14 @@ defmodule CowRoll.ScripsDndTest do
     end
 
     test "div should return an division by 0" do
-      try do
-        {:error, error} = Interpreter.eval_input("5/0")
-        assert error == "Error: division by 0"
-      rescue
-        _ ->
-          assert false
-      end
+      assert_raise(
+        RuntimeError,
+        "Error: division by 0",
+        fn ->
+          Interpreter.eval_input("5/0")
+        end
+      )
     end
-
-    # test "div should return must be an integer" do
-    #   try do
-    #     {:error, error} = Interpreter.eval_input("5/true")
-    #     assert error == "Error: divider must be an integer"
-    #     {:error, error} = Interpreter.eval_input("5/'a'")
-    #     assert error == "Error: divider must be an integer"
-    #   rescue
-    #     error ->
-    #       IO.puts(error)
-    #       assert false
-    #   end
-    # end
-
-    # test "div should return parenthesis error" do
-    #   try do
-    #     {:error, error} = Interpreter.eval_input("5/(3+4")
-    #     assert error == "Error: divider must be an integer"
-    #   rescue
-    #     error ->
-    #       assert false
-    #   end
-    # end
-
-    # test "div should return an error" do
-    #   try do
-    #     Interpreter.eval_input("5/((2)")
-    #     assert false
-    #   rescue
-    #     _ ->
-    #       assert true
-    #   end
-    # end
   end
 
   describe "round division" do
@@ -984,13 +922,13 @@ defmodule CowRoll.ScripsDndTest do
     end
 
     test "div should return an division by 0" do
-      try do
-        {:error, error} = Interpreter.eval_input("5//0")
-        assert error == "Error: division by 0"
-      rescue
-        _ ->
-          assert false
-      end
+      assert_raise(
+        RuntimeError,
+        "Error: division by 0",
+        fn ->
+          Interpreter.eval_input("5//0")
+        end
+      )
     end
   end
 
@@ -1158,12 +1096,7 @@ defmodule CowRoll.ScripsDndTest do
     end
 
     test "mods by zero" do
-      try do
-        Interpreter.eval_input("5%0")
-      catch
-        {:error, error} ->
-          assert error == "Error: division by 0"
-      end
+      assert_raise(RuntimeError, "Error: division by 0", fn -> Interpreter.eval_input("5%0") end)
     end
 
     test "mods with operations" do
@@ -1234,16 +1167,15 @@ defmodule CowRoll.ScripsDndTest do
     end
 
     test "not found" do
-      try do
-        input = "hola_mundo()"
-        result = Interpreter.eval_input(input)
-        expect = "hola mundo"
+      input = "hola_mundo()"
 
-        assert false
-      catch
-        error ->
-          assert error == {:error, "Error en la linea 1: Función: 'hola_mundo' no encontrada"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error en la linea 1: Función: 'hola_mundo' no encontrada",
+        fn ->
+          Interpreter.eval_input(input)
+        end
+      )
     end
 
     test "basic call function with parameters" do
@@ -1260,43 +1192,66 @@ defmodule CowRoll.ScripsDndTest do
     end
 
     test "basic call function with bad number of parameters" do
-      try do
-        input = "function hola_mundo (msg, range) do
+      input = "function hola_mundo (msg, range) do
              for participants <- 1..range do
                msg
              end
            end;
            hola_mundo('hola mundo')
            "
-        Interpreter.eval_input(input)
 
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 6: bad number of parameters on hola_mundo expected 2 but got 1"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 6: bad number of parameters on hola_mundo expected 2 but got 1",
+        fn ->
+          Interpreter.eval_input(input)
+        end
+      )
     end
 
     test "basic call function with moreparameters" do
-      try do
-        input = "function hola_mundo (a) do
+      input = "function hola_mundo (a) do
              for participants <- 1..range do
                msg
              end
            end;
            hola_mundo('hola', 'mundo')
            "
-        Interpreter.eval_input(input)
 
-        assert false
-      catch
-        error ->
-          assert error ==
-                   {:error,
-                    "Error at line 6: bad number of parameters on hola_mundo expected 1 but got 2"}
-      end
+      assert_raise(
+        RuntimeError,
+        "Error at line 6: bad number of parameters on hola_mundo expected 1 but got 2",
+        fn ->
+          Interpreter.eval_input(input)
+        end
+      )
+    end
+
+    test "error in function in an assignament" do
+      input = "x = function hola(x) do x + 7 end
+      x()"
+
+      assert_raise(
+        RuntimeError,
+        "Error at line 2: bad number of parameters on x expected 1 but got 0",
+        fn ->
+          Interpreter.eval_input(input)
+        end
+      )
+    end
+
+    test "function in an assignament" do
+      input = "x = function hola() do 7 end
+      x()"
+      result = Interpreter.eval_input(input)
+
+      assert result == 7
+
+      input = "x = function hola(x) do x + 7 end
+      x(2)"
+      result = Interpreter.eval_input(input)
+
+      assert result == 9
     end
   end
 
