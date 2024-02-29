@@ -2,83 +2,137 @@ defmodule CowRoll.TreeNodeTest do
   # Importa ExUnit.Case para definir pruebas
   use ExUnit.Case
   import TreeNode
+  import Verifier
 
   describe "tree CRUD Operations" do
     test "new node" do
+      # Reiniciamos el contador de IDs únicos antes de cada prueba
       node = new(:test)
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :test,
-        parent_id: nil,
-        value: %{},
-        children: []
-      }
+      case node do
+        %TreeNode{
+          id: _,
+          name: :test,
+          parent_id: nil,
+          value: %{},
+          children: []
+        } ->
+          assert true
 
-      assert node == expect
+        _ ->
+          assert false
+      end
 
       node = new("test")
 
-      expect = %TreeNode{
-        id: :"2",
-        name: "test",
-        parent_id: nil,
-        value: %{},
-        children: []
-      }
+      case node do
+        %TreeNode{
+          id: _,
+          name: "test",
+          parent_id: nil,
+          value: %{},
+          children: []
+        } ->
+          assert true
 
-      assert node == expect
+        _ ->
+          assert false
+      end
     end
 
     test "Create tree" do
-      node = create_tree()
-
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: []
-      }
-
-      assert node == expect
+      :erlang.system_flag(:microstate_accounting, :reset)
 
       node = create_tree()
-      assert node == expect
+
+      case node do
+        %TreeNode{
+          id: _,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: []
+        } ->
+          assert true
+
+        _ ->
+          assert false
+      end
+
+      node = create_tree()
+
+      case node do
+        %TreeNode{
+          id: _,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: []
+        } ->
+          assert true
+
+        _ ->
+          assert false
+      end
     end
 
     test "Create tree with parameters" do
+      :erlang.system_flag(:microstate_accounting, :reset)
+
       tree = :test
       tree_name = :test_name
       node = create_tree(tree, tree_name)
 
-      expect = %TreeNode{
-        id: :"1",
-        name: tree_name,
-        parent_id: nil,
-        value: %{},
-        children: []
-      }
+      case node do
+        %TreeNode{
+          id: _,
+          name: ^tree_name,
+          parent_id: nil,
+          value: %{},
+          children: []
+        } ->
+          assert true
 
-      assert node == expect
+        _ ->
+          assert false
+      end
 
       node = create_tree(tree, tree_name)
-      assert node == expect
+
+      case node do
+        %TreeNode{
+          id: _,
+          name: ^tree_name,
+          parent_id: nil,
+          value: %{},
+          children: []
+        } ->
+          assert true
+
+        _ ->
+          assert false
+      end
 
       node = create_tree()
 
-      expect = %TreeNode{
-        id: :"2",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: []
-      }
+      case node do
+        %TreeNode{
+          id: _,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: []
+        } ->
+          assert true
 
-      assert node == expect
+        _ ->
+          assert false
+      end
     end
 
     test "get tree" do
+      :erlang.system_flag(:microstate_accounting, :reset)
+
       node = get_tree()
 
       assert node == false
@@ -86,18 +140,24 @@ defmodule CowRoll.TreeNodeTest do
       create_tree()
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: []
-      }
+      case node do
+        %TreeNode{
+          id: _,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: []
+        } ->
+          assert true
 
-      assert node == expect
+        _ ->
+          assert false
+      end
     end
 
     test "get tree with parameters" do
+      :erlang.system_flag(:microstate_accounting, :reset)
+
       tree = :test
       tree_name = :test_name
       node = get_tree(tree, tree_name)
@@ -109,30 +169,40 @@ defmodule CowRoll.TreeNodeTest do
 
       node = get_tree(tree, tree_name)
 
-      expect = %TreeNode{
-        id: :"1",
-        name: tree_name,
-        parent_id: nil,
-        value: %{},
-        children: []
-      }
+      case node do
+        %TreeNode{
+          id: _,
+          name: ^tree_name,
+          parent_id: nil,
+          value: %{},
+          children: []
+        } ->
+          assert true
 
-      assert node == expect
+        _ ->
+          assert false
+      end
     end
 
     test "delete tree" do
+      :erlang.system_flag(:microstate_accounting, :reset)
+
       create_tree()
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: []
-      }
+      case node do
+        %TreeNode{
+          id: _,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: []
+        } ->
+          assert true
 
-      assert node == expect
+        _ ->
+          assert false
+      end
 
       delete_tree()
       node = get_tree()
@@ -145,15 +215,19 @@ defmodule CowRoll.TreeNodeTest do
       tree_name = :test_name
       node = create_tree(tree, tree_name)
 
-      expect = %TreeNode{
-        id: :"1",
-        name: tree_name,
-        parent_id: nil,
-        value: %{},
-        children: []
-      }
+      case node do
+        %TreeNode{
+          id: _,
+          name: ^tree_name,
+          parent_id: nil,
+          value: %{},
+          children: []
+        } ->
+          assert true
 
-      assert node == expect
+        _ ->
+          assert false
+      end
 
       delete_tree(tree)
       node = get_tree(tree, tree_name)
@@ -162,6 +236,8 @@ defmodule CowRoll.TreeNodeTest do
     end
 
     test "update tree" do
+      :erlang.system_flag(:microstate_accounting, :reset)
+
       node = create_tree()
       node = %TreeNode{node | children: [new(:child)]}
 
@@ -172,6 +248,8 @@ defmodule CowRoll.TreeNodeTest do
     end
 
     test "update tree with parameters" do
+      :erlang.system_flag(:microstate_accounting, :reset)
+
       tree = :test
       tree_name = :test_name
       node = create_tree(tree, tree_name)
@@ -190,87 +268,101 @@ defmodule CowRoll.TreeNodeTest do
       add_scope(node.id, :child)
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
-          %TreeNode{
-            id: :"2",
-            name: :child,
-            parent_id: :"1",
-            value: %{},
-            children: []
-          }
-        ]
-      }
+      case node do
+        %TreeNode{
+          id: id1,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: [
+            %TreeNode{
+              id: id2,
+              name: :child,
+              parent_id: id1,
+              value: %{},
+              children: []
+            }
+          ]
+        } ->
+          assert id1 != id2
 
-      assert node == expect
+        _ ->
+          assert false
+      end
 
       add_scope(node.id, :tree)
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
+      id2 =
+        case node do
           %TreeNode{
-            id: :"3",
+            id: id1,
             name: :tree,
-            parent_id: :"1",
-            value: %{},
-            children: []
-          },
-          %TreeNode{
-            id: :"2",
-            name: :child,
-            parent_id: :"1",
-            value: %{},
-            children: []
-          }
-        ]
-      }
-
-      assert node == expect
-
-      add_scope(:"2", :child_3)
-      node = get_tree()
-
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
-          %TreeNode{
-            id: :"2",
-            name: :child,
-            parent_id: :"1",
+            parent_id: nil,
             value: %{},
             children: [
               %TreeNode{
-                id: :"4",
-                name: :child_3,
-                parent_id: :"2",
+                id: id3,
+                name: :tree,
+                parent_id: id1,
+                value: %{},
+                children: []
+              },
+              %TreeNode{
+                id: id2,
+                name: :child,
+                parent_id: id1,
                 value: %{},
                 children: []
               }
             ]
-          },
-          %TreeNode{
-            id: :"3",
-            name: :tree,
-            parent_id: :"1",
-            value: %{},
-            children: []
-          }
-        ]
-      }
+          } ->
+            assert are_all_different([id1, id2, id3])
+            id2
 
-      assert node == expect
+          _ ->
+            assert false
+        end
+
+      add_scope(id2, :child_3)
+      node = get_tree()
+
+      case node do
+        %TreeNode{
+          id: id1,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: [
+            %TreeNode{
+              id: id2,
+              name: :child,
+              parent_id: id1,
+              value: %{},
+              children: [
+                %TreeNode{
+                  id: id4,
+                  name: :child_3,
+                  parent_id: id2,
+                  value: %{},
+                  children: []
+                }
+              ]
+            },
+            %TreeNode{
+              id: id3,
+              name: :tree,
+              parent_id: id1,
+              value: %{},
+              children: []
+            }
+          ]
+        } ->
+          assert are_all_different([id1, id2, id3, id4])
+
+        _ ->
+          assert false
+      end
     end
 
     test "delete scopes" do
@@ -278,77 +370,98 @@ defmodule CowRoll.TreeNodeTest do
       add_scope(node.id, :child)
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
+      id2 =
+        case node do
           %TreeNode{
-            id: :"2",
-            name: :child,
-            parent_id: :"1",
+            id: id1,
+            name: :tree,
+            parent_id: nil,
+            value: %{},
+            children: [
+              %TreeNode{
+                id: id2,
+                name: :child,
+                parent_id: id1,
+                value: %{},
+                children: []
+              }
+            ]
+          } ->
+            assert id1 != id2
+            id2
+
+          _ ->
+            assert false
+        end
+
+      node = remove_scope(id2)
+
+      id1 =
+        case node do
+          %TreeNode{
+            id: id1,
+            name: :tree,
+            parent_id: nil,
             value: %{},
             children: []
-          }
-        ]
-      }
+          } ->
+            assert true
+            id1
 
-      assert node == expect
+          _ ->
+            assert false
+        end
 
-      node = remove_scope(:"2")
+      id3 = add_scope(id1, :child)
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: []
-      }
+      add_scope(id3, :chil_2)
 
-      assert node == expect
+      node = remove_scope(id3)
 
-      add_scope(:"1", :child)
+      case node do
+        %TreeNode{
+          id: id1,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: []
+        } ->
+          assert true
+          id1
 
-      add_scope(:"3", :chil_2)
+        _ ->
+          assert false
+      end
 
-      node = remove_scope(:"3")
+      add_scope(id1, :child)
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: []
-      }
+      id5 = add_scope(id1, :chil_2)
 
-      assert node == expect
+      node = remove_scope(id5)
 
-      add_scope(:"1", :child)
+      case node do
+        %TreeNode{
+          id: id1,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: [
+            %TreeNode{
+              id: id4,
+              name: :child,
+              parent_id: id1,
+              value: %{},
+              children: []
+            }
+          ]
+        } ->
+          assert id4 != id1
 
-      add_scope(:"1", :chil_2)
+        _ ->
+          assert false
+      end
 
-      node = remove_scope(:"5")
-
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
-          %TreeNode{
-            id: :"6",
-            name: :chil_2,
-            parent_id: :"1",
-            value: %{},
-            children: []
-          }
-        ]
-      }
-
-      assert node == expect
-
-      node = remove_scope(:"1")
+      node = remove_scope(id1)
 
       expect = []
 
@@ -357,238 +470,272 @@ defmodule CowRoll.TreeNodeTest do
 
     test "insert variables into scopes" do
       node = create_tree()
-      add_scope(node.id, :child)
-      add_variable_to_scope(:"2", "x", 2)
+      id1 = node.id
+      id2 = add_scope(id1, :child)
+      add_variable_to_scope(id2, "x", 2)
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
-          %TreeNode{
-            id: :"2",
-            name: :child,
-            parent_id: :"1",
-            value: %{"x" => 2},
-            children: []
-          }
-        ]
-      }
+      case node do
+        %TreeNode{
+          id: id1,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: [
+            %TreeNode{
+              id: id2,
+              name: :child,
+              parent_id: id1,
+              value: %{"x" => 2},
+              children: []
+            }
+          ]
+        } ->
+          assert id1 != id2
+          id2
 
-      assert node == expect
+        _ ->
+          assert false
+      end
 
-      add_variable_to_scope(:"2", "x", 3)
+      add_variable_to_scope(id2, "x", 3)
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
-          %TreeNode{
-            id: :"2",
-            name: :child,
-            parent_id: :"1",
-            value: %{"x" => 3},
-            children: []
-          }
-        ]
-      }
+      case node do
+        %TreeNode{
+          id: id1,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: [
+            %TreeNode{
+              id: id2,
+              name: :child,
+              parent_id: id1,
+              value: %{"x" => 3},
+              children: []
+            }
+          ]
+        } ->
+          assert id1 != id2
 
-      assert node == expect
+        _ ->
+          assert false
+      end
 
-      add_scope(:"2", :child_2)
-      add_variable_to_scope(:"3", "x", 4)
+      id3 = add_scope(id2, :child_2)
+      add_variable_to_scope(id3, "x", 4)
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
-          %TreeNode{
-            id: :"2",
-            name: :child,
-            parent_id: :"1",
-            value: %{"x" => 4},
-            children: [
-              %TreeNode{
-                id: :"3",
-                name: :child_2,
-                parent_id: :"2",
-                value: %{},
-                children: []
-              }
-            ]
-          }
-        ]
-      }
+      case node do
+        %TreeNode{
+          id: id1,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: [
+            %TreeNode{
+              id: id2,
+              name: :child,
+              parent_id: id1,
+              value: %{"x" => 4},
+              children: [
+                %TreeNode{
+                  id: id3,
+                  name: :child_2,
+                  parent_id: id2,
+                  value: %{},
+                  children: []
+                }
+              ]
+            }
+          ]
+        } ->
+          assert are_all_different([id1, id2, id3])
 
-      assert node == expect
+        _ ->
+          assert false
+      end
 
-      add_variable_to_scope(:"3", "y", 4)
+      add_variable_to_scope(id3, "y", 4)
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
-          %TreeNode{
-            id: :"2",
-            name: :child,
-            parent_id: :"1",
-            value: %{"x" => 4},
-            children: [
-              %TreeNode{
-                id: :"3",
-                name: :child_2,
-                parent_id: :"2",
-                value: %{"y" => 4},
-                children: []
-              }
-            ]
-          }
-        ]
-      }
+      case node do
+        %TreeNode{
+          id: id1,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: [
+            %TreeNode{
+              id: id2,
+              name: :child,
+              parent_id: id1,
+              value: %{"x" => 4},
+              children: [
+                %TreeNode{
+                  id: id3,
+                  name: :child_2,
+                  parent_id: id2,
+                  value: %{"y" => 4},
+                  children: []
+                }
+              ]
+            }
+          ]
+        } ->
+          assert are_all_different([id1, id2, id3])
 
-      assert node == expect
+        _ ->
+          assert false
+      end
 
-      add_variable_to_scope(:"3", "z", 4)
+      add_variable_to_scope(id3, "z", 4)
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
-          %TreeNode{
-            id: :"2",
-            name: :child,
-            parent_id: :"1",
-            value: %{"x" => 4},
-            children: [
-              %TreeNode{
-                id: :"3",
-                name: :child_2,
-                parent_id: :"2",
-                value: %{"y" => 4, "z" => 4},
-                children: []
-              }
-            ]
-          }
-        ]
-      }
+      case node do
+        %TreeNode{
+          id: id1,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: [
+            %TreeNode{
+              id: id2,
+              name: :child,
+              parent_id: id1,
+              value: %{"x" => 4},
+              children: [
+                %TreeNode{
+                  id: id3,
+                  name: :child_2,
+                  parent_id: id2,
+                  value: %{"y" => 4, "z" => 4},
+                  children: []
+                }
+              ]
+            }
+          ]
+        } ->
+          assert are_all_different([id1, id2, id3])
 
-      assert node == expect
+        _ ->
+          assert false
+      end
 
-      add_variable_to_scope(:"2", "z", 4)
+      add_variable_to_scope(id2, "z", 4)
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
-          %TreeNode{
-            id: :"2",
-            name: :child,
-            parent_id: :"1",
-            value: %{"x" => 4, "z" => 4},
-            children: [
-              %TreeNode{
-                id: :"3",
-                name: :child_2,
-                parent_id: :"2",
-                value: %{"y" => 4, "z" => 4},
-                children: []
-              }
-            ]
-          }
-        ]
-      }
+      case node do
+        %TreeNode{
+          id: id1,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: [
+            %TreeNode{
+              id: id2,
+              name: :child,
+              parent_id: id1,
+              value: %{"x" => 4, "z" => 4},
+              children: [
+                %TreeNode{
+                  id: id3,
+                  name: :child_2,
+                  parent_id: id2,
+                  value: %{"y" => 4, "z" => 4},
+                  children: []
+                }
+              ]
+            }
+          ]
+        } ->
+          assert are_all_different([id1, id2, id3])
 
-      assert node == expect
+        _ ->
+          assert false
+      end
 
-      add_scope(:"1", :child_3)
-      add_variable_to_scope(:"4", "x", 4)
+      id4 = add_scope(id1, :child_3)
+      add_variable_to_scope(id4, "x", 4)
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
-          %TreeNode{
-            id: :"4",
-            name: :child_3,
-            parent_id: :"1",
-            value: %{"x" => 4},
-            children: []
-          },
-          %TreeNode{
-            id: :"2",
-            name: :child,
-            parent_id: :"1",
-            value: %{"x" => 4, "z" => 4},
-            children: [
-              %TreeNode{
-                id: :"3",
-                name: :child_2,
-                parent_id: :"2",
-                value: %{"y" => 4, "z" => 4},
-                children: []
-              }
-            ]
-          }
-        ]
-      }
+      case node do
+        %TreeNode{
+          id: id1,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: [
+            %TreeNode{
+              id: id4,
+              name: :child_3,
+              parent_id: id1,
+              value: %{"x" => 4},
+              children: []
+            },
+            %TreeNode{
+              id: id2,
+              name: :child,
+              parent_id: id1,
+              value: %{"x" => 4, "z" => 4},
+              children: [
+                %TreeNode{
+                  id: id3,
+                  name: :child_2,
+                  parent_id: id2,
+                  value: %{"y" => 4, "z" => 4},
+                  children: []
+                }
+              ]
+            }
+          ]
+        } ->
+          assert are_all_different([id1, id2, id3, id4])
 
-      assert node == expect
+        _ ->
+          assert false
+      end
 
-      add_variable_to_scope(:"3", "x", 5)
+      add_variable_to_scope(id3, "x", 5)
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{},
-        children: [
-          %TreeNode{
-            id: :"4",
-            name: :child_3,
-            parent_id: :"1",
-            value: %{"x" => 4},
-            children: []
-          },
-          %TreeNode{
-            id: :"2",
-            name: :child,
-            parent_id: :"1",
-            value: %{"x" => 5, "z" => 4},
-            children: [
-              %TreeNode{
-                id: :"3",
-                name: :child_2,
-                parent_id: :"2",
-                value: %{"y" => 4, "z" => 4},
-                children: []
-              }
-            ]
-          }
-        ]
-      }
+      case node do
+        %TreeNode{
+          id: id1,
+          name: :tree,
+          parent_id: nil,
+          value: %{},
+          children: [
+            %TreeNode{
+              id: id4,
+              name: :child_3,
+              parent_id: id1,
+              value: %{"x" => 4},
+              children: []
+            },
+            %TreeNode{
+              id: id2,
+              name: :child,
+              parent_id: id1,
+              value: %{"x" => 5, "z" => 4},
+              children: [
+                %TreeNode{
+                  id: id3,
+                  name: :child_2,
+                  parent_id: id2,
+                  value: %{"y" => 4, "z" => 4},
+                  children: []
+                }
+              ]
+            }
+          ]
+        } ->
+          assert are_all_different([id1, id2, id3, id4])
 
-      assert node == expect
+        _ ->
+          assert false
+      end
     end
 
     test "insert fucntions into scopes" do
@@ -596,21 +743,25 @@ defmodule CowRoll.TreeNodeTest do
       add_function_to_scope({:name, "hola_mundo", 1}, "msg", "IO.puts(msg)")
       node = get_tree()
 
-      expect = %TreeNode{
-        id: :"1",
-        name: :tree,
-        parent_id: nil,
-        value: %{
-          {:name, "hola_mundo"} => %{
-            code: "IO.puts(msg)",
-            type: :code,
-            parameters: "msg"
-          }
-        },
-        children: []
-      }
+      case node do
+        %TreeNode{
+          id: _,
+          name: :tree,
+          parent_id: nil,
+          value: %{
+            {:name, "hola_mundo"} => %{
+              code: "IO.puts(msg)",
+              type: :code,
+              parameters: "msg"
+            }
+          },
+          children: []
+        } ->
+          assert true
 
-      assert node == expect
+        _ ->
+          assert false
+      end
     end
 
     test "get variables" do
