@@ -1,5 +1,4 @@
 defmodule CowRoll.TreeNodeTest do
-  alias CowRoll.TreeNodeTest
   # Importa ExUnit.Case para definir pruebas
   use ExUnit.Case
   import TreeNode

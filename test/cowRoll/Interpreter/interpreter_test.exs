@@ -525,7 +525,7 @@ defmodule CowRoll.ScripsDndTest do
       input = "{a: 1, b: 2, c: 3, c: 9}"
       result = Interpreter.eval_input(input)
 
-      assert result == %{"a" => 1, "b" => 2, "c" => 3, "c" => 9}
+      assert result == %{"a" => 1, "b" => 2, "c" => 9}
     end
 
     test "map with an string element" do
