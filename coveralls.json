@@ -1,0 +1,15 @@
+{
+  "skip_files": [
+    "lib/cowRoll_web.ex",
+    "lib/cowRoll_web/endpoint.ex",
+    "lib/cowRoll_web/gettext.ex",
+    "lib/cowRoll_web/router.ex",
+    "lib/cowRoll_web/telemetry.ex",
+    "src/grammar_spec.erl",
+    "src/lexical_analysis.erl",
+    "test/support/conn_case.ex",
+    "lib/cowRoll/mailer.ex",
+    "lib/cowRoll.ex",
+    "lib/cowRoll/application.ex"  
+  ]
+}
