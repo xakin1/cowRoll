@@ -1,6 +1,5 @@
 defmodule Interpreter do
   use Parser
-  use DiceRoller
   import TreeNode
   import Tuples
   import TypesUtils

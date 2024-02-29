@@ -1,10 +1,12 @@
 defmodule CowRoll.TreeNodeTest do
+  alias CowRoll.TreeNodeTest
   # Importa ExUnit.Case para definir pruebas
   use ExUnit.Case
+  import TreeNode
 
   describe "tree CRUD Operations" do
     test "new node" do
-      node = TreeNode.new(:test)
+      node = new(:test)
 
       expect = %TreeNode{
         id: :"1",
@@ -16,7 +18,7 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      node = TreeNode.new("test")
+      node = new("test")
 
       expect = %TreeNode{
         id: :"2",
@@ -30,7 +32,7 @@ defmodule CowRoll.TreeNodeTest do
     end
 
     test "Create tree" do
-      node = TreeNode.create_tree()
+      node = create_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -42,14 +44,14 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      node = TreeNode.create_tree()
+      node = create_tree()
       assert node == expect
     end
 
     test "Create tree with parameters" do
       tree = :test
       tree_name = :test_name
-      node = TreeNode.create_tree(tree, tree_name)
+      node = create_tree(tree, tree_name)
 
       expect = %TreeNode{
         id: :"1",
@@ -61,10 +63,10 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      node = TreeNode.create_tree(tree, tree_name)
+      node = create_tree(tree, tree_name)
       assert node == expect
 
-      node = TreeNode.create_tree()
+      node = create_tree()
 
       expect = %TreeNode{
         id: :"2",
@@ -78,12 +80,12 @@ defmodule CowRoll.TreeNodeTest do
     end
 
     test "get tree" do
-      node = TreeNode.get_tree()
+      node = get_tree()
 
       assert node == false
 
-      TreeNode.create_tree()
-      node = TreeNode.get_tree()
+      create_tree()
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -99,14 +101,14 @@ defmodule CowRoll.TreeNodeTest do
     test "get tree with parameters" do
       tree = :test
       tree_name = :test_name
-      node = TreeNode.get_tree(tree, tree_name)
+      node = get_tree(tree, tree_name)
       assert node == false
 
-      TreeNode.create_tree(tree, tree_name)
-      node = TreeNode.get_tree()
+      create_tree(tree, tree_name)
+      node = get_tree()
       assert node == false
 
-      node = TreeNode.get_tree(tree, tree_name)
+      node = get_tree(tree, tree_name)
 
       expect = %TreeNode{
         id: :"1",
@@ -120,8 +122,8 @@ defmodule CowRoll.TreeNodeTest do
     end
 
     test "delete tree" do
-      TreeNode.create_tree()
-      node = TreeNode.get_tree()
+      create_tree()
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -133,8 +135,8 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.delete_tree()
-      node = TreeNode.get_tree()
+      delete_tree()
+      node = get_tree()
       expect = false
       assert node == expect
     end
@@ -142,7 +144,7 @@ defmodule CowRoll.TreeNodeTest do
     test "delete tree with parameters" do
       tree = :test
       tree_name = :test_name
-      node = TreeNode.create_tree(tree, tree_name)
+      node = create_tree(tree, tree_name)
 
       expect = %TreeNode{
         id: :"1",
@@ -154,40 +156,40 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.delete_tree(tree)
-      node = TreeNode.get_tree(tree, tree_name)
+      delete_tree(tree)
+      node = get_tree(tree, tree_name)
       expect = false
       assert node == expect
     end
 
     test "update tree" do
-      node = TreeNode.create_tree()
-      node = %TreeNode{node | children: [TreeNode.new(:child)]}
+      node = create_tree()
+      node = %TreeNode{node | children: [new(:child)]}
 
-      nodeUpdate = TreeNode.update_tree(node)
+      nodeUpdate = update_tree(node)
       assert node == nodeUpdate
-      %TreeNode{node | children: node.children ++ [TreeNode.new(:child)]}
+      %TreeNode{node | children: node.children ++ [new(:child)]}
       assert node == nodeUpdate
     end
 
     test "update tree with parameters" do
       tree = :test
       tree_name = :test_name
-      node = TreeNode.create_tree(tree, tree_name)
-      node = %TreeNode{node | children: [TreeNode.new(:child)]}
+      node = create_tree(tree, tree_name)
+      node = %TreeNode{node | children: [new(:child)]}
 
-      nodeUpdate = TreeNode.update_tree(tree, tree_name, node)
+      nodeUpdate = update_tree(tree, tree_name, node)
       assert node == nodeUpdate
-      %TreeNode{node | children: node.children ++ [TreeNode.new(:child)]}
+      %TreeNode{node | children: node.children ++ [new(:child)]}
       assert node == nodeUpdate
     end
   end
 
   describe "operation with childes" do
     test "insert scopes" do
-      node = TreeNode.create_tree()
-      TreeNode.add_scope(node.id, :child)
-      node = TreeNode.get_tree()
+      node = create_tree()
+      add_scope(node.id, :child)
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -207,8 +209,8 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.add_scope(node.id, :tree)
-      node = TreeNode.get_tree()
+      add_scope(node.id, :tree)
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -235,8 +237,8 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.add_scope(:"2", :child_3)
-      node = TreeNode.get_tree()
+      add_scope(:"2", :child_3)
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -273,9 +275,9 @@ defmodule CowRoll.TreeNodeTest do
     end
 
     test "delete scopes" do
-      node = TreeNode.create_tree()
-      TreeNode.add_scope(node.id, :child)
-      node = TreeNode.get_tree()
+      node = create_tree()
+      add_scope(node.id, :child)
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -295,7 +297,7 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      node = TreeNode.remove_scope(:"2")
+      node = remove_scope(:"2")
 
       expect = %TreeNode{
         id: :"1",
@@ -307,11 +309,11 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.add_scope(:"1", :child)
+      add_scope(:"1", :child)
 
-      TreeNode.add_scope(:"3", :chil_2)
+      add_scope(:"3", :chil_2)
 
-      node = TreeNode.remove_scope(:"3")
+      node = remove_scope(:"3")
 
       expect = %TreeNode{
         id: :"1",
@@ -323,11 +325,11 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.add_scope(:"1", :child)
+      add_scope(:"1", :child)
 
-      TreeNode.add_scope(:"1", :chil_2)
+      add_scope(:"1", :chil_2)
 
-      node = TreeNode.remove_scope(:"5")
+      node = remove_scope(:"5")
 
       expect = %TreeNode{
         id: :"1",
@@ -347,7 +349,7 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      node = TreeNode.remove_scope(:"1")
+      node = remove_scope(:"1")
 
       expect = []
 
@@ -355,10 +357,10 @@ defmodule CowRoll.TreeNodeTest do
     end
 
     test "insert variables into scopes" do
-      node = TreeNode.create_tree()
-      TreeNode.add_scope(node.id, :child)
-      TreeNode.add_variable_to_scope(:"2", "x", 2)
-      node = TreeNode.get_tree()
+      node = create_tree()
+      add_scope(node.id, :child)
+      add_variable_to_scope(:"2", "x", 2)
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -378,8 +380,8 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.add_variable_to_scope(:"2", "x", 3)
-      node = TreeNode.get_tree()
+      add_variable_to_scope(:"2", "x", 3)
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -399,9 +401,9 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.add_scope(:"2", :child_2)
-      TreeNode.add_variable_to_scope(:"3", "x", 4)
-      node = TreeNode.get_tree()
+      add_scope(:"2", :child_2)
+      add_variable_to_scope(:"3", "x", 4)
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -429,8 +431,8 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.add_variable_to_scope(:"3", "y", 4)
-      node = TreeNode.get_tree()
+      add_variable_to_scope(:"3", "y", 4)
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -458,8 +460,8 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.add_variable_to_scope(:"3", "z", 4)
-      node = TreeNode.get_tree()
+      add_variable_to_scope(:"3", "z", 4)
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -487,8 +489,8 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.add_variable_to_scope(:"2", "z", 4)
-      node = TreeNode.get_tree()
+      add_variable_to_scope(:"2", "z", 4)
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -516,9 +518,9 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.add_scope(:"1", :child_3)
-      TreeNode.add_variable_to_scope(:"4", "x", 4)
-      node = TreeNode.get_tree()
+      add_scope(:"1", :child_3)
+      add_variable_to_scope(:"4", "x", 4)
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -553,8 +555,8 @@ defmodule CowRoll.TreeNodeTest do
 
       assert node == expect
 
-      TreeNode.add_variable_to_scope(:"3", "x", 5)
-      node = TreeNode.get_tree()
+      add_variable_to_scope(:"3", "x", 5)
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
@@ -591,15 +593,21 @@ defmodule CowRoll.TreeNodeTest do
     end
 
     test "insert fucntions into scopes" do
-      TreeNode.create_tree()
-      TreeNode.add_fuction_to_scope("hola_mundo", "msg", "IO.puts(msg)")
-      node = TreeNode.get_tree()
+      create_tree()
+      add_function_to_scope({:name, "hola_mundo", 1}, "msg", "IO.puts(msg)")
+      node = get_tree()
 
       expect = %TreeNode{
         id: :"1",
         name: :tree,
         parent_id: nil,
-        value: %{"hola_mundo" => %{parameters: "msg", code: "IO.puts(msg)"}},
+        value: %{
+          {:name, "hola_mundo"} => %{
+            code: "IO.puts(msg)",
+            type: :code,
+            parameters: "msg"
+          }
+        },
         children: []
       }
 
@@ -607,61 +615,61 @@ defmodule CowRoll.TreeNodeTest do
     end
 
     test "get variables" do
-      node_tree = TreeNode.create_tree()
-      node_2_id = TreeNode.add_scope(node_tree.id, :child)
-      TreeNode.add_variable_to_scope(node_2_id, "x", 2)
-      TreeNode.add_variable_to_scope(node_2_id, "x", 3)
-      node_3_id = TreeNode.add_scope(node_2_id, :child_2)
-      TreeNode.add_variable_to_scope(node_3_id, "x", 5)
-      node_4_id = TreeNode.add_scope(node_tree, :child_3)
-      TreeNode.add_variable_to_scope(node_4_id, "x", 4)
-      TreeNode.add_variable_to_scope(node_4_id, "z", 3)
-      TreeNode.get_tree()
+      node_tree = create_tree()
+      node_2_id = add_scope(node_tree.id, :child)
+      add_variable_to_scope(node_2_id, "x", 2)
+      add_variable_to_scope(node_2_id, "x", 3)
+      node_3_id = add_scope(node_2_id, :child_2)
+      add_variable_to_scope(node_3_id, "x", 5)
+      node_4_id = add_scope(node_tree, :child_3)
+      add_variable_to_scope(node_4_id, "x", 4)
+      add_variable_to_scope(node_4_id, "z", 3)
+      get_tree()
 
-      result = TreeNode.get_variable_from_scope(node_4_id, "x")
+      result = get_variable_from_scope(node_4_id, "x")
 
       assert result == 4
     end
 
     test "get variables that not exist" do
-      node_tree = TreeNode.create_tree()
-      node_2_id = TreeNode.add_scope(node_tree.id, :child)
-      TreeNode.add_variable_to_scope(node_2_id, "x", 2)
-      TreeNode.add_variable_to_scope(node_2_id, "x", 3)
-      node_3_id = TreeNode.add_scope(node_2_id, :child_2)
-      TreeNode.add_variable_to_scope(node_3_id, "x", 5)
-      node_4_id = TreeNode.add_scope(node_tree, :child_3)
-      TreeNode.add_variable_to_scope(node_4_id, "x", 4)
-      TreeNode.add_variable_to_scope(node_4_id, "z", 3)
-      TreeNode.get_tree()
+      node_tree = create_tree()
+      node_2_id = add_scope(node_tree.id, :child)
+      add_variable_to_scope(node_2_id, "x", 2)
+      add_variable_to_scope(node_2_id, "x", 3)
+      node_3_id = add_scope(node_2_id, :child_2)
+      add_variable_to_scope(node_3_id, "x", 5)
+      node_4_id = add_scope(node_tree, :child_3)
+      add_variable_to_scope(node_4_id, "x", 4)
+      add_variable_to_scope(node_4_id, "z", 3)
+      get_tree()
 
-      result = TreeNode.get_variable_from_scope(:"-1", "x")
+      result = get_variable_from_scope(:"-1", "x")
 
       assert result == false
     end
 
     test "get function" do
-      TreeNode.create_tree()
-      TreeNode.add_fuction_to_scope("hola_mundo", "msg", "IO.puts(msg)")
-      {parameters, code} = TreeNode.get_fuction_from_scope("hola_mundo")
+      create_tree()
+      add_function_to_scope({:name, "hola_mundo", 1}, "msg", "IO.puts(msg)")
+      {parameters, code} = get_fuction_from_scope({:name, "hola_mundo", 1})
 
       assert parameters == "msg"
       assert code == "IO.puts(msg)"
 
-      {parameters, code} = TreeNode.get_fuction_from_scope("hola_mundo")
+      {parameters, code} = get_fuction_from_scope({:name, "hola_mundo", 1})
 
       assert parameters == "msg"
       assert code == "IO.puts(msg)"
 
-      TreeNode.add_fuction_to_scope("hola_mundo2", nil, "IO.puts(msg)")
-      {parameters, code} = TreeNode.get_fuction_from_scope("hola_mundo2")
+      add_function_to_scope({:name, "hola_mundo2", 1}, nil, "IO.puts(msg)")
+      {parameters, code} = get_fuction_from_scope({:name, "hola_mundo2", 1})
 
       assert parameters == nil
       assert code == "IO.puts(msg)"
 
-      exists? = TreeNode.get_fuction_from_scope("hola_mundo3")
+      exists? = get_fuction_from_scope({:name, "hola_mundo3", 1})
 
-      assert exists? == false
+      assert exists? == {false, "hola_mundo3", 1}
     end
   end
 end

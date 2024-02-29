@@ -1,5 +1,4 @@
 defmodule CowRoll.ParserTest do
-  alias Kernel.ParallelRequire
   # Importa ExUnit.Case para definir pruebas
   use ExUnit.Case
 
@@ -1389,7 +1388,7 @@ defmodule CowRoll.ParserTest do
       input = "x = function hola() do 1 end"
       {:ok, result} = Parser.parse(input)
 
-      assert result =
+      assert result ==
                {:assignment, {:name, "x", 1},
                 {:assignment_function, {:function_name, {:name, "hola", 1}}, {:parameters, nil},
                  {:function_code, {:number, 1, 1}}}}
