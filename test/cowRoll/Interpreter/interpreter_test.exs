@@ -191,6 +191,24 @@ defmodule CowRoll.ScripsDndTest do
       )
     end
 
+    test "check concat arrays ++" do
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in ++ operation, both factors must be string, but String and Integer were found",
+        fn ->
+          Interpreter.eval_input("'3' ++ [2]")
+        end
+      )
+
+      assert_raise(
+        RuntimeError,
+        "Error at line 1 in ++ operation, both factors must be string, but Integer and String were found",
+        fn ->
+          Interpreter.eval_input(" ++ ")
+        end
+      )
+    end
+
     test "check condition of if" do
       assert_raise(
         RuntimeError,
@@ -496,6 +514,59 @@ defmodule CowRoll.ScripsDndTest do
       ]
 
       assert result == expect
+    end
+
+    test "concat arrays" do
+      input = "[2,3,1] ++ [4,3]"
+      result = Interpreter.eval_input(input)
+
+      assert result ==
+               [2, 3, 1, 4, 3]
+    end
+
+    test "concat empty array" do
+      input = "[2,3,1] ++ []"
+      result = Interpreter.eval_input(input)
+
+      assert result ==
+               [2, 3, 1]
+    end
+
+    test "concat from empty array" do
+      input = "[] ++ [2,3,1]"
+      result = Interpreter.eval_input(input)
+
+      assert result ==
+               [2, 3, 1]
+    end
+
+    test "concat elements" do
+      input = "[] ++ 2"
+      result = Interpreter.eval_input(input)
+
+      assert result ==
+               2
+    end
+
+    test "substract arrays" do
+      input = "[2,3,1] -- [4,3]"
+      result = Interpreter.eval_input(input)
+
+      assert result == [2, 1]
+    end
+
+    test "substract empty array" do
+      input = "[2,3,1] -- []"
+      result = Interpreter.eval_input(input)
+
+      assert result == [2, 3, 1]
+    end
+
+    test "substract from empty array" do
+      input = " [] -- [2,3,1]"
+      result = Interpreter.eval_input(input)
+
+      assert result == []
     end
   end
 

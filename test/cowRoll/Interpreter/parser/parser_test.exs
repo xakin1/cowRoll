@@ -728,7 +728,7 @@ defmodule CowRoll.ParserTest do
     end
   end
 
-  describe "arrays" do
+  describe "lists" do
     test "empty array" do
       input = "[]"
       {:ok, token} = Parser.parse(input)
@@ -882,6 +882,26 @@ defmodule CowRoll.ParserTest do
                   {{:string, "'3'", 1},
                    {:if_then_else, {:boolean, true, 1}, {:number, 3, 1}, {:string, "'r'", 1},
                     {:if, 1}}}}}}
+    end
+
+    test "concat arrays" do
+      input = "[2,3,1] ++ [4,3]"
+      {:ok, result} = Parser.parse(input)
+
+      assert result ==
+               {:concat,
+                {{:list, {{:number, 2, 1}, {{:number, 3, 1}, {:number, 1, 1}}}},
+                 {:list, {{:number, 4, 1}, {:number, 3, 1}}}}, {:++, 1}}
+    end
+
+    test "substract arrays" do
+      input = "[2,3,1] -- [4,3]"
+      {:ok, result} = Parser.parse(input)
+
+      assert result ==
+               {:subtract,
+                {{:list, {{:number, 2, 1}, {{:number, 3, 1}, {:number, 1, 1}}}},
+                 {:list, {{:number, 4, 1}, {:number, 3, 1}}}}, {:--, 1}}
     end
   end
 

@@ -16,7 +16,7 @@ defmodule Interpreter do
   defp bad_type_unitary(function_name, type, value, line) do
     case get_type(value) do
       type_value ->
-        raise RuntimeError,
+        raise ArgumentError,
               "Error at line #{line} in #{function_name} operation, the factor must be #{type}, but #{type_value} was found"
     end
   end
@@ -287,12 +287,25 @@ defmodule Interpreter do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
-    do_binary_operation_with_check(
-      [left_expression_evaluated, right_expression_evaluated],
-      &is_bitstring/1,
-      &<>/2,
-      bad_type("++", "string", left_expression_evaluated, right_expression_evaluated, line)
-    )
+    case left_expression_evaluated do
+      left_expression when is_list(left_expression) ->
+        left_expression ++ right_expression_evaluated
+
+      left_expression when is_bitstring(left_expression) ->
+        do_binary_operation_with_check(
+          [left_expression_evaluated, right_expression_evaluated],
+          &is_bitstring/1,
+          &<>/2,
+          bad_type("++", "string", left_expression_evaluated, right_expression_evaluated, line)
+        )
+    end
+  end
+
+  defp eval(scope, {:subtract, {left_expression, right_expression}, {_simbol, line}}) do
+    left_expression_evaluated = eval(scope, left_expression)
+    right_expression_evaluated = eval(scope, right_expression)
+
+    left_expression_evaluated -- right_expression_evaluated
   end
 
   defp eval(scope, {:plus, {left_expression, right_expression}, {_simbol, line}}) do
@@ -338,7 +351,7 @@ defmodule Interpreter do
 
       case {dividend, divider} do
         {_, 0} ->
-          raise RuntimeError, "Error: division by 0"
+          raise ArithmeticError, "Error: division by 0"
 
         {dividend, divider} ->
           do_binary_operation_with_check(
@@ -360,7 +373,7 @@ defmodule Interpreter do
 
       case {dividend, divisor} do
         {_, 0} ->
-          raise RuntimeError, "Error: division by 0"
+          raise ArithmeticError, "Error: division by 0"
 
         {dividend, divisor} ->
           check_type(
@@ -385,7 +398,7 @@ defmodule Interpreter do
 
       case {dividend, module} do
         {_, 0} ->
-          raise RuntimeError, "Error: division by 0"
+          raise ArithmeticError, "Error: division by 0"
 
         {dividend, module} ->
           do_binary_operation_with_check(
@@ -619,7 +632,7 @@ defmodule Interpreter do
       end)
 
     if !is_correct_type do
-      raise RuntimeError, error
+      raise ArgumentError, error
     end
   end
 end
