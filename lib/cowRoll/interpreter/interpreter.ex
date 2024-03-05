@@ -301,7 +301,7 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:subtract, {left_expression, right_expression}, {_simbol, line}}) do
+  defp eval(scope, {:subtract, {left_expression, right_expression}, {_simbol, _line}}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
