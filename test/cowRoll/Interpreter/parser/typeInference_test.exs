@@ -86,7 +86,7 @@ defmodule CowRoll.TypeInference do
       input = "['1',2,3,4,5,6][2+3]"
 
       assert do_analize(input) ==
-               {"#{get_type_integer()}", %{}}
+               {"#{get_type_string()} | #{get_type_integer()}", %{}}
 
       input = "{a: 1, b: 2}"
 
@@ -202,10 +202,10 @@ defmodule CowRoll.TypeInference do
       assert do_analize(input) == {get_type_boolean(), %{}}
 
       input = "'hola ' ++ 'que tal'"
-      assert do_analize(input) == {get_type_list(), %{}}
+      assert do_analize(input) == {get_type_string(), %{}}
 
       input = "[2,3,1] ++ [4,3]"
-      assert do_analize(input) == {get_type_string(), %{}}
+      assert do_analize(input) == {get_type_list(), %{}}
 
       input = "[2,3,1] -- [4,3]"
       assert do_analize(input) == {get_type_list(), %{}}

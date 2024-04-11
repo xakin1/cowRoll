@@ -24,6 +24,13 @@ defmodule TypesUtils do
   def get_type_map, do: @map
   def get_type_list, do: @list
 
+  def is_list?(type) do
+    case type do
+      @list -> true
+      _ -> false
+    end
+  end
+
   def is_enum(type) do
     case type do
       @map -> true

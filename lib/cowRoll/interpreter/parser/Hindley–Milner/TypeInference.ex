@@ -232,7 +232,7 @@ defmodule TypeInference do
     [_ | [types]] = String.split(enum_type, " of ")
 
     # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
-    {String.split(types, " | "), enum_constraints}
+    {types, enum_constraints}
   end
 
   defp infer_expression(
@@ -545,7 +545,7 @@ defmodule TypeInference do
             try do
               [enum | _] = String.split(t1, " of ")
 
-              if is_list(enum) do
+              if is_list?(enum) do
                 list_type
               else
                 raise TypeError, message: "Incompatible types: #{t1}, #{t2}"
