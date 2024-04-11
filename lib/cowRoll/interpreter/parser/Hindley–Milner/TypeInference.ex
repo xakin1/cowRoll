@@ -1,5 +1,27 @@
 defmodule TypeInference do
   import TypesUtils
+  import NestedIndexFinder
+
+  @operadores [
+    :mult,
+    :divi,
+    :plus,
+    :minus,
+    :assignment,
+    :stric_more,
+    :more_equal,
+    :stric_less,
+    :less_equal,
+    :equal,
+    :not_equal,
+    :and_operation,
+    :or_operation,
+    :round_div,
+    :mod,
+    :pow,
+    :concat,
+    :subtract
+  ]
 
   def infer(expression) do
     {type, constraints} = infer_expression(expression, %{})
@@ -166,26 +188,7 @@ defmodule TypeInference do
          {function, {left_expr, right_expr}, {_symbol, _line}},
          constraints
        )
-       when function in [
-              :mult,
-              :divi,
-              :plus,
-              :minus,
-              :assignment,
-              :stric_more,
-              :more_equal,
-              :stric_less,
-              :less_equal,
-              :equal,
-              :not_equal,
-              :and_operation,
-              :or_operation,
-              :round_div,
-              :mod,
-              :pow,
-              :concat,
-              :subtract
-            ] do
+       when function in @operadores do
     {left_type, constraints} = infer_expression(left_expr, constraints)
     {right_type, constraints} = infer_expression(right_expr, constraints)
     {get_function_type(function, left_type, right_type), constraints}
@@ -195,26 +198,7 @@ defmodule TypeInference do
          {{function, {left_expr, right_expr}, {symbol, line}}, next_expression},
          constraints
        )
-       when function in [
-              :mult,
-              :divi,
-              :plus,
-              :minus,
-              :assignment,
-              :stric_more,
-              :more_equal,
-              :stric_less,
-              :less_equal,
-              :equal,
-              :not_equal,
-              :and_operation,
-              :or_operation,
-              :round_div,
-              :mod,
-              :pow,
-              :concat,
-              :subtract
-            ] do
+       when function in @operadores do
     {_, constraints} =
       infer_expression(
         {function, {left_expr, right_expr}, {symbol, line}},
@@ -225,14 +209,28 @@ defmodule TypeInference do
   end
 
   defp infer_expression({:index, {index_value, enum_value}}, constraints) do
-    {enum_type, enum_constraints} = infer_expression(enum_value, constraints)
     # Comprobamos que el índice es de un tipo correcto
-    check_index_type(index_value, enum_type, constraints)
+    {enum_type, enum_constraints} = infer_expression(enum_value, constraints)
+    index_type = check_index_type(index_value, enum_type, constraints)
+    integer = get_type_integer()
 
-    [_ | [types]] = String.split(enum_type, " of ")
+    case {enum_type, index_type} do
+      {"List of" <> _, ^integer} ->
+        levels = find_levels(index_value)
+        types = get_types(levels, enum_type)
+        # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
+        {types, enum_constraints}
 
-    # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
-    {types, enum_constraints}
+      {"Map of" <> _, ^integer} ->
+        levels = find_levels(index_value)
+        types = get_types(levels, enum_type)
+        # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
+        {types, enum_constraints}
+
+      # Caso de varios indices sobre un array
+      _ ->
+        {enum_type, enum_constraints}
+    end
   end
 
   defp infer_expression(
@@ -367,6 +365,28 @@ defmodule TypeInference do
          constraints
        ) do
     {var_type, new_constraints} = infer_expression(range, constraints)
+    integer = get_type_integer()
+    string = get_type_string()
+
+    var_type =
+      case var_type do
+        ^integer ->
+          integer
+
+        ^string ->
+          string
+
+        "List of " <> _ ->
+          [TypesUtils.get_type_list(), String.trim_leading(var_type, "List of ")]
+
+        "Map of " <> _ ->
+          String.trim_leading(var_type, "Map of ")
+
+        # Los tipos 'tX' se tratan como tipos base.
+        _ ->
+          var_type
+      end
+
     var_constraints = %{var_name => var_type}
     constraints = Map.merge(new_constraints, constraints)
     constraints = Map.merge(var_constraints, constraints)
@@ -374,13 +394,13 @@ defmodule TypeInference do
   end
 
   defp infer_expression(
-         {:call_function, {:name, function_name, _}, {:parameters, parameters}},
+         {:call_function, {:name, function_name, line}, {:parameters, parameters}},
          constraints
        ) do
     # Obtener el tipo de la función de las restricciones
     function_type =
       case Map.get(constraints, function_name) do
-        nil -> raise "Undefined function: #{function_name}"
+        nil -> raise "Error at line #{line}: Undefined function: '#{function_name}'"
         existing_type -> existing_type
       end
 
@@ -492,11 +512,26 @@ defmodule TypeInference do
       {^integer_type, ^integer_type} ->
         boolean_type
 
+      {^boolean_type, ^boolean_type} ->
+        boolean_type
+
+      {^boolean_type, ^integer_type} ->
+        boolean_type
+
+      {^integer_type, ^boolean_type} ->
+        boolean_type
+
       # Casos en los que t1 o t2 son variables
       {t1, ^integer_type} when is_atom(t1) ->
         boolean_type
 
       {^integer_type, t2} when is_atom(t2) ->
+        boolean_type
+
+      {t1, ^boolean_type} when is_atom(t1) ->
+        boolean_type
+
+      {^boolean_type, t2} when is_atom(t2) ->
         boolean_type
 
       _ ->
@@ -606,16 +641,23 @@ defmodule TypeInference do
     # Comprobamos que el índice es de un tipo correcto
     case {var_type, enum} do
       {^integer_type, ^list_type} ->
-        :ok
+        var_type
 
       {^integer_type, ^string_type} ->
-        :ok
+        var_type
 
       {^integer_type, ^map_type} ->
-        :ok
+        var_type
 
       {^string_type, ^map_type} ->
-        :ok
+        var_type
+
+      # Caso de dos indices o más seguidos
+      {^integer_type, ^integer_type} ->
+        var_type
+
+      {^string_type, ^string_type} ->
+        var_type
 
       {_, ^map_type} ->
         raise TypeError,
@@ -683,12 +725,76 @@ defmodule TypeInference do
     get_map_types(rest, types)
   end
 
+  defp get_map_types(
+         {{_key, {:if_then_else, condition, then_expression, else_expression, {function, line}}},
+          rest},
+         types
+       ) do
+    {_, constraints} =
+      infer_expression(
+        {:if_then_else, condition, then_expression, else_expression, {function, line}},
+        %{}
+      )
+
+    type = Enum.join(Map.to_list(constraints), " | ")
+
+    types = MapSet.put(types, type)
+    get_map_types(rest, types)
+  end
+
+  defp get_map_types(
+         {_key, {:if_then_else, condition, then_expression, else_expression, {function, line}}},
+         types
+       ) do
+    {_, constraints} =
+      infer_expression(
+        {:if_then_else, condition, then_expression, else_expression, {function, line}},
+        %{}
+      )
+
+    # Extraemos los valores del mapa y los convertimos en un MapSet
+    types_map =
+      constraints
+      |> Map.values()
+      |> MapSet.new()
+
+    # Unimos el MapSet existente con el nuevo MapSet de valores
+    MapSet.union(types, types_map)
+  end
+
+  defp get_map_types(
+         {{_key, {{function, {left_expr, right_expr}, {symbol, line}}, rest}}},
+         types
+       )
+       when function in @operadores do
+    {function_type, _} =
+      infer_expression(
+        {function, {left_expr, right_expr}, {symbol, line}},
+        %{}
+      )
+
+    types = MapSet.put(types, function_type)
+
+    get_map_types(rest, types)
+  end
+
+  defp get_map_types({_key, {{function, {left_expr, right_expr}, {symbol, line}}}}, types)
+       when function in @operadores do
+    {function_type, _} =
+      infer_expression(
+        {function, {left_expr, right_expr}, {symbol, line}},
+        %{}
+      )
+
+    MapSet.put(types, function_type)
+  end
+
   defp get_map_types({_key, {type, _value, _line}}, types) do
     MapSet.put(types, type)
   end
 
   defp get_map_types({{_key, {type, _value, _line}}, rest}, types) do
-    types = MapSet.put(types, type)
+    MapSet.put(types, type)
     get_map_types(rest, types)
   end
 
@@ -746,6 +852,57 @@ defmodule TypeInference do
       type
     else
       raise TypeError, message: "Incompatible types: #{t1}, #{t2}"
+    end
+  end
+
+  def get_types(0, type), do: parse_type(type)
+
+  def get_types(n, type) when n > 0 do
+    type
+    |> parse_type()
+    |> process_types(n)
+  end
+
+  defp parse_type(type) do
+    type
+    |> String.replace(~r/\(([^()]+)\)/, "\\1")
+    |> String.replace(~r/List of /, "")
+    |> String.split(" | ")
+    |> Enum.map(&String.trim/1)
+    |> Enum.uniq()
+  end
+
+  defp process_types(types, 0), do: Enum.join(types, " | ")
+
+  defp process_types(types, n) when n > 0 do
+    types
+    |> Enum.flat_map(&split_nested_types/1)
+    |> MapSet.new()
+    |> Enum.to_list()
+    |> process_types(n - 1)
+  end
+
+  # Actualizamos para usar las funciones de TypesUtils
+  defp split_nested_types(type) do
+    integer = get_type_integer()
+    string = get_type_string()
+
+    case type do
+      ^integer ->
+        [integer]
+
+      ^string ->
+        [string]
+
+      "List of " <> _ ->
+        [TypesUtils.get_type_list(), String.trim_leading(type, "List of ")]
+
+      "Map of " <> _ ->
+        [TypesUtils.get_type_map(), String.trim_leading(type, "Map of ")]
+
+      # Los tipos 'tX' se tratan como tipos base.
+      ":t" <> _ ->
+        [type]
     end
   end
 end

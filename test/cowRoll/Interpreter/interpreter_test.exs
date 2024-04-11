@@ -218,6 +218,18 @@ defmodule CowRoll.ScripsDndTest do
         end
       )
     end
+
+    test "parse string with '' with invalid index" do
+      input = "'hola mundo'['1']"
+
+      assert_raise(
+        TypeError,
+        "The index must be an Integer but String was found",
+        fn ->
+          Interpreter.eval_input(input)
+        end
+      )
+    end
   end
 
   describe "ifs" do
@@ -761,7 +773,7 @@ defmodule CowRoll.ScripsDndTest do
       assert 6 == result
     end
 
-    test "loop with variables" do
+    test "loop with variables with integers" do
       result = Interpreter.eval_input("
          y = 0;
          begin = 3;
@@ -772,7 +784,9 @@ defmodule CowRoll.ScripsDndTest do
          y
          ")
       assert 18 == result
+    end
 
+    test "loop with variables with lists" do
       result = Interpreter.eval_input("
          y = 0;
          z = [3,4,5,6];
@@ -833,16 +847,6 @@ defmodule CowRoll.ScripsDndTest do
       input = "'hola mundo'[1]"
       result = Interpreter.eval_input(input)
       assert result == "o"
-    end
-
-    test "parse string with '' with invalid index" do
-      try do
-        input = "'hola mundo'['1']"
-        Interpreter.eval_input(input)
-        assert false
-      catch
-        error -> assert error == {:error, "The index must be an Integer"}
-      end
     end
 
     test "parse string with '' with an operation in the index" do
@@ -1244,7 +1248,7 @@ defmodule CowRoll.ScripsDndTest do
 
       assert_raise(
         RuntimeError,
-        "Error en la linea 1: Función: 'hola_mundo' no encontrada",
+        "Error at line 1: Undefined function: 'hola_mundo'",
         fn ->
           Interpreter.eval_input(input)
         end

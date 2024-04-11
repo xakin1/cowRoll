@@ -68,30 +68,43 @@ defmodule CowRoll.TypeInference do
   end
 
   describe "inference" do
-    test "infer a constant" do
+    test "infer a constant: integer" do
       input = "3"
       assert do_analize(input) == {get_type_integer(), %{}}
+    end
 
+    test "infer a constant: string" do
       input = "'3'"
       assert do_analize(input) == {get_type_string(), %{}}
+    end
 
+    test "infer a constant: boolean" do
       input = "true"
       assert do_analize(input) == {get_type_boolean(), %{}}
+    end
 
+    test "infer a constant: list of strings or integers" do
       input = "['1',2,3,4,5,6]"
+      expected_type = "#{get_type_list()} of #{get_type_string()} | #{get_type_integer()}"
+      assert do_analize(input) == {expected_type, %{}}
+    end
 
-      assert do_analize(input) ==
-               {"#{get_type_list()} of #{get_type_string()} | #{get_type_integer()}", %{}}
-
+    test "infer a constant: string or integer" do
       input = "['1',2,3,4,5,6][2+3]"
+      expected_type = "#{get_type_string()} | #{get_type_integer()}"
+      assert do_analize(input) == {expected_type, %{}}
+    end
 
-      assert do_analize(input) ==
-               {"#{get_type_string()} | #{get_type_integer()}", %{}}
+    test "infer a constant list of list: string or integer" do
+      input = "[['1',2,3],[4,5,6]][3][1]"
+      expected_type = "#{get_type_integer()} | #{get_type_string()}"
+      assert do_analize(input) == {expected_type, %{}}
+    end
 
+    test "infer a constant: map of integers" do
       input = "{a: 1, b: 2}"
-
-      assert do_analize(input) ==
-               {"#{get_type_map()} of #{get_type_integer()}", %{}}
+      expected_type = "#{get_type_map()} of #{get_type_integer()}"
+      assert do_analize(input) == {expected_type, %{}}
     end
 
     test "infer assignment" do
@@ -149,66 +162,109 @@ defmodule CowRoll.TypeInference do
                 %{}}
     end
 
-    test "infer functions" do
-      input = "3 + 3 "
+    test "addition of integers" do
+      assert do_analize("3 + 3") == {get_type_integer(), %{}}
+    end
+
+    test "addition with array access" do
+      assert do_analize("3 + [2,3,4,5][2]") == {get_type_integer(), %{}}
+    end
+
+    test "subtraction of integers" do
+      assert do_analize("3 - 3") == {get_type_integer(), %{}}
+    end
+
+    test "multiplication of integers" do
+      assert do_analize("3 * 3") == {get_type_integer(), %{}}
+    end
+
+    test "division of integers" do
+      assert do_analize("3 / 3") == {get_type_integer(), %{}}
+    end
+
+    test "integer division" do
+      assert do_analize("3 // 3") == {get_type_integer(), %{}}
+    end
+
+    test "exponentiation" do
+      assert do_analize("3^3") == {get_type_integer(), %{}}
+    end
+
+    test "modulo operation" do
+      assert do_analize("3%3") == {get_type_integer(), %{}}
+    end
+
+    test "greater than comparison" do
+      assert do_analize("3>3") == {get_type_boolean(), %{}}
+    end
+
+    test "greater than or equal comparison" do
+      assert do_analize("3>=3") == {get_type_boolean(), %{}}
+    end
+
+    test "less than comparison" do
+      assert do_analize("3<3") == {get_type_boolean(), %{}}
+    end
+
+    test "less than or equal comparison" do
+      assert do_analize("3<=3") == {get_type_boolean(), %{}}
+    end
+
+    test "logical or operation" do
+      assert do_analize("true or false") == {get_type_boolean(), %{}}
+    end
+
+    test "logical and operation" do
+      assert do_analize("true and false") == {get_type_boolean(), %{}}
+    end
+
+    test "logical and with comparison" do
+      assert do_analize("true and 3 > 5") == {get_type_boolean(), %{}}
+    end
+
+    test "equality comparison with boolean and integer" do
+      assert do_analize("true == 3") == {get_type_boolean(), %{}}
+    end
+
+    test "inequality comparison between integer and string" do
+      assert do_analize("3 != '4'") == {get_type_boolean(), %{}}
+    end
+
+    test "string concatenation" do
+      assert do_analize("'hola ' ++ 'que tal'") == {get_type_string(), %{}}
+    end
+
+    test "list concatenation" do
+      assert do_analize("[2,3,1] ++ [4,3]") == {get_type_list(), %{}}
+    end
+
+    test "list subtraction" do
+      assert do_analize("[2,3,1] -- [4,3]") == {get_type_list(), %{}}
+    end
+
+    test "loop with integer accumulation" do
+      input = "
+        y = 0;
+        begin = 3;
+        finish = 6;
+        for x <- begin..finish do
+          y = y + x
+        end;
+        y"
       assert do_analize(input) == {get_type_integer(), %{}}
+    end
 
-      input = "3 + [2,3,4,5][2]"
+    test "loop with integer accumulation and lists" do
+      input = "
+           y = 0;
+           z = [3,4,5,6];
+
+           for x <- z do
+             y = y + x
+           end;
+           y
+           "
       assert do_analize(input) == {get_type_integer(), %{}}
-
-      input = "3 - 3 "
-      assert do_analize(input) == {get_type_integer(), %{}}
-
-      input = "3 * 3 "
-      assert do_analize(input) == {get_type_integer(), %{}}
-
-      input = "3 / 3 "
-      assert do_analize(input) == {get_type_integer(), %{}}
-
-      input = "3 // 3 "
-      assert do_analize(input) == {get_type_integer(), %{}}
-
-      input = "3^3 "
-      assert do_analize(input) == {get_type_integer(), %{}}
-
-      input = "3%3 "
-      assert do_analize(input) == {get_type_integer(), %{}}
-
-      input = "3>3 "
-      assert do_analize(input) == {get_type_boolean(), %{}}
-
-      input = "3>=3 "
-      assert do_analize(input) == {get_type_boolean(), %{}}
-
-      input = "3<3 "
-      assert do_analize(input) == {get_type_boolean(), %{}}
-
-      input = "3<=3 "
-      assert do_analize(input) == {get_type_boolean(), %{}}
-
-      input = "true or false"
-      assert do_analize(input) == {get_type_boolean(), %{}}
-
-      input = "true and false"
-      assert do_analize(input) == {get_type_boolean(), %{}}
-
-      input = "true and 3 > 5"
-      assert do_analize(input) == {get_type_boolean(), %{}}
-
-      input = "true == 3"
-      assert do_analize(input) == {get_type_boolean(), %{}}
-
-      input = "3 != '4'"
-      assert do_analize(input) == {get_type_boolean(), %{}}
-
-      input = "'hola ' ++ 'que tal'"
-      assert do_analize(input) == {get_type_string(), %{}}
-
-      input = "[2,3,1] ++ [4,3]"
-      assert do_analize(input) == {get_type_list(), %{}}
-
-      input = "[2,3,1] -- [4,3]"
-      assert do_analize(input) == {get_type_list(), %{}}
     end
 
     test "test statements" do
