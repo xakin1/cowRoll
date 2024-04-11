@@ -961,7 +961,7 @@ defmodule CowRoll.ScripsDndTest do
 
     test "div should return an division by 0" do
       assert_raise(
-        RuntimeError,
+        ArithmeticError,
         "Error: division by 0",
         fn ->
           Interpreter.eval_input("5/0")
@@ -994,7 +994,7 @@ defmodule CowRoll.ScripsDndTest do
 
     test "div should return an division by 0" do
       assert_raise(
-        RuntimeError,
+        ArithmeticError,
         "Error: division by 0",
         fn ->
           Interpreter.eval_input("5//0")
@@ -1167,7 +1167,9 @@ defmodule CowRoll.ScripsDndTest do
     end
 
     test "mods by zero" do
-      assert_raise(RuntimeError, "Error: division by 0", fn -> Interpreter.eval_input("5%0") end)
+      assert_raise(ArithmeticError, "Error: division by 0", fn ->
+        Interpreter.eval_input("5%0")
+      end)
     end
 
     test "mods with operations" do

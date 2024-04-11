@@ -83,6 +83,11 @@ defmodule CowRoll.TypeInference do
       assert do_analize(input) ==
                {"#{get_type_list()} of #{get_type_string()} | #{get_type_integer()}", %{}}
 
+      input = "['1',2,3,4,5,6][2+3]"
+
+      assert do_analize(input) ==
+               {"#{get_type_integer()}", %{}}
+
       input = "{a: 1, b: 2}"
 
       assert do_analize(input) ==

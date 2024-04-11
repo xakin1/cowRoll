@@ -1,11 +1,6 @@
 defmodule Parser do
-  defmacro __using__(_opts) do
-    quote do
-      import Parser
-    end
-  end
-
   import SyntaxAnalyzer
+  import TypeInference
   @spec parse(any()) :: {:error, any()} | {:ok, tuple()}
   @doc """
   Attempts to tokenize an input string to start_tag, end_tag, and char
@@ -21,8 +16,9 @@ defmodule Parser do
               {:error, error} ->
                 throw({:error, error})
 
-              input_parsed ->
-                input_parsed
+              {:ok, input_parsed} ->
+                infer(input_parsed)
+                {:ok, input_parsed}
             end
         end
     end

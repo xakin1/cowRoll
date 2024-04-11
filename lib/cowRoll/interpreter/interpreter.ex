@@ -1,25 +1,10 @@
 defmodule Interpreter do
-  use Parser
+  import Parser
   import TreeNode
   import Tuples
   import TypesUtils
   import NestedIndexFinder
   import Arrays
-
-  defp bad_type(function_name, type, value1, value2, line) do
-    case {get_type(value1), get_type(value2)} do
-      {type_value1, type_value2} ->
-        "Error at line #{line} in #{function_name} operation, both factors must be #{type}, but #{type_value1} and #{type_value2} were found"
-    end
-  end
-
-  defp bad_type_unitary(function_name, type, value, line) do
-    case get_type(value) do
-      type_value ->
-        raise ArgumentError,
-              "Error at line #{line} in #{function_name} operation, the factor must be #{type}, but #{type_value} was found"
-    end
-  end
 
   @type expr_ast ::
           {:mult, expr_ast, expr_ast}
@@ -70,7 +55,7 @@ defmodule Interpreter do
     node = create_tree()
     load_modules()
 
-    {:ok, list_sentences} = Parser.parse(input)
+    {:ok, list_sentences} = parse(input)
     result = eval_block(node.id, list_sentences)
 
     delete_tree()
@@ -193,18 +178,12 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:negative, expresion, {_simbol, line}}) do
-    case eval(scope, expresion) do
-      value when is_integer(value) -> -value
-      value -> bad_type_unitary("-", "Integer", value, line)
-    end
+  defp eval(scope, {:negative, expresion, _}) do
+    -eval(scope, expresion)
   end
 
-  defp eval(scope, {:not_operation, expresion, {_simbol, line}}) do
-    case eval(scope, expresion) do
-      value when is_boolean(value) -> not value
-      value -> bad_type_unitary("not", "boolean", value, line)
-    end
+  defp eval(scope, {:not_operation, expresion, _}) do
+    not eval(scope, expresion)
   end
 
   defp eval(scope, {:name, variable, line}) do
@@ -282,7 +261,7 @@ defmodule Interpreter do
     end
   end
 
-  defp eval(scope, {:concat, {left_expression, right_expression}, {_simbol, line}}) do
+  defp eval(scope, {:concat, {left_expression, right_expression}, _}) do
     left_expression_evaluated = eval(scope, left_expression)
     right_expression_evaluated = eval(scope, right_expression)
 
@@ -291,81 +270,27 @@ defmodule Interpreter do
         left_expression ++ right_expression_evaluated
 
       left_expression when is_bitstring(left_expression) ->
-        do_binary_operation_with_check(
-          [left_expression_evaluated, right_expression_evaluated],
-          &is_bitstring/1,
-          &<>/2,
-          bad_type("++", "string", left_expression_evaluated, right_expression_evaluated, line)
-        )
+        left_expression_evaluated <> right_expression_evaluated
     end
   end
 
-  defp eval(scope, {:subtract, {left_expression, right_expression}, {_simbol, _line}}) do
-    left_expression_evaluated = eval(scope, left_expression)
-    right_expression_evaluated = eval(scope, right_expression)
-
-    left_expression_evaluated -- right_expression_evaluated
+  defp eval(scope, {:subtract, {left_expression, right_expression}, _}) do
+    eval(scope, left_expression) -- eval(scope, right_expression)
   end
 
-  defp eval(scope, {:plus, {left_expression, right_expression}, {_simbol, line}}) do
-    left_expression_evaluated = eval(scope, left_expression)
-    right_expression_evaluated = eval(scope, right_expression)
-
-    do_binary_operation_with_check(
-      [left_expression_evaluated, right_expression_evaluated],
-      &is_integer/1,
-      &+/2,
-      bad_type("+", "Integers", left_expression_evaluated, right_expression_evaluated, line)
-    )
+  defp eval(scope, {:plus, {left_expression, right_expression}, _}) do
+    eval(scope, left_expression) + eval(scope, right_expression)
   end
 
-  defp eval(scope, {:minus, {left_expression, right_expression}, {_simbol, line}}) do
-    left_expression_evaluated = eval(scope, left_expression)
-    right_expression_evaluated = eval(scope, right_expression)
-
-    do_binary_operation_with_check(
-      [left_expression_evaluated, right_expression_evaluated],
-      &is_integer/1,
-      &-/2,
-      bad_type("-", "Integers", left_expression_evaluated, right_expression_evaluated, line)
-    )
+  defp eval(scope, {:minus, {left_expression, right_expression}, _}) do
+    eval(scope, left_expression) - eval(scope, right_expression)
   end
 
-  defp eval(scope, {:mult, {left_expression, right_expression}, {_simbol, line}}) do
-    left_expression_evaluated = eval(scope, left_expression)
-    right_expression_evaluated = eval(scope, right_expression)
-
-    do_binary_operation_with_check(
-      [left_expression_evaluated, right_expression_evaluated],
-      &is_integer/1,
-      &*/2,
-      bad_type("*", "Integers", left_expression_evaluated, right_expression_evaluated, line)
-    )
+  defp eval(scope, {:mult, {left_expression, right_expression}, _}) do
+    eval(scope, left_expression) * eval(scope, right_expression)
   end
 
-  defp eval(scope, {:divi, {left_expression, right_expression}, {_simbol, line}}) do
-    try do
-      dividend = eval(scope, left_expression)
-      divider = eval(scope, right_expression)
-
-      case {dividend, divider} do
-        {_, 0} ->
-          raise ArithmeticError, "Error: division by 0"
-
-        {dividend, divider} ->
-          do_binary_operation_with_check(
-            [dividend, divider],
-            &is_integer/1,
-            &div/2,
-            bad_type("/", "Integers", dividend, divider, line)
-          )
-      end
-    catch
-      {:error, error} -> raise RuntimeError, error
-    end
-  end
-
-  defp eval(scope, {:round_div, {left_expression, right_expression}, {_simbol, line}}) do
+  defp eval(scope, {:divi, {left_expression, right_expression}, _}) do
     try do
       dividend = eval(scope, left_expression)
       divisor = eval(scope, right_expression)
@@ -375,95 +300,75 @@ defmodule Interpreter do
           raise ArithmeticError, "Error: division by 0"
 
         {dividend, divisor} ->
-          check_type(
-            [dividend, divisor],
-            &is_integer/1,
-            bad_type("//", "Integers", dividend, divisor, line)
-          )
-
-          result = div(dividend, divisor) + ceil(rem(dividend, divisor) / divisor)
-
-          result
+          div(dividend, divisor)
       end
     catch
-      {:error, error} -> throw({:error, error})
+      {:error, error} -> raise RuntimeError, error
     end
   end
 
-  defp eval(scope, {:mod, {left_expression, right_expression}, {_simbol, line}}) do
+  defp eval(scope, {:round_div, {left_expression, right_expression}, _}) do
     try do
       dividend = eval(scope, left_expression)
-      module = eval(scope, right_expression)
+      divisor = eval(scope, right_expression)
 
-      case {dividend, module} do
+      case {dividend, divisor} do
         {_, 0} ->
           raise ArithmeticError, "Error: division by 0"
 
-        {dividend, module} ->
-          do_binary_operation_with_check(
-            [dividend, module],
-            &is_integer/1,
-            &Integer.mod/2,
-            bad_type("%", "Integers", dividend, module, line)
-          )
+        {dividend, divisor} ->
+          div(dividend, divisor) + ceil(rem(dividend, divisor) / divisor)
       end
     catch
       {:error, error} -> throw({:error, error})
     end
   end
 
-  defp eval(scope, {:pow, {left_expression, right_expression}, {_simbol, line}}) do
-    left_expression_evaluated = eval(scope, left_expression)
-    right_expression_evaluated = eval(scope, right_expression)
+  defp eval(scope, {:mod, {left_expression, right_expression}, _}) do
+    try do
+      dividend = eval(scope, left_expression)
+      divisor = eval(scope, right_expression)
 
-    do_binary_operation_with_check(
-      [left_expression_evaluated, right_expression_evaluated],
-      &is_integer/1,
-      &Integer.pow/2,
-      bad_type("^", "Integers", left_expression_evaluated, right_expression_evaluated, line)
-    )
+      case {dividend, divisor} do
+        {_, 0} ->
+          raise ArithmeticError, "Error: division by 0"
+
+        {dividend, divisor} ->
+          Integer.mod(dividend, divisor)
+      end
+    catch
+      {:error, error} -> throw({:error, error})
+    end
   end
 
-  defp eval(scope, {:stric_more, {left_expression, right_expression}, {_simbol, _line}}),
+  defp eval(scope, {:pow, {left_expression, right_expression}, _}) do
+    Integer.pow(eval(scope, left_expression), eval(scope, right_expression))
+  end
+
+  defp eval(scope, {:stric_more, {left_expression, right_expression}, _}),
     do: eval(scope, left_expression) > eval(scope, right_expression)
 
-  defp eval(scope, {:more_equal, {left_expression, right_expression}, {_simbol, _line}}),
+  defp eval(scope, {:more_equal, {left_expression, right_expression}, _}),
     do: eval(scope, left_expression) >= eval(scope, right_expression)
 
-  defp eval(scope, {:stric_less, {left_expression, right_expression}, {_simbol, _line}}),
+  defp eval(scope, {:stric_less, {left_expression, right_expression}, _}),
     do: eval(scope, left_expression) < eval(scope, right_expression)
 
-  defp eval(scope, {:less_equal, {left_expression, right_expression}, {_simbol, _line}}),
+  defp eval(scope, {:less_equal, {left_expression, right_expression}, _}),
     do: eval(scope, left_expression) <= eval(scope, right_expression)
 
-  defp eval(scope, {:equal, {left_expression, right_expression}, {_simbol, _line}}),
+  defp eval(scope, {:equal, {left_expression, right_expression}, _}),
     do: eval(scope, left_expression) == eval(scope, right_expression)
 
-  defp eval(scope, {:not_equal, {left_expression, right_expression}, {_simbol, _line}}),
+  defp eval(scope, {:not_equal, {left_expression, right_expression}, _}),
     do: eval(scope, left_expression) != eval(scope, right_expression)
 
-  defp eval(scope, {:and_operation, {left_expression, right_expression}, {_simbol, line}}) do
-    left_expression_evaluated = eval(scope, left_expression)
-    right_expression_evaluated = eval(scope, right_expression)
-
-    do_binary_operation_with_check(
-      [left_expression_evaluated, right_expression_evaluated],
-      &is_boolean/1,
-      &and/2,
-      bad_type("and", "boolean", left_expression_evaluated, right_expression_evaluated, line)
-    )
+  defp eval(scope, {:and_operation, {left_expression, right_expression}, _}) do
+    eval(scope, left_expression) and eval(scope, right_expression)
   end
 
-  defp eval(scope, {:or_operation, {left_expression, right_expression}, {_simbol, line}}) do
-    left_expression_evaluated = eval(scope, left_expression)
-    right_expression_evaluated = eval(scope, right_expression)
-
-    do_binary_operation_with_check(
-      [left_expression_evaluated, right_expression_evaluated],
-      &is_boolean/1,
-      &or/2,
-      bad_type("or", "boolean", left_expression_evaluated, right_expression_evaluated, line)
-    )
+  defp eval(scope, {:or_operation, {left_expression, right_expression}, _}) do
+    eval(scope, left_expression) or eval(scope, right_expression)
   end
 
   defp eval(scope, {:range, range}) do
@@ -504,21 +409,15 @@ defmodule Interpreter do
   defp eval(_, nil) do
   end
 
-  defp eval(scope, {:if_then_else, condition, then_expression, else_expression, {_simbol, line}}) do
+  defp eval(scope, {:if_then_else, condition, then_expression, else_expression, _}) do
     node = add_scope(scope, :for_loop)
     condition = eval(scope, condition)
 
     result =
-      case condition do
-        condition when is_boolean(condition) ->
-          if condition do
-            eval_block(node, then_expression)
-          else
-            eval_block(node, else_expression)
-          end
-
-        condition ->
-          bad_type_unitary("condition", "boolean", condition, line)
+      if condition do
+        eval_block(node, then_expression)
+      else
+        eval_block(node, else_expression)
       end
 
     remove_scope(:for_loop)
@@ -608,30 +507,6 @@ defmodule Interpreter do
 
       _ ->
         :error
-    end
-  end
-
-  defp do_binary_operation_with_check(
-         factors,
-         is_x_type,
-         operation,
-         error
-       ) do
-    check_type(factors, is_x_type, error)
-
-    case Enum.reduce(factors, &operation.(&2, &1)) do
-      value -> value
-    end
-  end
-
-  defp check_type(factors, is_x_type, error) do
-    is_correct_type =
-      Enum.reduce(factors, true, fn factor, acc ->
-        acc and is_x_type.(factor)
-      end)
-
-    if !is_correct_type do
-      raise ArgumentError, error
     end
   end
 end
