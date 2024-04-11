@@ -445,7 +445,7 @@ yeccpars2(128=S, Cat, Ss, Stack, T, Ts, Tzr) ->
 %% yeccpars2(129=S, Cat, Ss, Stack, T, Ts, Tzr) ->
 %%  yeccpars2_129(S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccpars2(130=S, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_36(S, Cat, Ss, Stack, T, Ts, Tzr);
+ yeccpars2_19(S, Cat, Ss, Stack, T, Ts, Tzr);
 %% yeccpars2(131=S, Cat, Ss, Stack, T, Ts, Tzr) ->
 %%  yeccpars2_131(S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccpars2(132=S, Cat, Ss, Stack, T, Ts, Tzr) ->
@@ -2087,14 +2087,12 @@ yeccpars2_129(_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  NewStack = yeccpars2_129_(Stack),
  yeccgoto_index(hd(Nss), Cat, Nss, NewStack, T, Ts, Tzr).
 
-%% yeccpars2_130: see yeccpars2_36
+%% yeccpars2_130: see yeccpars2_19
 
--dialyzer({nowarn_function, yeccpars2_131/7}).
--compile({nowarn_unused_function,  yeccpars2_131/7}).
 yeccpars2_131(S, ']', Ss, Stack, T, Ts, Tzr) ->
  yeccpars1(S, 132, Ss, Stack, T, Ts, Tzr);
-yeccpars2_131(_, _, _, _, T, _, _) ->
- yeccerror(T).
+yeccpars2_131(S, Cat, Ss, Stack, T, Ts, Tzr) ->
+ yeccpars2_cont_86(S, Cat, Ss, Stack, T, Ts, Tzr).
 
 -dialyzer({nowarn_function, yeccpars2_132/7}).
 -compile({nowarn_unused_function,  yeccpars2_132/7}).
@@ -2243,7 +2241,7 @@ yeccgoto_E(116, Cat, Ss, Stack, T, Ts, Tzr) ->
 yeccgoto_E(124, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_18(18, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_E(130, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_18(18, Cat, Ss, Stack, T, Ts, Tzr);
+ yeccpars2_131(131, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_E(134, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_18(18, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_E(137, Cat, Ss, Stack, T, Ts, Tzr) ->
@@ -2363,8 +2361,6 @@ yeccgoto_assignment(116=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_16(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_assignment(124=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_16(_S, Cat, Ss, Stack, T, Ts, Tzr);
-yeccgoto_assignment(130=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_16(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_assignment(134=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_16(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_assignment(137=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
@@ -2393,8 +2389,6 @@ yeccgoto_assignment_function(108=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
 yeccgoto_assignment_function(116=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_15(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_assignment_function(124=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_15(_S, Cat, Ss, Stack, T, Ts, Tzr);
-yeccgoto_assignment_function(130=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_15(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_assignment_function(134=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_15(_S, Cat, Ss, Stack, T, Ts, Tzr);
@@ -2535,8 +2529,6 @@ yeccgoto_for_loop(116=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_12(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_for_loop(124=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_12(_S, Cat, Ss, Stack, T, Ts, Tzr);
-yeccgoto_for_loop(130=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_12(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_for_loop(134=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_12(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_for_loop(137=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
@@ -2654,8 +2646,6 @@ yeccgoto_if_statement(116=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_9(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_if_statement(124=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_9(_S, Cat, Ss, Stack, T, Ts, Tzr);
-yeccgoto_if_statement(130=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_9(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_if_statement(134=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_9(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_if_statement(137=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
@@ -2737,8 +2727,8 @@ yeccgoto_index(116, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_8(8, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_index(124, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_8(8, Cat, Ss, Stack, T, Ts, Tzr);
-yeccgoto_index(130, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_8(8, Cat, Ss, Stack, T, Ts, Tzr);
+yeccgoto_index(130=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
+ yeccpars2_41(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_index(134, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_8(8, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_index(137, Cat, Ss, Stack, T, Ts, Tzr) ->
@@ -2969,8 +2959,6 @@ yeccgoto_statement(116, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_5(5, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_statement(124, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_5(5, Cat, Ss, Stack, T, Ts, Tzr);
-yeccgoto_statement(130, Cat, Ss, Stack, T, Ts, Tzr) ->
- yeccpars2_131(131, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_statement(134=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_135(_S, Cat, Ss, Stack, T, Ts, Tzr);
 yeccgoto_statement(137, Cat, Ss, Stack, T, Ts, Tzr) ->
@@ -4667,7 +4655,7 @@ yeccpars2_129_(__Stack0) ->
 yeccpars2_132_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
-                                    ___2
+                            ___2
   end | __Stack].
 
 -compile({inline,yeccpars2_133_/1}).
@@ -4677,7 +4665,7 @@ yeccpars2_132_(__Stack0) ->
 yeccpars2_133_(__Stack0) ->
  [___4,___3,___2,___1 | __Stack] = __Stack0,
  [begin
-                                               {index, {___2, ___4}}
+                                       {index, {___2, ___4}}
   end | __Stack].
 
 -compile({inline,yeccpars2_135_/1}).

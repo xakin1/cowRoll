@@ -1,21 +1,38 @@
 defmodule TypesUtils do
-  def get_type(value) when is_binary(value) do
-    "String"
+  @string "String"
+  @boolean "Boolean"
+  @integer "Integer"
+  @map "Map"
+  @list "List"
+
+  def get_type(value) when is_binary(value), do: @string
+  def get_type(value) when is_boolean(value), do: @boolean
+  def get_type(value) when is_integer(value), do: @integer
+  def get_type(value) when is_map(value), do: @map
+  def get_type(value) when is_list(value), do: @list
+
+  def get_type(:string), do: @string
+  def get_type(:boolean), do: @boolean
+  def get_type(:number), do: @integer
+  def get_type(:map), do: @map
+  def get_type(:list), do: @list
+  def get_type(:name), do: fresh_type()
+
+  def get_type_boolean, do: @boolean
+  def get_type_integer, do: @integer
+  def get_type_string, do: @string
+  def get_type_map, do: @map
+  def get_type_list, do: @list
+
+  def is_enum(type) do
+    case type do
+      @map -> true
+      @list -> true
+      _ -> false
+    end
   end
 
-  def get_type(value) when is_boolean(value) do
-    "Boolean"
-  end
-
-  def get_type(value) when is_integer(value) do
-    "Integer"
-  end
-
-  def get_type(value) when is_map(value) do
-    "Map"
-  end
-
-  def get_type(value) when is_list(value) do
-    "List"
+  def fresh_type() do
+    :"t#{:erlang.unique_integer([:positive, :monotonic])}"
   end
 end

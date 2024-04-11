@@ -132,8 +132,8 @@ code -> error                 : '$1'.
     enums -> string    : '$1'.
     enums -> VAR       : '$1'.
 
-    indexation -> '['statement']' : '$2'.
-    indexation -> '['statement']' indexation : {index, {'$2', '$4'}}.
+    indexation -> '['E']' : '$2'.
+    indexation -> '['E']' indexation : {index, {'$2', '$4'}}.
     index -> enums indexation : {index, {'$2','$1'}}.
 
 

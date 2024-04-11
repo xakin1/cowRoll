@@ -45,7 +45,6 @@ defmodule Interpreter do
           | {:boolean, boolean}
           | {:string, String.t()}
           | {:not_defined, String.t()}
-          | {:dice, expr_ast, expr_ast}
           | {:negative, expr_ast}
           | {:name, String.t()}
           | {:list, expr_ast}

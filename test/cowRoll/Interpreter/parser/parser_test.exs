@@ -403,6 +403,40 @@ defmodule CowRoll.ParserTest do
                     {:if_then_else, {:boolean, true, 1}, {:number, 3, 1}, {:string, "'r'", 1},
                      {:if, 1}}}}}}}
     end
+
+    test "map with string index" do
+      input = "x = {a: '1',b: \"2\"}
+      x['a']"
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:map,
+                {{{:name, "a", 1}, {:string, "'1'", 1}}, {{:name, "b", 1}, {:string, "\"2\"", 1}}}}
+    end
+
+    test "map with index" do
+      input =
+        "{first: '1'++'2',second: 3+2*(3+3), third: '3',fourth: if true then 3 else 'r' end}[1]"
+
+      {:ok, token} = Parser.parse(input)
+
+      assert token ==
+               {:index,
+                {{:number, 1, 1},
+                 {:map,
+                  {{{:name, "first", 1},
+                    {:concat, {{:string, "'1'", 1}, {:string, "'2'", 1}}, {:++, 1}}},
+                   {{{:name, "second", 1},
+                     {:plus,
+                      {{:number, 3, 1},
+                       {:mult,
+                        {{:number, 2, 1}, {:plus, {{:number, 3, 1}, {:number, 3, 1}}, {:+, 1}}},
+                        {:*, 1}}}, {:+, 1}}},
+                    {{{:name, "third", 1}, {:string, "'3'", 1}},
+                     {{:name, "fourth", 1},
+                      {:if_then_else, {:boolean, true, 1}, {:number, 3, 1}, {:string, "'r'", 1},
+                       {:if, 1}}}}}}}}}
+    end
   end
 
   describe "boolean expressions" do
