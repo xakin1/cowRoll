@@ -57,8 +57,8 @@ defmodule CowRoll.ScripsDndTest do
   describe "checking types" do
     test "check numeric expression with plus" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in + operation, both factors must be Integers, but Integer and Boolean were found",
+        TypeError,
+        "Error at line 1 in '+' operation, Incompatible types: Integer, Boolean was found but Integer, Integer was expected",
         fn ->
           Interpreter.eval_input("3+true")
         end
@@ -67,8 +67,8 @@ defmodule CowRoll.ScripsDndTest do
 
     test "check numeric expression with minus" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in - operation, both factors must be Integers, but Integer and Boolean were found",
+        TypeError,
+        "Error at line 1 in '-' operation, Incompatible types: Integer, Boolean was found but Integer, Integer was expected",
         fn ->
           Interpreter.eval_input("3-true")
         end
@@ -77,8 +77,8 @@ defmodule CowRoll.ScripsDndTest do
 
     test "check numeric expression with mult" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in * operation, both factors must be Integers, but Integer and List were found",
+        TypeError,
+        "Error at line 1 in '*' operation, Incompatible types: Integer, List of Integer was found but Integer, Integer was expected",
         fn ->
           Interpreter.eval_input("3*[1]")
         end
@@ -87,8 +87,8 @@ defmodule CowRoll.ScripsDndTest do
 
     test "check numeric expression with div" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in / operation, both factors must be Integers, but Integer and Map were found",
+        TypeError,
+        "Error at line 1 in '/' operation, Incompatible types: Integer, Map of Boolean was found but Integer, Integer was expected",
         fn ->
           Interpreter.eval_input("3/{a: true}")
         end
@@ -97,8 +97,8 @@ defmodule CowRoll.ScripsDndTest do
 
     test "check numeric expression with round div" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in // operation, both factors must be Integers, but Integer and Boolean were found",
+        TypeError,
+        "Error at line 1 in '//' operation, Incompatible types: Integer, Boolean was found but Integer, Integer was expected",
         fn ->
           Interpreter.eval_input("3//true")
         end
@@ -107,8 +107,8 @@ defmodule CowRoll.ScripsDndTest do
 
     test "check numeric expression with round mod" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in % operation, both factors must be Integers, but Integer and Boolean were found",
+        TypeError,
+        "Error at line 1 in '%' operation, Incompatible types: Integer, Boolean was found but Integer, Integer was expected",
         fn ->
           Interpreter.eval_input("3%true")
         end
@@ -117,8 +117,8 @@ defmodule CowRoll.ScripsDndTest do
 
     test "check numeric expression with pow" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in ^ operation, both factors must be Integers, but Integer and Boolean were found",
+        TypeError,
+        "Error at line 1 in '^' operation, Incompatible types: Integer, Boolean was found but Integer, Integer was expected",
         fn ->
           Interpreter.eval_input("3^true")
         end
@@ -127,8 +127,8 @@ defmodule CowRoll.ScripsDndTest do
 
     test "check numeric expression with unitary -" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in - operation, the factor must be Integer, but Boolean was found",
+        TypeError,
+        "Error at line 1 in '-' operation, Incompatible type: Boolean was found but Integer was expected",
         fn ->
           Interpreter.eval_input("-true")
         end
@@ -137,8 +137,8 @@ defmodule CowRoll.ScripsDndTest do
 
     test "check boolean expression with or" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in or operation, both factors must be boolean, but Integer and Boolean were found",
+        TypeError,
+        "Error at line 1 in 'or' operation, Incompatible types: Integer, Boolean was found but Boolean, Boolean was expected",
         fn ->
           Interpreter.eval_input("3+2 or true")
         end
@@ -147,16 +147,16 @@ defmodule CowRoll.ScripsDndTest do
 
     test "check boolean expression with and" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in and operation, both factors must be boolean, but Integer and Boolean were found",
+        TypeError,
+        "Error at line 1 in 'and' operation, Incompatible types: Integer, Boolean was found but Boolean, Boolean was expected",
         fn ->
           Interpreter.eval_input("3 and true")
         end
       )
 
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in and operation, both factors must be boolean, but String and String were found",
+        TypeError,
+        "Error at line 1 in 'and' operation, Incompatible types: String, String was found but Boolean, Boolean was expected",
         fn ->
           Interpreter.eval_input("'3' and 'true'")
         end
@@ -165,8 +165,8 @@ defmodule CowRoll.ScripsDndTest do
 
     test "check boolean expression with not" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in not operation, the factor must be boolean, but Integer was found",
+        TypeError,
+        "Error at line 1 in 'unknow' operation, Incompatible type: Integer was found but Boolean was expected",
         fn ->
           Interpreter.eval_input("not 3")
         end
@@ -175,16 +175,16 @@ defmodule CowRoll.ScripsDndTest do
 
     test "check boolean expression with ++" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in ++ operation, both factors must be string, but String and Integer were found",
+        TypeError,
+        "Error at line 1 in '++' operation, Incompatible types: String, Integer were found but String, String were expected",
         fn ->
           Interpreter.eval_input("'3' ++ 2")
         end
       )
 
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in ++ operation, both factors must be string, but Integer and String were found",
+        TypeError,
+        "Error at line 1 in '++' operation, Incompatible types: Integer, String were found but String, String were expected",
         fn ->
           Interpreter.eval_input("3 ++ '2'")
         end
@@ -193,26 +193,26 @@ defmodule CowRoll.ScripsDndTest do
 
     test "check concat arrays ++" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in ++ operation, both factors must be string, but String and Integer were found",
+        TypeError,
+        "Error at line 1 in '++' operation, Incompatible types: String, List of Integer were found but String, String were expected",
         fn ->
           Interpreter.eval_input("'3' ++ [2]")
         end
       )
 
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in ++ operation, both factors must be string, but Integer and String were found",
+        TypeError,
+        "Error at line 1 in '++' operation, Incompatible types: Integer, String were found but String, String were expected",
         fn ->
-          Interpreter.eval_input(" ++ ")
+          Interpreter.eval_input("1 ++ '2'")
         end
       )
     end
 
     test "check condition of if" do
       assert_raise(
-        RuntimeError,
-        "Error at line 1 in condition operation, the factor must be boolean, but Integer was found",
+        TypeError,
+        "Error at line 1 in 'condition': Integer was found but Boolean was expected",
         fn ->
           Interpreter.eval_input("if 3 then 3 end")
         end
@@ -223,8 +223,8 @@ defmodule CowRoll.ScripsDndTest do
       input = "'hola mundo'['1']"
 
       assert_raise(
-        TypeError,
-        "The index must be an Integer but String was found",
+        RuntimeError,
+        "The index must be an Integer",
         fn ->
           Interpreter.eval_input(input)
         end

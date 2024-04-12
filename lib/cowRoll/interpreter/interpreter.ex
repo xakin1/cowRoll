@@ -118,7 +118,7 @@ defmodule Interpreter do
         String.at(string, index)
 
       _ ->
-        throw({:error, "The index must be an Integer"})
+        raise "The index must be an Integer"
     end
   end
 

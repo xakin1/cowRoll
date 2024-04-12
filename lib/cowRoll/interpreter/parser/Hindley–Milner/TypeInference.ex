@@ -91,14 +91,19 @@ defmodule TypeInference do
       end
 
     case value do
-      {basic_type, value, _line} when basic_type in [:number, :string, :boolean, :list, :map] ->
+      {function, value, line} when function in [:number, :string, :boolean, :list, :map] ->
         [_ | [elements_t1]] = String.split(enum_type, " of ")
         types = String.split(elements_t1, " | ")
         var_type = get_type(value)
 
         case Enum.member?(types, var_type) do
-          true -> {var_type, constraints}
-          false -> raise "Incompatible types: #{var_type} expected  #{elements_t1} "
+          true ->
+            {var_type, constraints}
+
+          false ->
+            raise TypeError,
+              message:
+                "Error at line #{line} in '#{get_function(function)}' operation, Incompatible types: #{var_type} was found but expected  #{elements_t1} "
         end
 
       {:name, variable, _line} ->
@@ -185,13 +190,13 @@ defmodule TypeInference do
   end
 
   defp infer_expression(
-         {function, {left_expr, right_expr}, {_symbol, _line}},
+         {function, {left_expr, right_expr}, {_symbol, line}},
          constraints
        )
        when function in @operadores do
     {left_type, constraints} = infer_expression(left_expr, constraints)
     {right_type, constraints} = infer_expression(right_expr, constraints)
-    {get_function_type(function, left_type, right_type), constraints}
+    {get_function_type(function, left_type, right_type, line), constraints}
   end
 
   defp infer_expression(
@@ -234,7 +239,7 @@ defmodule TypeInference do
   end
 
   defp infer_expression(
-         {unary_function, expr_ast, {_symbol, _line}},
+         {unary_function, expr_ast, {_symbol, line}},
          constraints
        )
        when unary_function in [
@@ -242,7 +247,7 @@ defmodule TypeInference do
               :not_operation
             ] do
     {expr_type, constraints} = infer_expression(expr_ast, constraints)
-    {get_function_type(unary_function, expr_type), constraints}
+    {get_function_type(unary_function, expr_type, line), constraints}
   end
 
   defp infer_expression(
@@ -296,7 +301,7 @@ defmodule TypeInference do
   end
 
   defp infer_expression(
-         {:if_then_else, condition, then_expr, else_expr, {_simbol, _line}},
+         {:if_then_else, condition, then_expr, else_expr, {_simbol, line}},
          constraints
        ) do
     # Inferir el tipo de la condición
@@ -329,7 +334,9 @@ defmodule TypeInference do
 
       _ ->
         # La condición no es de tipo booleano, lanzar un error
-        raise TypeError, message: "Condition must be boolean"
+        raise TypeError,
+          message:
+            "Error at line #{line} in 'condition': #{condition_type} was found but #{boolean} was expected"
     end
   end
 
@@ -459,29 +466,43 @@ defmodule TypeInference do
     end
   end
 
-  defp get_function_type(function, t1)
+  defp get_function_type(function, t1, line)
        when function in [:negative] do
     integer_type = get_type_integer()
 
     case t1 do
-      ^integer_type -> integer_type
-      t1 when is_atom(t1) and is_atom(t1) -> integer_type
-      _ -> raise TypeError, message: "Incompatible types: #{t1}"
+      ^integer_type ->
+        integer_type
+
+      t1 when is_atom(t1) and is_atom(t1) ->
+        integer_type
+
+      _ ->
+        raise TypeError,
+          message:
+            "Error at line #{line} in '#{get_function(function)}' operation, Incompatible type: #{t1} was found but #{integer_type} was expected"
     end
   end
 
-  defp get_function_type(function, t1)
+  defp get_function_type(function, t1, line)
        when function in [:not_operation] do
     boolean_type = get_type_boolean()
 
     case t1 do
-      ^boolean_type -> boolean_type
-      t1 when is_atom(t1) and is_atom(t1) -> boolean_type
-      _ -> raise TypeError, message: "Incompatible types: #{t1}"
+      ^boolean_type ->
+        boolean_type
+
+      t1 when is_atom(t1) and is_atom(t1) ->
+        boolean_type
+
+      _ ->
+        raise TypeError,
+          message:
+            "Error at line #{line} in '#{get_function(function)}' operation, Incompatible type: #{t1} was found but #{boolean_type} was expected"
     end
   end
 
-  defp get_function_type(function, t1, t2)
+  defp get_function_type(function, t1, t2, line)
        when function in [:mult, :divi, :round_div, :plus, :minus, :mod, :pow] do
     integer_type = get_type_integer()
 
@@ -499,11 +520,11 @@ defmodule TypeInference do
         integer_type
 
       _ ->
-        compatible?(t1, t2, integer_type)
+        compatible?(function, t1, t2, integer_type, line)
     end
   end
 
-  defp get_function_type(function, t1, t2)
+  defp get_function_type(function, t1, t2, line)
        when function in [:stric_more, :more_equal, :stric_less, :less_equal] do
     boolean_type = get_type_boolean()
     integer_type = get_type_integer()
@@ -535,11 +556,11 @@ defmodule TypeInference do
         boolean_type
 
       _ ->
-        compatible?(t1, t2, boolean_type)
+        compatible?(function, t1, t2, boolean_type, line)
     end
   end
 
-  defp get_function_type(function, t1, t2)
+  defp get_function_type(function, t1, t2, line)
        when function in [:and_operation, :or_operation] do
     boolean_type = get_type_boolean()
 
@@ -554,13 +575,16 @@ defmodule TypeInference do
         boolean_type
 
       _ ->
-        compatible?(t1, t2, boolean_type)
+        compatible?(function, t1, t2, boolean_type, line)
     end
   end
 
-  defp get_function_type(function, t1, t2) when function in [:concat, :subtract] do
+  defp get_function_type(function, t1, t2, line) when function in [:concat, :subtract] do
     string_type = get_type_string()
     list_type = get_type_list()
+
+    error_message =
+      "Error at line #{line} in '#{get_function(function)}' operation, Incompatible types: #{t1}, #{t2} were found but #{string_type}, #{string_type} were expected"
 
     case {t1, t2} do
       {^list_type, _} ->
@@ -574,7 +598,7 @@ defmodule TypeInference do
 
       _ ->
         try do
-          compatible?(t1, t2, string_type)
+          compatible?(function, t1, t2, string_type, line)
         rescue
           TypeError ->
             try do
@@ -583,16 +607,17 @@ defmodule TypeInference do
               if is_list?(enum) do
                 list_type
               else
-                raise TypeError, message: "Incompatible types: #{t1}, #{t2}"
+                raise TypeError,
+                  message: error_message
               end
             rescue
-              _ -> raise TypeError, message: "Incompatible types: #{t1}, #{t2}"
+              _ -> raise TypeError, message: error_message
             end
         end
     end
   end
 
-  defp get_function_type(function, _t1, _t2)
+  defp get_function_type(function, _t1, _t2, _line)
        when function in [:equal, :not_equal],
        do: get_type_boolean()
 
@@ -827,10 +852,13 @@ defmodule TypeInference do
 
   # En el caso de que en una operación haya un enumerado indexado
   # tenemos que comprobar los posibles tipos del enumerado
-  defp compatible?(t1, t2, type) do
+  defp compatible?(function, t1, t2, type, line) do
     t1_enum? = is_list(t1)
 
     t2_enum? = is_list(t2)
+
+    error_message =
+      "Error at line #{line} in '#{get_function(function)}' operation, Incompatible types: #{t1}, #{t2} was found but #{type}, #{type} was expected"
 
     compatible =
       case {t1_enum?, t2_enum?} do
@@ -851,7 +879,7 @@ defmodule TypeInference do
     if compatible do
       type
     else
-      raise TypeError, message: "Incompatible types: #{t1}, #{t2}"
+      raise TypeError, message: error_message
     end
   end
 
@@ -903,6 +931,31 @@ defmodule TypeInference do
       # Los tipos 'tX' se tratan como tipos base.
       ":t" <> _ ->
         [type]
+    end
+  end
+
+  defp get_function(function) do
+    case function do
+      :mult -> "*"
+      :divi -> "/"
+      :plus -> "+"
+      :minus -> "-"
+      :negative -> "-"
+      :assignment -> "assignment"
+      :stric_more -> ">"
+      :more_equal -> ">="
+      :stric_less -> "<"
+      :less_equal -> "<="
+      :equal -> "=="
+      :not_equal -> "!="
+      :and_operation -> "and"
+      :or_operation -> "or"
+      :round_div -> "//"
+      :mod -> "%"
+      :pow -> "^"
+      :concat -> "++"
+      :subtract -> "--"
+      _ -> "unknow"
     end
   end
 end
