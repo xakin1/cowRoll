@@ -147,6 +147,9 @@ defmodule Interpreter do
   # Necesario para construir una lista
   defp eval_line(scope, elements, list) do
     case elements do
+      {:list, _} ->
+        [eval(scope, elements) | list]
+
       {first_element, second_element} when is_tuple(second_element) ->
         eval_line(scope, second_element, [eval(scope, first_element) | list])
 

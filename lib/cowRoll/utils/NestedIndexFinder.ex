@@ -23,11 +23,15 @@ defmodule NestedIndexFinder do
   end
 
   @spec find_levels(any()) :: non_neg_integer()
-  def find_levels({:index, {_, var_or_name2}}) do
-    1 + find_levels(var_or_name2)
+  def find_levels({:index, next_index}) do
+    1 + find_levels(next_index)
+  end
+
+  def find_levels({{:index, next_index}, _}) do
+    1 + find_levels(next_index)
   end
 
   def find_levels(_) do
-    1
+    0
   end
 end

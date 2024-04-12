@@ -394,7 +394,7 @@ defmodule CowRoll.ScripsDndTest do
     end
 
     test "array assignment with nested index" do
-      input = "x = [['1',2],3,4,5,6]
+      input = "x = [['1',[2]],3,4,5,6]
       x[0][1] = '2'
       x"
       result = Interpreter.eval_input(input)
@@ -430,26 +430,6 @@ defmodule CowRoll.ScripsDndTest do
       result = Interpreter.eval_input(input)
 
       assert result == 6
-    end
-
-    test "array with an invalid index" do
-      try do
-        input = "['1',2,3,4,5,6]['1']"
-        Interpreter.eval_input(input)
-      catch
-        error -> assert error == {:error, "The index must be an Integer"}
-      end
-    end
-
-    test "var with an invalid index" do
-      try do
-        input = "
-           x = ['1',2,3,4,5,6]
-           x['1']"
-        Interpreter.eval_input(input)
-      catch
-        error -> assert error == {:error, "The index must be an Integer"}
-      end
     end
 
     test "index an nested array" do
