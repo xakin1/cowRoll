@@ -45,6 +45,7 @@ defmodule TypeError do
       :less_equal -> "<="
       :equal -> "=="
       :not_equal -> "!="
+      :not_operation -> "not"
       :and_operation -> "and"
       :or_operation -> "or"
       :round_div -> "//"
