@@ -586,18 +586,16 @@ defmodule TypeInference do
           compatible?(function, t1, t2, string_type, line)
         rescue
           TypeError ->
-            try do
-              [enum | _] = String.split(t1, " of ")
+            case split_list_and_types(t1) do
+              {enum, _} ->
+                if is_list?(enum) do
+                  list_type
+                else
+                  TypeError.raise_error(line, function, t1, t2, string_type)
+                end
 
-              if is_list?(enum) do
-                list_type
-              else
-                raise TypeError,
-                  message: TypeError.raise_error(line, function, t1, t2, list_type)
-              end
-            rescue
-              _ ->
-                TypeError.raise_error(line, function, t1, t2, list_type)
+              false ->
+                TypeError.raise_error(line, function, t1, t2, string_type)
             end
         end
     end
@@ -644,40 +642,46 @@ defmodule TypeInference do
 
   defp check_index_type(index, enum_type, constraints) do
     {var_type, _var_constraints} = infer_expression(index, constraints)
-    [enum | _element_types] = String.split(enum_type, " of ")
-    integer_type = get_type_integer()
-    string_type = get_type_string()
-    list_type = get_type_list()
-    map_type = get_type_map()
-    # Comprobamos que el índice es de un tipo correcto
-    case {var_type, enum} do
-      {^integer_type, ^list_type} ->
-        var_type
 
-      {^integer_type, ^string_type} ->
-        var_type
+    case split_list_and_types(enum_type) do
+      {enum, _element_types} ->
+        integer_type = get_type_integer()
+        string_type = get_type_string()
+        list_type = get_type_list()
+        map_type = get_type_map()
+        # Comprobamos que el índice es de un tipo correcto
+        case {var_type, enum} do
+          {^integer_type, ^list_type} ->
+            var_type
 
-      {^integer_type, ^map_type} ->
-        var_type
+          {^integer_type, ^string_type} ->
+            var_type
 
-      {^string_type, ^map_type} ->
-        var_type
+          {^integer_type, ^map_type} ->
+            var_type
 
-      # Caso de dos indices o más seguidos
-      {^integer_type, ^integer_type} ->
-        var_type
+          {^string_type, ^map_type} ->
+            var_type
 
-      {^string_type, ^string_type} ->
-        var_type
+          # Caso de dos indices o más seguidos
+          {^integer_type, ^integer_type} ->
+            var_type
 
-      {_, ^map_type} ->
-        raise TypeError.raise_index_map_error(var_type)
+          {^string_type, ^string_type} ->
+            var_type
 
-      {_, ^string_type} ->
-        raise TypeError.raise_index_error(var_type)
+          {_, ^map_type} ->
+            raise TypeError.raise_index_map_error(var_type)
 
-      {_, ^list_type} ->
-        raise TypeError.raise_index_error(var_type)
+          {_, ^string_type} ->
+            raise TypeError.raise_index_error(var_type)
+
+          {_, ^list_type} ->
+            raise TypeError.raise_index_error(var_type)
+        end
+
+      false ->
+        nil
     end
   end
 

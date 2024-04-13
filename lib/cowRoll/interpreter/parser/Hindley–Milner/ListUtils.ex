@@ -88,6 +88,8 @@ defmodule ListUtils do
     end
   end
 
+  # Devuelve false en el caso de que no sea un enumerado
+  @spec split_list_and_types(any(), any()) :: false | {<<_::24, _::_*8>>, any()}
   def split_list_and_types(input, levels \\ 1) do
     case input do
       "List" <> _ ->
@@ -100,7 +102,7 @@ defmodule ListUtils do
         {get_type_map(), fresh_type()}
 
       _ ->
-        raise "Unexpected error"
+        false
     end
   end
 end
