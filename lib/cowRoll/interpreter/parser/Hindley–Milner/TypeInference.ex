@@ -28,7 +28,8 @@ defmodule TypeInference do
   ]
 
   def infer(expression) do
-    infer_expression(expression, %{})
+    {type, _} = infer_expression(expression, %{})
+    type
   end
 
   defp infer_expression({basic_type, value, _line}, constraints)
