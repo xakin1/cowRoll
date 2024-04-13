@@ -28,8 +28,7 @@ defmodule TypeInference do
   ]
 
   def infer(expression) do
-    {type, constraints} = infer_expression(expression, %{})
-    {type, unify_constraints(constraints)}
+    infer_expression(expression, %{})
   end
 
   defp infer_expression({basic_type, value, _line}, constraints)
@@ -607,41 +606,6 @@ defmodule TypeInference do
        when function in [:equal, :not_equal],
        do: get_type_boolean()
 
-  def unify_constraints(constraints) do
-    unify_constraints(constraints, %{})
-  end
-
-  # Caso base para unificar restricciones
-  defp unify_constraints(%{}, substitution) do
-    substitution
-  end
-
-  # Función privada para unificar restricciones
-  defp unify_constraints(constraints, substitution) do
-    # TODO: Revisar esto
-    {{var, type}, remaining} = Map.pop(constraints, nil)
-
-    new_substitution =
-      case Map.get(substitution, var) do
-        nil -> Map.put(substitution, var, type)
-        existing_type -> unify(existing_type, type, substitution)
-      end
-
-    unify_constraints(remaining, new_substitution)
-  end
-
-  defp unify(t1, t2, substitution) when t1 == t2 do
-    substitution
-  end
-
-  defp unify(t1, t2, substitution) when is_atom(t1) do
-    Map.put(substitution, t1, t2)
-  end
-
-  defp unify(t1, t2, substitution) when is_atom(t2) do
-    Map.put(substitution, t2, t1)
-  end
-
   defp check_index_type(index, enum_type, constraints) do
     {var_type, _var_constraints} = infer_expression(index, constraints)
 
@@ -910,9 +874,6 @@ defmodule TypeInference do
     t1_enum? = is_list(t1)
 
     t2_enum? = is_list(t2)
-
-    error_message =
-      "Error at line #{line} in '#{}' operation, Incompatible types: #{t1}, #{t2} was found but #{type}, #{type} was expected"
 
     compatible =
       case {t1_enum?, t2_enum?} do

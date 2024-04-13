@@ -31,14 +31,6 @@ defmodule TypesUtils do
     end
   end
 
-  def is_enum(type) do
-    case type do
-      @map -> true
-      @list -> true
-      _ -> false
-    end
-  end
-
   def fresh_type() do
     :"t#{:erlang.unique_integer([:positive, :monotonic])}"
   end
