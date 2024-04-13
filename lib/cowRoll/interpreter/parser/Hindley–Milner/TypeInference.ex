@@ -393,13 +393,15 @@ defmodule TypeInference do
   end
 
   defp infer_expression(
-         {:call_function, {:name, function_name, line}, {:parameters, parameters}},
+         {:call_function, {:name, function_name, _line}, {:parameters, parameters}},
          constraints
        ) do
     # Obtener el tipo de la función de las restricciones
     function_type =
       case Map.get(constraints, function_name) do
-        nil -> raise "Error at line #{line}: Undefined function: '#{function_name}'"
+        # Aquí puede ser o que la función no exista o que esté importada en un modulo como el elixir
+        # caso en el que no podríamos inferir el tipo -> Podríamos dar un warning o nada y dejarlo en tiempo de ejecución
+        nil -> fresh_type()
         existing_type -> existing_type
       end
 

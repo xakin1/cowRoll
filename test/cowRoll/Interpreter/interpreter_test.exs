@@ -1230,7 +1230,7 @@ defmodule CowRoll.ScripsDndTest do
 
       assert_raise(
         RuntimeError,
-        "Error at line 1: Undefined function: 'hola_mundo'",
+        "Error at line 1, Undefined function: 'hola_mundo'",
         fn ->
           Interpreter.eval_input(input)
         end

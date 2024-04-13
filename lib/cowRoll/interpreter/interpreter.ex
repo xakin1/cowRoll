@@ -441,7 +441,7 @@ defmodule Interpreter do
        ) do
     case get_fuction_from_scope(function_name) do
       {false, name, line} ->
-        raise RuntimeError, "Error en la linea #{line}: Función: '#{name}' no encontrada"
+        raise RuntimeError, "Error at line #{line}, Undefined function: '#{name}'"
 
       {parameters_to_replace, code} ->
         call_function(scope, function_name, parameters, parameters_to_replace, code)
