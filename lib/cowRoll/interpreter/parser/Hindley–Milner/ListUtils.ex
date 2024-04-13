@@ -12,6 +12,7 @@ defmodule ListUtils do
   defp format_input(input) when is_list(input) do
     case input do
       [single] -> single
+      [] -> nil
       _ -> Enum.join(input, " | ")
     end
   end

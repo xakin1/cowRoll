@@ -216,13 +216,13 @@ defmodule TypeInference do
     case {enum_type, index_type} do
       {"List of" <> _, ^integer} ->
         levels = find_levels({:index, {index_value, enum_value}})
-        types = get_types(levels, enum_type)
+        types = extract_types(enum_type, levels)
         # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
         {types, enum_constraints}
 
       {"Map of" <> _, ^integer} ->
         levels = find_levels({:index, {index_value, enum_value}})
-        types = get_types(levels, enum_type)
+        types = extract_types(enum_type, levels)
         # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
         {types, enum_constraints}
 
@@ -845,7 +845,7 @@ defmodule TypeInference do
   end
 
   defp get_map_types(
-         {{_key, {{function, {left_expr, right_expr}, {symbol, line}}, rest}}},
+         {{_key, {function, {left_expr, right_expr}, {symbol, line}}}, rest},
          types
        )
        when function in @operadores do
@@ -860,7 +860,7 @@ defmodule TypeInference do
     get_map_types(rest, types)
   end
 
-  defp get_map_types({_key, {{function, {left_expr, right_expr}, {symbol, line}}}}, types)
+  defp get_map_types({_key, {function, {left_expr, right_expr}, {symbol, line}}}, types)
        when function in @operadores do
     {function_type, _} =
       infer_expression(
@@ -937,57 +937,6 @@ defmodule TypeInference do
       type
     else
       raise TypeError, message: error_message
-    end
-  end
-
-  def get_types(0, type), do: parse_type(type)
-
-  def get_types(n, type) when n > 0 do
-    type
-    |> parse_type()
-    |> process_types(n)
-  end
-
-  defp parse_type(type) do
-    type
-    |> String.replace(~r/\(([^()]+)\)/, "\\1")
-    |> String.replace(~r/List of /, "")
-    |> String.split(" | ")
-    |> Enum.map(&String.trim/1)
-    |> Enum.uniq()
-  end
-
-  defp process_types(types, 0), do: Enum.join(types, " | ")
-
-  defp process_types(types, n) when n > 0 do
-    types
-    |> Enum.flat_map(&split_nested_types/1)
-    |> MapSet.new()
-    |> Enum.to_list()
-    |> process_types(n - 1)
-  end
-
-  # Actualizamos para usar las funciones de TypesUtils
-  defp split_nested_types(type) do
-    integer = get_type_integer()
-    string = get_type_string()
-
-    case type do
-      ^integer ->
-        [integer]
-
-      ^string ->
-        [string]
-
-      "List of " <> _ ->
-        [TypesUtils.get_type_list(), String.trim_leading(type, "List of ")]
-
-      "Map of " <> _ ->
-        [TypesUtils.get_type_map(), String.trim_leading(type, "Map of ")]
-
-      # Los tipos 'tX' se tratan como tipos base.
-      ":t" <> _ ->
-        [type]
     end
   end
 
