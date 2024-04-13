@@ -328,9 +328,7 @@ defmodule TypeInference do
 
       _ ->
         # La condición no es de tipo booleano, lanzar un error
-        raise TypeError,
-          message:
-            "Error at line #{line} in 'condition': #{condition_type} was found but #{boolean} was expected"
+        raise TypeError.raise_error(line, "condition", condition_type, boolean)
     end
   end
 
@@ -472,9 +470,7 @@ defmodule TypeInference do
         integer_type
 
       _ ->
-        raise TypeError,
-          message:
-            "Error at line #{line} in '#{get_function(function)}' operation, Incompatible type: #{t1} was found but #{integer_type} was expected"
+        raise TypeError.raise_error(line, function, t1, integer_type)
     end
   end
 
@@ -490,9 +486,7 @@ defmodule TypeInference do
         boolean_type
 
       _ ->
-        raise TypeError,
-          message:
-            "Error at line #{line} in '#{get_function(function)}' operation, Incompatible type: #{t1} was found but #{boolean_type} was expected"
+        raise TypeError.raise_error(line, function, t1, boolean_type)
     end
   end
 
@@ -577,9 +571,6 @@ defmodule TypeInference do
     string_type = get_type_string()
     list_type = get_type_list()
 
-    error_message =
-      "Error at line #{line} in '#{get_function(function)}' operation, Incompatible types: #{t1}, #{t2} were found but #{string_type}, #{string_type} were expected"
-
     case {t1, t2} do
       {^list_type, _} ->
         list_type
@@ -602,10 +593,11 @@ defmodule TypeInference do
                 list_type
               else
                 raise TypeError,
-                  message: error_message
+                  message: TypeError.raise_error(line, function, t1, t2, list_type)
               end
             rescue
-              _ -> raise TypeError, message: error_message
+              _ ->
+                TypeError.raise_error(line, function, t1, t2, list_type)
             end
         end
     end
@@ -679,14 +671,13 @@ defmodule TypeInference do
         var_type
 
       {_, ^map_type} ->
-        raise TypeError,
-          message: "The index must be an Integer or a String but #{var_type} was found"
+        raise TypeError.raise_index_map_error(var_type)
 
       {_, ^string_type} ->
-        raise TypeError, message: "The index must be an Integer but #{var_type} was found"
+        raise TypeError.raise_index_error(var_type)
 
       {_, ^list_type} ->
-        raise TypeError, message: "The index must be an Integer but #{var_type} was found"
+        raise TypeError.raise_index_error(var_type)
     end
   end
 
@@ -915,7 +906,7 @@ defmodule TypeInference do
     t2_enum? = is_list(t2)
 
     error_message =
-      "Error at line #{line} in '#{get_function(function)}' operation, Incompatible types: #{t1}, #{t2} was found but #{type}, #{type} was expected"
+      "Error at line #{line} in '#{}' operation, Incompatible types: #{t1}, #{t2} was found but #{type}, #{type} was expected"
 
     compatible =
       case {t1_enum?, t2_enum?} do
@@ -936,32 +927,7 @@ defmodule TypeInference do
     if compatible do
       type
     else
-      raise TypeError, message: error_message
-    end
-  end
-
-  defp get_function(function) do
-    case function do
-      :mult -> "*"
-      :divi -> "/"
-      :plus -> "+"
-      :minus -> "-"
-      :negative -> "-"
-      :assignment -> "assignment"
-      :stric_more -> ">"
-      :more_equal -> ">="
-      :stric_less -> "<"
-      :less_equal -> "<="
-      :equal -> "=="
-      :not_equal -> "!="
-      :and_operation -> "and"
-      :or_operation -> "or"
-      :round_div -> "//"
-      :mod -> "%"
-      :pow -> "^"
-      :concat -> "++"
-      :subtract -> "--"
-      _ -> "unknow"
+      raise TypeError.raise_error(line, function, t1, t2, type)
     end
   end
 end
