@@ -2,6 +2,7 @@ defmodule TypeInference do
   import TypesUtils
   import NestedIndexFinder
   import ListUtils
+  import Compatibility
 
   @types [:number, :string, :boolean, :list, :map]
   @basic_type [:number, :string, :boolean]
@@ -62,11 +63,7 @@ defmodule TypeInference do
 
   defp infer_expression({:name, variable, _line}, constraints) do
     # Verificar si la variable ya existe en las restricciones
-    var_type =
-      case Map.get(constraints, variable) do
-        nil -> fresh_type()
-        existing_type -> existing_type
-      end
+    var_type = get_type_from_constraints(variable, constraints)
 
     # Agrega restricciones que relacionan las variables originales con la nueva variable de tipo.
     # Para el caso de z = y, donde y es una variable {t1, [%{z => t1, y => t1}]}
@@ -88,11 +85,7 @@ defmodule TypeInference do
          {:assignment, {:index, {_index, {:name, enum_name, _line}}}, value},
          constraints
        ) do
-    enum_type =
-      case Map.get(constraints, enum_name) do
-        nil -> fresh_type()
-        existing_type -> existing_type
-      end
+    enum_type = get_type_from_constraints(enum_name, constraints)
 
     case value do
       {function, value, _line} when function in @types ->
@@ -100,11 +93,7 @@ defmodule TypeInference do
 
       {:name, variable, _line} ->
         # Verificar si la variable ya existe en las restricciones
-        var_type =
-          case Map.get(constraints, variable) do
-            nil -> fresh_type()
-            existing_type -> existing_type
-          end
+        var_type = get_type_from_constraints(variable, constraints)
 
         # Agrega restricciones que relacionan las variables originales con la nueva variable de tipo.
         # Para el caso de z = y, donde y es una variable {t1, [%{z => t1, y => t1}]}
@@ -134,11 +123,7 @@ defmodule TypeInference do
 
       {:name, variable, _line} ->
         # Verificar si la variable ya existe en las restricciones
-        var_type =
-          case Map.get(constraints, variable) do
-            nil -> fresh_type()
-            existing_type -> existing_type
-          end
+        var_type = get_type_from_constraints(variable, constraints)
 
         # Agrega restricciones que relacionan las variables originales con la nueva variable de tipo.
         # Para el caso de z = y, donde y es una variable {t1, [%{z => t1, y => t1}]}
@@ -397,18 +382,15 @@ defmodule TypeInference do
          constraints
        ) do
     # Obtener el tipo de la función de las restricciones
-    function_type =
-      case Map.get(constraints, function_name) do
-        # Aquí puede ser o que la función no exista o que esté importada en un modulo como el elixir
-        # caso en el que no podríamos inferir el tipo -> Podríamos dar un warning o nada y dejarlo en tiempo de ejecución
-        nil -> fresh_type()
-        existing_type -> existing_type
-      end
+    # Aquí puede ser o que la función no exista o que esté importada en un modulo como el elixir
+    # caso en el que no podríamos inferir el tipo -> Podríamos dar un warning o nada y dejarlo en tiempo de ejecución
+    function_type = get_type_from_constraints(function_name, constraints)
 
+    # TODO: Hay que revisar que los tipos de los parámetros son correctos
     # Inferir el tipo de los parámetros
     # Lógica para determinar el tipo de retorno de la función
-    parameter_types = get_parameter_types(parameters, constraints)
-    {get_return_type(function_type, parameter_types), constraints}
+    # parameter_types = get_parameter_types(parameters, constraints)
+    {function_type, constraints}
   end
 
   defp infer_expression({{:range, range}, next_expr}, constraints) do
@@ -435,11 +417,6 @@ defmodule TypeInference do
     end
   end
 
-  # TODO: Revisar esto
-  defp get_return_type(function_type, parameter_types) do
-    function_type
-  end
-
   defp get_parameter_types(parameters, constraints) do
     case parameters do
       # Si no hay parámetros, devolvemos un mapa vacío
@@ -459,162 +436,6 @@ defmodule TypeInference do
         raise TypeError, message: "Unsupported parameters type"
     end
   end
-
-  defp get_function_type(function, t1, line)
-       when function in [:negative] do
-    integer_type = get_type_integer()
-
-    case t1 do
-      ^integer_type ->
-        integer_type
-
-      t1 when is_atom(t1) and is_atom(t1) ->
-        integer_type
-
-      _ ->
-        raise TypeError.raise_error(line, function, t1, integer_type)
-    end
-  end
-
-  defp get_function_type(function, t1, line)
-       when function in [:not_operation] do
-    boolean_type = get_type_boolean()
-
-    case t1 do
-      ^boolean_type ->
-        boolean_type
-
-      t1 when is_atom(t1) and is_atom(t1) ->
-        boolean_type
-
-      _ ->
-        raise TypeError.raise_error(line, function, t1, boolean_type)
-    end
-  end
-
-  defp get_function_type(function, t1, t2, line)
-       when function in [:mult, :divi, :round_div, :plus, :minus, :mod, :pow] do
-    integer_type = get_type_integer()
-
-    case {t1, t2} do
-      {^integer_type, ^integer_type} ->
-        integer_type
-
-      {t1, t2} when is_atom(t1) and is_atom(t2) ->
-        integer_type
-
-      {t1, ^integer_type} when is_atom(t1) ->
-        integer_type
-
-      {^integer_type, t2} when is_atom(t2) ->
-        integer_type
-
-      {t1, t2} when is_atom(t1) and is_atom(t2) ->
-        integer_type
-
-      _ ->
-        compatible?(function, t1, t2, integer_type, line)
-    end
-  end
-
-  defp get_function_type(function, t1, t2, line)
-       when function in [:strict_more, :more_equal, :strict_less, :less_equal] do
-    boolean_type = get_type_boolean()
-    integer_type = get_type_integer()
-
-    case {t1, t2} do
-      {^integer_type, ^integer_type} ->
-        boolean_type
-
-      {^boolean_type, ^boolean_type} ->
-        boolean_type
-
-      {^boolean_type, ^integer_type} ->
-        boolean_type
-
-      {^integer_type, ^boolean_type} ->
-        boolean_type
-
-      # Casos en los que t1 o t2 son variables
-      {t1, ^integer_type} when is_atom(t1) ->
-        boolean_type
-
-      {^integer_type, t2} when is_atom(t2) ->
-        boolean_type
-
-      {t1, ^boolean_type} when is_atom(t1) ->
-        boolean_type
-
-      {^boolean_type, t2} when is_atom(t2) ->
-        boolean_type
-
-      {t1, t2} when is_atom(t1) and is_atom(t2) ->
-        boolean_type
-
-      _ ->
-        compatible?(function, t1, t2, boolean_type, line)
-    end
-  end
-
-  defp get_function_type(function, t1, t2, line)
-       when function in [:and_operation, :or_operation] do
-    boolean_type = get_type_boolean()
-
-    case {t1, t2} do
-      {^boolean_type, ^boolean_type} ->
-        boolean_type
-
-      {t1, ^boolean_type} when is_atom(t1) ->
-        boolean_type
-
-      {^boolean_type, t2} when is_atom(t2) ->
-        boolean_type
-
-      {t1, t2} when is_atom(t1) and is_atom(t2) ->
-        boolean_type
-
-      _ ->
-        compatible?(function, t1, t2, boolean_type, line)
-    end
-  end
-
-  defp get_function_type(function, t1, t2, line) when function in [:concat, :subtract] do
-    string_type = get_type_string()
-    list_type = get_type_list()
-
-    case {t1, t2} do
-      {^list_type, _} ->
-        list_type
-
-      {^string_type, ^string_type} ->
-        string_type
-
-      {^string_type, t2} when is_atom(t2) ->
-        string_type
-
-      _ ->
-        try do
-          compatible?(function, t1, t2, string_type, line)
-        rescue
-          TypeError ->
-            case split_list_and_types(t1) do
-              {enum, _} ->
-                if is_list?(enum) do
-                  list_type
-                else
-                  TypeError.raise_error(line, function, t1, t2, string_type)
-                end
-
-              false ->
-                TypeError.raise_error(line, function, t1, t2, string_type)
-            end
-        end
-    end
-  end
-
-  defp get_function_type(function, _t1, _t2, _line)
-       when function in [:equal, :not_equal],
-       do: get_type_boolean()
 
   defp check_index_type(index, enum_type, constraints) do
     {var_type, _var_constraints} = infer_expression(index, constraints)
@@ -887,33 +708,10 @@ defmodule TypeInference do
     end
   end
 
-  # En el caso de que en una operación haya un enumerado indexado
-  # tenemos que comprobar los posibles tipos del enumerado
-  defp compatible?(function, t1, t2, type, line) do
-    t1_enum? = is_list(t1)
-
-    t2_enum? = is_list(t2)
-
-    compatible =
-      case {t1_enum?, t2_enum?} do
-        {true, true} ->
-          Enum.member?(t1, type) and
-            Enum.member?(t2, type)
-
-        {true, false} ->
-          Enum.member?(t1, type) and (type == t2 or is_atom(t2))
-
-        {false, true} ->
-          Enum.member?(t2, type) and (type == t1 or is_atom(t1))
-
-        _ ->
-          false
-      end
-
-    if compatible do
-      type
-    else
-      raise TypeError.raise_error(line, function, t1, t2, type)
+  defp get_type_from_constraints(variable, constraints) do
+    case Map.get(constraints, variable) do
+      nil -> fresh_type()
+      existing_type -> existing_type
     end
   end
 end
