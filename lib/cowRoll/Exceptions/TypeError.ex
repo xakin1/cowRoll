@@ -1,4 +1,5 @@
 defmodule TypeError do
+  import TypesUtils
   defexception message: "Incompatible types"
 
   @spec raise_error(any(), any(), any(), any()) :: none()
@@ -17,18 +18,31 @@ defmodule TypeError do
     raise __MODULE__, message: message
   end
 
-  def raise_index_error(expected_type) do
+  def raise_index_error(type) when is_bitstring(type) do
     message =
-      "The index must be an Integer but #{expected_type} was found"
+      "The index must be an Integer but #{type} was found"
 
     raise __MODULE__, message: message
   end
 
-  def raise_index_map_error(expected_type) do
+  def raise_index_error(type) do
     message =
-      "The index must be an Integer or a String but #{expected_type} was found"
+      "The index must be an Integer but #{get_type(type)} was found"
 
     raise __MODULE__, message: message
+  end
+
+  def raise_index_map_error(type) do
+    message =
+      "The index must be an Integer or a String but #{type} was found"
+
+    raise __MODULE__, message: message
+  end
+
+  @spec raise_error_type(any()) :: none()
+  def raise_error_type(data) do
+    raise __MODULE__,
+          "Invalid type: '#{data}' it's a/an #{get_type(data)}. The type must be a list, map, or string."
   end
 
   defp get_function(function) do

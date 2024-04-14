@@ -2,7 +2,7 @@ defmodule Interpreter do
   import Parser
   import TreeNode
   import Tuples
-  import TypesUtils
+  import TypeError
   import NestedIndexFinder
   import Arrays
 
@@ -66,14 +66,6 @@ defmodule Interpreter do
     add_function_to_scope("rand", "range")
   end
 
-  defp throw_error_type(data) do
-    case get_type(data) do
-      type ->
-        raise RuntimeError,
-              "Invalid type: '#{data}' it's a/an #{type}. The type must be a list, map, or string."
-    end
-  end
-
   # para evaluar una lista de tuplas y que te devuelva los parametros en un array
   defp eval_parameters(scope, parameters) do
     case parameters do
@@ -95,7 +87,7 @@ defmodule Interpreter do
         list when is_list(list) -> fech_line(list, index)
         string when is_bitstring(string) -> fech_string(string, index)
         map when is_map(map) -> fech_map(map, index)
-        error -> throw_error_type(error)
+        error -> raise_error_type(error)
       end
 
     fech(result, tail)
@@ -118,7 +110,7 @@ defmodule Interpreter do
         String.at(string, index)
 
       _ ->
-        raise "The index must be an Integer"
+        raise_index_error(index)
     end
   end
 
@@ -128,7 +120,7 @@ defmodule Interpreter do
         Enum.at(list, index)
 
       _ ->
-        throw({:error, "The index must be an Integer"})
+        raise_index_error(index)
     end
   end
 
