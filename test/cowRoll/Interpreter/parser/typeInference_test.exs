@@ -6,8 +6,11 @@ defmodule CowRoll.TypeInference do
 
   defp do_analize(input) do
     case Parser.parse(input) do
-      {:ok, tokens} -> infer(tokens)
-      _ -> assert RuntimeError, "Error al parsear"
+      {:ok, tokens} ->
+        infer(tokens)
+
+      _ ->
+        assert RuntimeError, "Error al parsear"
     end
   end
 
@@ -15,7 +18,7 @@ defmodule CowRoll.TypeInference do
     test "infer a var" do
       input = "y = x"
 
-      output = do_analize(input)
+      {output, _} = do_analize(input)
       pattern = ~r/t\d+/
 
       assert Regex.match?(pattern, to_string(output))
@@ -24,27 +27,29 @@ defmodule CowRoll.TypeInference do
     test "infer a var with an integer" do
       input = "x = 1
       y = x"
-      assert do_analize(input) == get_type_integer()
+      {output, _} = do_analize(input)
+      assert output == get_type_integer()
     end
 
     test "infer a var with a string" do
       input = "x = 'hola'
       y = x"
-      assert do_analize(input) == get_type_string()
+      {output, _} = do_analize(input)
+      assert output == get_type_string()
     end
 
     test "infer a var with a boolean" do
       input = "x = true
       y = x"
-      assert do_analize(input) == get_type_boolean()
+      {output, _} = do_analize(input)
+      assert output == get_type_boolean()
     end
 
     test "infer a var with a map" do
       input = "x = {a: true, b: false, c: {d: number, e: [1,2]}, h: 3}
       y = x"
-      output = do_analize(input)
+      {output, _} = do_analize(input)
       pattern = ~r/Map of Boolean \| Integer \| \(Map of t\d+ \| \(List of Integer\)\)/
-
       assert Regex.match?(pattern, output)
     end
 
@@ -52,7 +57,7 @@ defmodule CowRoll.TypeInference do
       input = "x = {}
       y = x"
 
-      output = do_analize(input)
+      {output, _} = do_analize(input)
       pattern = ~r/Map of t\d+/
 
       assert Regex.match?(pattern, output)
@@ -61,89 +66,105 @@ defmodule CowRoll.TypeInference do
     test "infer a var with a index map" do
       input = "x = {a: true, b: false}
       y = x['a']"
-      assert do_analize(input) == get_type_boolean()
+      {output, _} = do_analize(input)
+      assert output == get_type_boolean()
     end
 
-    test "infer a var with a list" do
+    test "infer a var with a empty list" do
       input = "x = []
       y = x"
 
-      output = do_analize(input)
+      {output, _} = do_analize(input)
       pattern = ~r/List of t\d+/
 
       assert Regex.match?(pattern, output)
+    end
 
+    test "infer a var with a list" do
       input = "x = [true,false]
       y = x"
-      assert do_analize(input) == "#{get_type_list()} of #{get_type_boolean()}"
+      {output, _} = do_analize(input)
+      assert output == "#{get_type_list()} of #{get_type_boolean()}"
     end
 
     test "infer a var with a index list" do
       input = "x = [[[2],[1]],3,4,5][0][1]"
 
-      assert do_analize(input) == "#{get_type_list()} of #{get_type_integer()}"
+      {output, _} = do_analize(input)
+      assert output == "#{get_type_list()} of #{get_type_integer()}"
     end
   end
 
   describe "inference" do
     test "infer a constant: integer" do
       input = "3"
-      assert do_analize(input) == get_type_integer()
+      {output, _} = do_analize(input)
+      assert output == get_type_integer()
     end
 
     test "infer a constant: string" do
       input = "'3'"
-      assert do_analize(input) == get_type_string()
+      {output, _} = do_analize(input)
+      assert output == get_type_string()
     end
 
     test "infer a constant: boolean" do
       input = "true"
-      assert do_analize(input) == get_type_boolean()
+      {output, _} = do_analize(input)
+      assert output == get_type_boolean()
     end
 
     test "infer a constant: list of strings or integers" do
       input = "['1',2,3,4,5,6]"
       expected_type = "#{get_type_list()} of #{get_type_string()} | #{get_type_integer()}"
-      assert do_analize(input) == expected_type
+      {output, _} = do_analize(input)
+      assert output == expected_type
     end
 
     test "infer a constant: list of ints with operations" do
       input = "[1+1]"
       expected_type = "#{get_type_list()} of #{get_type_integer()}"
-      assert do_analize(input) == expected_type
+      {output, _} = do_analize(input)
+      assert output == expected_type
     end
 
     test "infer a constant: string or integer" do
       input = "['1',2,3,4,5,6][2+3]"
       expected_type = "#{get_type_string()} | #{get_type_integer()}"
-      assert do_analize(input) == expected_type
+      {output, _} = do_analize(input)
+      assert output == expected_type
     end
 
     test "infer a constant list of list: string or integer" do
       input = "[['1',2,3],[4,5,6]][3][1]"
       expected_type = "#{get_type_integer()} | #{get_type_string()}"
-      assert do_analize(input) == expected_type
+      {output, _} = do_analize(input)
+      assert output == expected_type
     end
 
     test "infer a constant: map of integers" do
       input = "{a: 1, b: 2}"
       expected_type = "#{get_type_map()} of #{get_type_integer()}"
-      assert do_analize(input) == expected_type
+      {output, _} = do_analize(input)
+      assert output == expected_type
     end
 
     test "infer integer assignment" do
       input = "x = 3"
-      assert do_analize(input) == get_type_integer()
+      {output, _} = do_analize(input)
+      assert output == get_type_integer()
     end
 
     test "infer boolean assignment" do
       input = "x = true"
-      assert do_analize(input) == get_type_boolean()
+      {output, _} = do_analize(input)
+      assert output == get_type_boolean()
     end
 
     test "infer string assignment" do
       input = "x = 'true'"
-      assert do_analize(input) == get_type_string()
+      {output, _} = do_analize(input)
+      assert output == get_type_string()
     end
 
     test "infer empty list assignment" do
@@ -152,139 +173,174 @@ defmodule CowRoll.TypeInference do
       output = do_analize(input)
       pattern = ~r/List of t\d+/
 
+      {output, _} = do_analize(input)
       assert Regex.match?(pattern, output)
     end
 
     test "infer list of integers assignment" do
       input = "x = [1,2]"
-      assert do_analize(input) == "#{get_type_list()} of #{get_type_integer()}"
+      {output, _} = do_analize(input)
+      assert output == "#{get_type_list()} of #{get_type_integer()}"
     end
 
     test "infer map of integers assignment" do
       input = "x = {a: 1,b: 2}"
-      assert do_analize(input) == "#{get_type_map()} of #{get_type_integer()}"
+      {output, _} = do_analize(input)
+      assert output == "#{get_type_map()} of #{get_type_integer()}"
     end
 
     test "infer map with mixed types assignment" do
       input = "x = {a: 1,b:'2', c: false}"
 
-      assert do_analize(input) ==
+      {output, _} = do_analize(input)
+
+      assert output ==
                "#{get_type_map()} of #{get_type_string()} | #{get_type_boolean()} | #{get_type_integer()}"
     end
 
     test "infer list with mixed types assignment" do
       input = "x = [1,'2', false]"
 
-      assert do_analize(input) ==
+      {output, _} = do_analize(input)
+
+      assert output ==
                "#{get_type_list()} of #{get_type_string()} | #{get_type_boolean()} | #{get_type_integer()}"
     end
 
     test "infer nested lists of integers assignment" do
       input = "x = [[1,2,3]]"
 
-      assert do_analize(input) ==
+      {output, _} = do_analize(input)
+
+      assert output ==
                "#{get_type_list()} of (#{get_type_list()} of #{get_type_integer()})"
     end
 
     test "infer list of lists with different types assignment" do
       input = "x = [[1,2,3],['1','2']]"
 
-      assert do_analize(input) ==
+      {output, _} = do_analize(input)
+
+      assert output ==
                "#{get_type_list()} of (#{get_type_list()} of #{get_type_integer()}) | (#{get_type_list()} of #{get_type_string()})"
     end
 
     test "infer complex list with multiple types of lists assignment" do
       input = "x = [[1,2,3],['1','2'],[true,false]]"
 
-      assert do_analize(input) ==
+      {output, _} = do_analize(input)
+
+      assert output ==
                "#{get_type_list()} of (#{get_type_list()} of #{get_type_boolean()}) | (#{get_type_list()} of #{get_type_integer()}) | (#{get_type_list()} of #{get_type_string()})"
     end
 
     test "infer extremely complex nested structures assignment" do
       input = "x = [[1,2,3],['1','2'],{a: false, b: [1,2, {re: [1,2,3]}]}]"
 
-      assert do_analize(input) ==
+      {output, _} = do_analize(input)
+
+      assert output ==
                "#{get_type_list()} of (#{get_type_list()} of #{get_type_integer()}) | (#{get_type_list()} of #{get_type_string()}) | (#{get_type_map()} of #{get_type_boolean()} | (#{get_type_list()} of #{get_type_integer()} | (#{get_type_map()} of (#{get_type_list()} of #{get_type_integer()}))))"
     end
 
     test "addition of integers" do
-      assert do_analize("3 + 3") == get_type_integer()
+      {output, _} = do_analize("3 + 3")
+      assert output == get_type_integer()
     end
 
     test "addition with array access" do
-      assert do_analize("3 + [2,3,4,5][2]") == get_type_integer()
+      {output, _} = do_analize("3 + [2,3,4,5][2]")
+      assert output == get_type_integer()
     end
 
     test "subtraction of integers" do
-      assert do_analize("3 - 3") == get_type_integer()
+      {output, _} = do_analize("3 - 3")
+      assert output == get_type_integer()
     end
 
     test "multiplication of integers" do
-      assert do_analize("3 * 3") == get_type_integer()
+      {output, _} = do_analize("3 * 3")
+      assert output == get_type_integer()
     end
 
     test "division of integers" do
-      assert do_analize("3 / 3") == get_type_integer()
+      {output, _} = do_analize("3 / 3")
+      assert output == get_type_integer()
     end
 
     test "integer division" do
-      assert do_analize("3 // 3") == get_type_integer()
+      {output, _} = do_analize("3 // 3")
+      assert output == get_type_integer()
     end
 
     test "exponentiation" do
-      assert do_analize("3^3") == get_type_integer()
+      {output, _} = do_analize("3^3")
+      assert output == get_type_integer()
     end
 
     test "modulo operation" do
-      assert do_analize("3%3") == get_type_integer()
+      {output, _} = do_analize("3 % 3")
+      assert output == get_type_integer()
     end
 
     test "greater than comparison" do
-      assert do_analize("3>3") == get_type_boolean()
+      {output, _} = do_analize("3 > 3")
+      assert output == get_type_boolean()
     end
 
     test "greater than or equal comparison" do
-      assert do_analize("3>=3") == get_type_boolean()
+      {output, _} = do_analize("3 >= 3")
+      assert output == get_type_boolean()
     end
 
     test "less than comparison" do
-      assert do_analize("3<3") == get_type_boolean()
+      {output, _} = do_analize("3 < 3")
+      assert output == get_type_boolean()
     end
 
     test "less than or equal comparison" do
-      assert do_analize("3<=3") == get_type_boolean()
+      {output, _} = do_analize("3 <= 3")
+      assert output == get_type_boolean()
     end
 
     test "logical or operation" do
-      assert do_analize("true or false") == get_type_boolean()
+      {output, _} = do_analize("true or false")
+      assert output == get_type_boolean()
     end
 
     test "logical and operation" do
-      assert do_analize("true and false") == get_type_boolean()
+      {output, _} = do_analize("true and false")
+      assert output == get_type_boolean()
     end
 
     test "logical and with comparison" do
-      assert do_analize("true and 3 > 5") == get_type_boolean()
+      {output, _} = do_analize("true and 3 > 5")
+      assert output == get_type_boolean()
     end
 
     test "equality comparison with boolean and integer" do
-      assert do_analize("true == 3") == get_type_boolean()
+      {output, _} = do_analize("true == 3")
+      assert output == get_type_boolean()
     end
 
     test "inequality comparison between integer and string" do
-      assert do_analize("3 != '4'") == get_type_boolean()
+      {output, _} = do_analize("3 != '4'")
+      assert output == get_type_boolean()
     end
 
     test "string concatenation" do
-      assert do_analize("'hola ' ++ 'que tal'") == get_type_string()
+      {output, _} = do_analize("'hola ' ++ 'que tal'")
+      assert output == get_type_string()
     end
 
     test "list concatenation" do
-      assert do_analize("[2,3,1] ++ [4,3]") == get_type_list()
+      {output, _} = do_analize("[2,3,1] ++ [4,3]")
+      assert output == get_type_list()
     end
 
     test "list subtraction" do
-      assert do_analize("[2,3,1] -- [4,3]") == get_type_list()
+      {output, _} = do_analize("[2,3,1] -- [4,3]")
+      assert output == get_type_list()
     end
 
     test "loop with integer accumulation" do
@@ -296,7 +352,8 @@ defmodule CowRoll.TypeInference do
           y = y + x
         end;
         y"
-      assert do_analize(input) == get_type_integer()
+      {output, _} = do_analize(input)
+      assert output == get_type_integer()
     end
 
     test "loop with integer accumulation and lists" do
@@ -309,7 +366,8 @@ defmodule CowRoll.TypeInference do
            end;
            y
            "
-      assert do_analize(input) == get_type_integer()
+      {output, _} = do_analize(input)
+      assert output == get_type_integer()
     end
 
     test "test statements" do
@@ -331,7 +389,8 @@ defmodule CowRoll.TypeInference do
         end
       end
       roll_dices(3,4)"
-      assert do_analize(input) == get_type_integer()
+      {output, _} = do_analize(input)
+      assert output == get_type_integer()
     end
 
     test "infer simple function returns integer" do
@@ -342,7 +401,8 @@ defmodule CowRoll.TypeInference do
       1-f()
       """
 
-      assert do_analize(input) == get_type_integer()
+      {output, _} = do_analize(input)
+      assert output == get_type_integer()
     end
 
     test "infer sum function returns integer" do
@@ -353,7 +413,8 @@ defmodule CowRoll.TypeInference do
       suma(3,4)
       """
 
-      assert do_analize(input) == get_type_integer()
+      {output, _} = do_analize(input)
+      assert output == get_type_integer()
     end
 
     test "infer conditional function returns string" do
@@ -369,7 +430,8 @@ defmodule CowRoll.TypeInference do
       suma(3,4)
       """
 
-      assert do_analize(input) == get_type_string()
+      {output, _} = do_analize(input)
+      assert output == get_type_string()
     end
 
     test "infer recursive function roll_dices returns integer" do
@@ -392,7 +454,8 @@ defmodule CowRoll.TypeInference do
       roll_dices(3,4)
       """
 
-      assert do_analize(input) == get_type_integer()
+      {output, _} = do_analize(input)
+      assert output == get_type_integer()
     end
 
     test "infer roll_ability_score function returns integer" do
@@ -421,7 +484,8 @@ defmodule CowRoll.TypeInference do
       end
       """
 
-      assert do_analize(input) == get_type_integer()
+      {output, _} = do_analize(input)
+      assert output == get_type_integer()
     end
   end
 

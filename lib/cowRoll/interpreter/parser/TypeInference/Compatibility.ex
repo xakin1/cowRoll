@@ -158,6 +158,52 @@ defmodule Compatibility do
       when function in [:equal, :not_equal],
       do: get_type_boolean()
 
+  def get_index_type(var_type, enum) do
+    integer_type = get_type_integer()
+    string_type = get_type_string()
+    list_type = get_type_list()
+    map_type = get_type_map()
+    # Comprobamos que el índice es de un tipo correcto
+    case {var_type, enum} do
+      {^integer_type, ^list_type} ->
+        var_type
+
+      {^integer_type, ^string_type} ->
+        var_type
+
+      {^integer_type, ^map_type} ->
+        var_type
+
+      {var_type, ^list_type} when is_atom(var_type) ->
+        var_type
+
+      {var_type, ^string_type} when is_atom(var_type) ->
+        var_type
+
+      {var_type, ^map_type} when is_atom(var_type) ->
+        var_type
+
+      {^string_type, ^map_type} ->
+        var_type
+
+      # Caso de dos indices o más seguidos
+      {^integer_type, ^integer_type} ->
+        var_type
+
+      {^string_type, ^string_type} ->
+        var_type
+
+      {_, ^map_type} ->
+        raise TypeError.raise_index_map_error(var_type)
+
+      {_, ^string_type} ->
+        raise TypeError.raise_index_error(var_type)
+
+      {_, ^list_type} ->
+        raise TypeError.raise_index_error(var_type)
+    end
+  end
+
   # En el caso de que en una operación haya un enumerado indexado
   # tenemos que comprobar los posibles tipos del enumerado
   defp compatible?(function, t1, t2, type, line) do
