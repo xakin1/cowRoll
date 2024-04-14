@@ -3655,7 +3655,7 @@ yeccpars2_68_(__Stack0) ->
 yeccpars2_69_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
-                     {stric_more,    {___1, ___3}, ___2}
+                     {strict_more,    {___1, ___3}, ___2}
   end | __Stack].
 
 -compile({inline,yeccpars2_70_/1}).
@@ -3685,7 +3685,7 @@ yeccpars2_71_(__Stack0) ->
 yeccpars2_72_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
-                     {stric_less,    {___1, ___3}, ___2}
+                     {strict_less,    {___1, ___3}, ___2}
   end | __Stack].
 
 -compile({inline,yeccpars2_73_/1}).

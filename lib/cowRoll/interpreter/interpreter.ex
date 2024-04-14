@@ -14,9 +14,9 @@ defmodule Interpreter do
           | {:negative, expr_ast}
           | {:not_operation, expr_ast}
           | {:assignment, expr_ast, expr_ast}
-          | {:stric_more, expr_ast, expr_ast}
+          | {:strict_more, expr_ast, expr_ast}
           | {:more_equal, expr_ast, expr_ast}
-          | {:stric_less, expr_ast, expr_ast}
+          | {:strict_less, expr_ast, expr_ast}
           | {:less_equal, expr_ast, expr_ast}
           | {:equal, expr_ast, expr_ast}
           | {:not_equal, expr_ast, expr_ast}
@@ -348,13 +348,13 @@ defmodule Interpreter do
     Integer.pow(eval(scope, left_expression), eval(scope, right_expression))
   end
 
-  defp eval(scope, {:stric_more, {left_expression, right_expression}, _}),
+  defp eval(scope, {:strict_more, {left_expression, right_expression}, _}),
     do: eval(scope, left_expression) > eval(scope, right_expression)
 
   defp eval(scope, {:more_equal, {left_expression, right_expression}, _}),
     do: eval(scope, left_expression) >= eval(scope, right_expression)
 
-  defp eval(scope, {:stric_less, {left_expression, right_expression}, _}),
+  defp eval(scope, {:strict_less, {left_expression, right_expression}, _}),
     do: eval(scope, left_expression) < eval(scope, right_expression)
 
   defp eval(scope, {:less_equal, {left_expression, right_expression}, _}),

@@ -12,9 +12,9 @@ defmodule TypeInference do
     :plus,
     :minus,
     :assignment,
-    :stric_more,
+    :strict_more,
     :more_equal,
-    :stric_less,
+    :strict_less,
     :less_equal,
     :equal,
     :not_equal,
@@ -509,13 +509,16 @@ defmodule TypeInference do
       {^integer_type, t2} when is_atom(t2) ->
         integer_type
 
+      {t1, t2} when is_atom(t1) and is_atom(t2) ->
+        integer_type
+
       _ ->
         compatible?(function, t1, t2, integer_type, line)
     end
   end
 
   defp get_function_type(function, t1, t2, line)
-       when function in [:stric_more, :more_equal, :stric_less, :less_equal] do
+       when function in [:strict_more, :more_equal, :strict_less, :less_equal] do
     boolean_type = get_type_boolean()
     integer_type = get_type_integer()
 
@@ -545,6 +548,9 @@ defmodule TypeInference do
       {^boolean_type, t2} when is_atom(t2) ->
         boolean_type
 
+      {t1, t2} when is_atom(t1) and is_atom(t2) ->
+        boolean_type
+
       _ ->
         compatible?(function, t1, t2, boolean_type, line)
     end
@@ -562,6 +568,9 @@ defmodule TypeInference do
         boolean_type
 
       {^boolean_type, t2} when is_atom(t2) ->
+        boolean_type
+
+      {t1, t2} when is_atom(t1) and is_atom(t2) ->
         boolean_type
 
       _ ->
@@ -625,6 +634,15 @@ defmodule TypeInference do
             var_type
 
           {^integer_type, ^map_type} ->
+            var_type
+
+          {var_type, ^list_type} when is_atom(var_type) ->
+            var_type
+
+          {var_type, ^string_type} when is_atom(var_type) ->
+            var_type
+
+          {var_type, ^map_type} when is_atom(var_type) ->
             var_type
 
           {^string_type, ^map_type} ->
