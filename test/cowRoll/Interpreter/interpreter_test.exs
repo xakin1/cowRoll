@@ -1291,8 +1291,8 @@ defmodule CowRoll.ScripsDndTest do
       x()"
 
       assert_raise(
-        RuntimeError,
-        "Error at line 2: bad number of parameters on x expected 1 but got 0",
+        TypeError,
+        "Error at line 2: bad number of parameters on 'x' expected 1 but got 0",
         fn ->
           Interpreter.eval_input(input)
         end
@@ -1300,11 +1300,11 @@ defmodule CowRoll.ScripsDndTest do
     end
 
     test "function in an assignament" do
-      # input = "x = function hola() do 7 end
-      # x()"
-      # result = Interpreter.eval_input(input)
+      input = "x = function hola() do 7 end
+      x()"
+      result = Interpreter.eval_input(input)
 
-      # assert result == 7
+      assert result == 7
 
       input = "x = function hola(x) do x + 7 end
       x(2)"

@@ -170,7 +170,6 @@ defmodule CowRoll.TypeInference do
     test "infer empty list assignment" do
       input = "x = []"
 
-      output = do_analyze(input)
       pattern = ~r/List of t\d+/
 
       {output, _} = do_analyze(input)
