@@ -261,7 +261,10 @@ defmodule TypeInference do
       infer_expression(function_code, constraints_with_function)
 
     {_type, param_constraints} =
-      infer_expression(parameters, %{})
+      case parameters do
+        nil -> {nil, %{}}
+        parameters -> infer_expression(parameters, %{})
+      end
 
     # Tomando solo las llaves de map1 que están presentes en map2
     relevant_keys_map2 = Map.take(constraints_with_function, Map.keys(param_constraints))

@@ -250,6 +250,9 @@ defmodule Compatibility do
             value when is_atom(value) and not is_atom(parameter) ->
               {acc_match, Map.put(acc_constraints, key, parameter), acc_error}
 
+            value when is_atom(value) and is_atom(parameter) ->
+              {acc_match, acc_constraints, acc_error}
+
             value when value == parameter ->
               {acc_match, acc_constraints, acc_error}
 
