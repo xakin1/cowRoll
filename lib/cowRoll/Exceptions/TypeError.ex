@@ -18,13 +18,6 @@ defmodule TypeError do
     raise __MODULE__, message: message
   end
 
-  def raise_index_error(type) when is_bitstring(type) do
-    message =
-      "The index must be an Integer but #{type} was found"
-
-    raise __MODULE__, message: message
-  end
-
   def raise_index_error(type) do
     message =
       "The index must be an Integer but #{get_type(type)} was found"

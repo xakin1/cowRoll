@@ -230,43 +230,102 @@ defmodule Compatibility do
   end
 
   def get_parameter_type(parameter_types, constraints, function_name, line) do
-    parameters = Map.get(constraints, "#{function_name}_parameters")
+    case Map.get(constraints, "#{function_name}_parameters") do
+      nil ->
+        # Caso de que sea una función importada de un modulo
+        case Map.get(constraints, function_name) do
+          nil ->
+            constraints
+
+          _ ->
+            get_parameter_type_aux(%{}, parameter_types, function_name, constraints, line)
+        end
+
+      parameters ->
+        get_parameter_type_aux(parameters, parameter_types, function_name, constraints, line)
+    end
+  end
+
+  defp get_parameter_type_aux(parameters, parameter_types, function_name, constraints, line) do
     parameters_found = Enum.count(parameter_types)
     parameters_expected = map_size(parameters)
-    keys = Map.keys(parameters)
 
     if parameters_found != parameters_expected do
       raise TypeError,
         message:
           "Error at line #{line}: bad number of parameters on '#{function_name}' expected #{parameters_expected} but got #{parameters_found}"
     else
-      {all_matched, updated_constraints, error_message} =
-        Enum.with_index(parameter_types, 0)
-        |> Enum.reduce({true, constraints, nil}, fn {parameter, index},
-                                                    {acc_match, acc_constraints, acc_error} ->
-          key = Enum.at(keys, index)
+      check_parameters(parameters, parameter_types, function_name, constraints, line)
+    end
+  end
 
-          case Map.get(parameters, key) do
-            value when is_atom(value) and not is_atom(parameter) ->
-              {acc_match, Map.put(acc_constraints, key, parameter), acc_error}
+  defp check_parameters(parameters, parameter_types, function_name, constraints, line) do
+    keys = Map.keys(parameters)
 
-            value when is_atom(value) and is_atom(parameter) ->
-              {acc_match, acc_constraints, acc_error}
+    {all_matched, updated_constraints, error_message} =
+      Enum.with_index(parameter_types, 0)
+      |> Enum.reduce({true, constraints, nil}, fn {parameter, index},
+                                                  {acc_match, acc_constraints, acc_error} ->
+        key = Enum.at(keys, index)
 
-            value when value == parameter ->
-              {acc_match, acc_constraints, acc_error}
+        case Map.get(parameters, key) do
+          value when is_atom(value) and not is_atom(parameter) ->
+            {acc_match, Map.put(acc_constraints, key, parameter), acc_error}
 
-            value ->
-              {false, acc_constraints,
-               "Error at line #{line}: Type mismatch in function '#{function_name}', expected parameter '#{to_string(key)}': #{value} but got '#{parameter}'"}
-          end
-        end)
+          value when is_atom(value) and is_atom(parameter) ->
+            {acc_match, acc_constraints, acc_error}
 
-      if all_matched do
-        updated_constraints
-      else
-        raise TypeError, message: error_message
-      end
+          value when value == parameter ->
+            {acc_match, acc_constraints, acc_error}
+
+          value ->
+            {false, acc_constraints,
+             "Error at line #{line}: Type mismatch in function '#{function_name}', expected parameter '#{to_string(key)}': #{value} but got '#{parameter}'"}
+        end
+      end)
+
+    if all_matched do
+      updated_constraints
+    else
+      raise TypeError, message: error_message
+    end
+  end
+
+  defp check_parameters_recursive_function(
+         parameters,
+         parameter_types,
+         function_name,
+         constraints,
+         line
+       ) do
+    keys = Map.keys(parameters)
+
+    {all_matched, updated_constraints, error_message} =
+      Enum.with_index(parameter_types, 0)
+      |> Enum.reduce({true, constraints, nil}, fn {parameter, index},
+                                                  {acc_match, acc_constraints, acc_error} ->
+        key = Enum.at(keys, index)
+
+        case Map.get(parameters, key) do
+          value when is_atom(value) and not is_atom(parameter) ->
+            {acc_match, Map.put(acc_constraints, key, parameter), acc_error}
+
+          value when is_atom(value) and is_atom(parameter) ->
+            {acc_match, acc_constraints, acc_error}
+
+          value when value == parameter ->
+            {acc_match, acc_constraints, acc_error}
+
+          value ->
+            {false, acc_constraints,
+             "Error at line #{line}: Type mismatch in function '#{function_name}', expected parameter '#{to_string(key)}': #{value} but got '#{parameter}'"}
+        end
+      end)
+
+    if all_matched do
+      updated_constraints
+    else
+      raise TypeError, message: error_message
     end
   end
 

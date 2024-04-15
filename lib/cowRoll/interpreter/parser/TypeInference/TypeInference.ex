@@ -149,9 +149,17 @@ defmodule TypeInference do
         # Devuelve la nueva variable de tipo y las restricciones actualizadas
         {enum_types, constraints}
 
+      {:assignment_function, {:function_name, {:name, _, line}}, {:parameters, parameters},
+       {:function_code, function_code}} ->
+        infer_expression(
+          {:assignment_function, {:function_name, {:name, var, line}}, {:parameters, parameters},
+           {:function_code, function_code}},
+          constraints
+        )
+
       expression ->
         # Verificar si la variable ya existe en las restricciones
-        {var_type, _constraint} = infer_expression(expression, constraints)
+        {var_type, constraints} = infer_expression(expression, constraints)
 
         new_constraints = %{var => var_type}
         constraints = Map.merge(new_constraints, constraints)
@@ -251,20 +259,23 @@ defmodule TypeInference do
           {:parameters, parameters}, {:function_code, function_code}},
          constraints
        ) do
+    {_type, param_constraints} =
+      case parameters do
+        nil -> {nil, %{}}
+        parameters -> infer_expression(parameters, %{})
+      end
+
+    constraints_with_params =
+      Map.put(constraints, function_name <> "_parameters", param_constraints)
+
     # Agregar la función y su tipo a las restricciones
-    {function_type, constraints} = infer_expression(function_code, constraints)
+    {function_type, constraints} = infer_expression(function_code, constraints_with_params)
 
     constraints_with_function = Map.put(constraints, function_name, function_type)
 
     # Inferir el tipo de la función
     {_type, constraints_with_function} =
       infer_expression(function_code, constraints_with_function)
-
-    {_type, param_constraints} =
-      case parameters do
-        nil -> {nil, %{}}
-        parameters -> infer_expression(parameters, %{})
-      end
 
     # Tomando solo las llaves de map1 que están presentes en map2
     relevant_keys_map2 = Map.take(constraints_with_function, Map.keys(param_constraints))
