@@ -490,6 +490,76 @@ defmodule CowRoll.TypeInference do
   end
 
   describe "static errors" do
+    test "basic call range x..y with not integers" do
+      input = "
+             for participants <- '1'..range do
+               msg
+             end
+           "
+
+      assert_raise(
+        TypeError,
+        "Error at line 2 in 'range' operation, Incompatible types: String, t1 were found but Integer, Integer were expected",
+        fn ->
+          do_analize(input)
+        end
+      )
+    end
+
+    test "functions with incorrect types" do
+      input = "function hola_mundo (msg, range) do
+        for participants <- 1..range do
+          msg
+        end
+      end;
+      hola_mundo('hola mundo','2')
+           "
+
+      assert_raise(
+        TypeError,
+        "Error at line 6: Type mismatch in function 'hola_mundo', expected parameter 'range': Integer but got 'String'",
+        fn ->
+          do_analize(input)
+        end
+      )
+    end
+
+    test "basic call function with bad number of parameters" do
+      input = "function hola_mundo (msg, range) do
+             for participants <- 1..range do
+               msg
+             end
+           end;
+           hola_mundo('hola mundo')
+           "
+
+      assert_raise(
+        TypeError,
+        "Error at line 6: bad number of parameters on 'hola_mundo' expected 2 but got 1",
+        fn ->
+          do_analize(input)
+        end
+      )
+    end
+
+    test "basic call function with moreparameters" do
+      input = "function hola_mundo (a) do
+             for participants <- 1..range do
+               msg
+             end
+           end;
+           hola_mundo('hola', 'mundo')
+           "
+
+      assert_raise(
+        TypeError,
+        "Error at line 6: bad number of parameters on 'hola_mundo' expected 1 but got 2",
+        fn ->
+          do_analize(input)
+        end
+      )
+    end
+
     test "addition with boolean should raise TypeError" do
       input = "3 + true"
 

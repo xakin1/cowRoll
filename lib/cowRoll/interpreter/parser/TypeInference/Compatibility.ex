@@ -60,6 +60,31 @@ defmodule Compatibility do
   end
 
   def get_function_type(function, t1, t2, line)
+      when function == :range do
+    integer_type = get_type_integer()
+
+    case {t1, t2} do
+      {^integer_type, ^integer_type} ->
+        integer_type
+
+      {t1, t2} when is_atom(t1) and is_atom(t2) ->
+        integer_type
+
+      {t1, ^integer_type} when is_atom(t1) ->
+        integer_type
+
+      {^integer_type, t2} when is_atom(t2) ->
+        integer_type
+
+      {t1, t2} when is_atom(t1) and is_atom(t2) ->
+        integer_type
+
+      _ ->
+        compatible?(function, t1, t2, integer_type, line)
+    end
+  end
+
+  def get_function_type(function, t1, t2, line)
       when function in [:strict_more, :more_equal, :strict_less, :less_equal] do
     boolean_type = get_type_boolean()
     integer_type = get_type_integer()
@@ -201,6 +226,44 @@ defmodule Compatibility do
 
       {_, ^list_type} ->
         raise TypeError.raise_index_error(var_type)
+    end
+  end
+
+  def get_parameter_type(parameter_types, constraints, function_name, line) do
+    parameters = Map.get(constraints, "#{function_name}_parameters")
+    parameters_found = Enum.count(parameter_types)
+    parameters_expected = map_size(parameters)
+    keys = Map.keys(parameters)
+
+    if parameters_found != parameters_expected do
+      raise TypeError,
+        message:
+          "Error at line #{line}: bad number of parameters on '#{function_name}' expected #{parameters_expected} but got #{parameters_found}"
+    else
+      {all_matched, updated_constraints, error_message} =
+        Enum.with_index(parameter_types, 0)
+        |> Enum.reduce({true, constraints, nil}, fn {parameter, index},
+                                                    {acc_match, acc_constraints, acc_error} ->
+          key = Enum.at(keys, index)
+
+          case Map.get(parameters, key) do
+            value when is_atom(value) and not is_atom(parameter) ->
+              {acc_match, Map.put(acc_constraints, key, parameter), acc_error}
+
+            value when value == parameter ->
+              {acc_match, acc_constraints, acc_error}
+
+            value ->
+              {false, acc_constraints,
+               "Error at line #{line}: Type mismatch in function '#{function_name}', expected parameter '#{to_string(key)}': #{value} but got '#{parameter}'"}
+          end
+        end)
+
+      if all_matched do
+        updated_constraints
+      else
+        raise TypeError, message: error_message
+      end
     end
   end
 

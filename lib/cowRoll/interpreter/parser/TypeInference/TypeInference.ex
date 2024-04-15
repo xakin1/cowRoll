@@ -247,8 +247,8 @@ defmodule TypeInference do
   end
 
   defp infer_expression(
-         {:assignment_function, {:function_name, {:name, function_name, _}}, {:parameters, _},
-          {:function_code, function_code}},
+         {:assignment_function, {:function_name, {:name, function_name, _}},
+          {:parameters, parameters}, {:function_code, function_code}},
          constraints
        ) do
     # Agregar la función y su tipo a las restricciones
@@ -259,6 +259,18 @@ defmodule TypeInference do
     # Inferir el tipo de la función
     {_type, constraints_with_function} =
       infer_expression(function_code, constraints_with_function)
+
+    {_type, param_constraints} =
+      infer_expression(parameters, %{})
+
+    # Tomando solo las llaves de map1 que están presentes en map2
+    relevant_keys_map2 = Map.take(constraints_with_function, Map.keys(param_constraints))
+
+    # Haciendo el merge, esta vez sin necesidad de una función de resolución
+    updated_map = Map.merge(param_constraints, relevant_keys_map2)
+
+    constraints_with_function =
+      Map.put(constraints_with_function, function_name <> "_parameters", updated_map)
 
     # Devolver el tipo de la función y las restricciones actualizadas
     {function_type, constraints_with_function}
@@ -378,7 +390,7 @@ defmodule TypeInference do
   end
 
   defp infer_expression(
-         {:call_function, {:name, function_name, _line}, {:parameters, parameters}},
+         {:call_function, {:name, function_name, line}, {:parameters, parameters}},
          constraints
        ) do
     # Obtener el tipo de la función de las restricciones
@@ -389,7 +401,9 @@ defmodule TypeInference do
     # TODO: Hay que revisar que los tipos de los parámetros son correctos
     # Inferir el tipo de los parámetros
     # Lógica para determinar el tipo de retorno de la función
-    # parameter_types = get_parameter_types(parameters, constraints)
+    parameter_types = get_parameter_types(parameters)
+
+    get_parameter_type(parameter_types, constraints, function_name, line)
     {function_type, constraints}
   end
 
@@ -405,31 +419,46 @@ defmodule TypeInference do
 
   defp infer_expression({:range, range}, contraints) do
     case range do
+      # Caso de que sea una lista o mapa
       {first, _} when is_atom(first) ->
         infer_expression(range, contraints)
 
+      # Caso de que sea una variable
       {first, _, _} when is_atom(first) ->
         infer_expression(range, contraints)
 
+      # Estamos en el caso de x..y donde x e y tienen que ser integers
       {first, last} ->
-        {_var_type, new_constraints} = infer_expression(first, contraints)
-        infer_expression(last, new_constraints)
+        {t1, new_constraints} =
+          infer_range_type(first, contraints)
+
+        {t2, new_constraints} = infer_range_type(last, new_constraints)
+
+        {get_function_type(:range, t1, t2, get_line(first)), new_constraints}
     end
   end
 
-  defp get_parameter_types(parameters, constraints) do
+  defp get_parameter_types(parameters) do
+    case get_parameter_types_aux(parameters, %{}) do
+      parameter_types when is_list(parameter_types) -> parameter_types
+      parameter_types -> [parameter_types]
+    end
+  end
+
+  defp get_parameter_types_aux(parameters, constraints) do
     case parameters do
       # Si no hay parámetros, devolvemos un mapa vacío
       nil ->
-        %{}
+        []
 
-      # Si hay parámetros y es una tupla, inferimos sus tipos
+      # caso genérico
       {head, _, _} when is_atom(head) ->
-        infer_expression(parameters, constraints)
+        {type, _} = infer_expression(parameters, constraints)
+        type
 
-      {_, tail} ->
-        {_, constraint} = infer_expression(parameters, constraints)
-        get_parameter_types(tail, constraint)
+      {head, tail} ->
+        {type, constraint} = infer_expression(head, constraints)
+        [type | [get_parameter_types_aux(tail, constraint)]]
 
       # Otros casos no manejados
       _ ->
@@ -453,6 +482,22 @@ defmodule TypeInference do
     case Map.get(constraints, variable) do
       nil -> fresh_type()
       existing_type -> existing_type
+    end
+  end
+
+  defp get_var_name({:name, var_name, _line}), do: var_name
+  defp get_line({_, _, line}), do: line
+
+  defp infer_range_type(element, contraints) do
+    integer = get_type_integer()
+
+    case infer_expression(element, contraints) do
+      {var_type, new_constraints} when is_atom(var_type) ->
+        new_constraints = Map.put(new_constraints, get_var_name(element), integer)
+        {var_type, new_constraints}
+
+      {var_type, new_constraints} ->
+        {var_type, new_constraints}
     end
   end
 end
