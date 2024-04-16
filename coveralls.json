@@ -10,6 +10,7 @@
     "test/support/conn_case.ex",
     "lib/cowRoll/mailer.ex",
     "lib/cowRoll.ex",
+    "lib/cowRoll/utils/Tuples.ex",
     "lib/cowRoll/application.ex"  
   ]
 }

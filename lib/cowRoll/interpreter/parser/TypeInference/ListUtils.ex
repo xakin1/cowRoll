@@ -4,8 +4,15 @@ defmodule ListUtils do
   # Quitamos el prefijo List of y obtenemos un array con los tipos  def extract_types(input, level) do  def extract_types(input, level) do
   def extract_types(input, level) do
     input = normalize_input(input)
-    input = split_and_extract(input, level)
-    format_input(input)
+
+    case input do
+      "t" <> _ ->
+        fresh_type()
+
+      _ ->
+        input = split_and_extract(input, level)
+        format_input(input)
+    end
   end
 
   defp format_input(input) when is_list(input) do

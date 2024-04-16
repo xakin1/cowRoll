@@ -320,7 +320,7 @@ defmodule TypeInference do
             ] do
     {_, constraints} =
       infer_expression(
-        {unary_function, {expr_ast}, {symbol, line}},
+        {unary_function, expr_ast, {symbol, line}},
         constraints
       )
 
@@ -490,16 +490,6 @@ defmodule TypeInference do
     {function_type, constraints}
   end
 
-  defp infer_expression({{:range, range}, next_expr}, constraints) do
-    {_var_type, constraints} =
-      infer_expression(
-        {:range, range},
-        constraints
-      )
-
-    infer_expression(next_expr, constraints)
-  end
-
   defp infer_expression({:range, range}, contraints) do
     case range do
       # Caso de que sea una lista o mapa
@@ -542,10 +532,6 @@ defmodule TypeInference do
       {head, tail} ->
         {type, constraint} = infer_expression(head, constraints)
         [type | [get_parameter_types_aux(tail, constraint)]]
-
-      # Otros casos no manejados
-      _ ->
-        raise TypeError, message: "Unsupported parameters type"
     end
   end
 

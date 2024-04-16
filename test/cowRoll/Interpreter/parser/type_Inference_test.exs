@@ -135,6 +135,15 @@ defmodule CowRoll.TypeInference do
       assert output == expected_type
     end
 
+    test "infer a constant: tdx in list" do
+      input = "[x][1][2]"
+
+      pattern = ~r/t\d+/
+
+      {output, _} = do_analyze(input)
+      assert Regex.match?(pattern, to_string(output))
+    end
+
     test "infer a constant: List of String | Integer | (Map of (Map of Integer)) | (Map of Integer) | (Map of List of Integer | Map of Integer)" do
       input =
         "[if true then 3 else [1,2,3] end,5,'6']"
@@ -337,6 +346,13 @@ defmodule CowRoll.TypeInference do
       assert output == get_type_integer()
     end
 
+    test "addition of integers with block of code" do
+      {output, _} = do_analyze("x = 3
+      4 - 3
+      x+3")
+      assert output == get_type_integer()
+    end
+
     test "addition with array access" do
       {output, _} = do_analyze("3 + [2,3,4,5][2]")
       assert output == get_type_integer()
@@ -345,6 +361,28 @@ defmodule CowRoll.TypeInference do
     test "addition with 2 array access" do
       {output, _} = do_analyze("[3,true][1]+ [3,2,'1'][2]")
       assert output == get_type_integer()
+    end
+
+    test "negative of integers" do
+      {output, _} = do_analyze("- 3")
+      assert output == get_type_integer()
+    end
+
+    test "negative of integers on block" do
+      {output, _} = do_analyze("- 3
+      -2")
+      assert output == get_type_integer()
+    end
+
+    test "not of integers" do
+      {output, _} = do_analyze("not true")
+      assert output == get_type_boolean()
+    end
+
+    test "not of integers on block" do
+      {output, _} = do_analyze("not false
+      not true")
+      assert output == get_type_boolean()
     end
 
     test "subtraction of integers" do
@@ -880,8 +918,56 @@ defmodule CowRoll.TypeInference do
       )
     end
 
-    test "Index error with string out of index" do
-      input = "'hola buenas'[1][1]"
+    test "infer a constant: out of index with constants on a LIst" do
+      input = "[2][1][1]"
+
+      assert_raise(
+        TypeError,
+        "Error: Attempt to access index with deep 2 on a List of Integer",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
+    test "infer a constant: out of index with constants on a Map" do
+      input = "{a:2}['a']['b']"
+
+      assert_raise(
+        TypeError,
+        "Error: Attempt to access index with deep 2 on a Map of Integer",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
+    test "infer a constant: out of index with vars" do
+      input = "[2][z][y]"
+
+      assert_raise(
+        TypeError,
+        "Error: Attempt to access index with deep 2 on a List of Integer",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
+    test "infer a constant: out of index with vars on Map" do
+      input = "{a: 2}[z][y]"
+
+      assert_raise(
+        TypeError,
+        "Error: Attempt to access index with deep 2 on a Map of Integer",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
+    test "infer a constant: out of index with vars on String" do
+      input = "'hola buenas'[z][y]"
 
       assert_raise(
         TypeError,
@@ -892,12 +978,12 @@ defmodule CowRoll.TypeInference do
       )
     end
 
-    test "Index error with list out of index" do
-      input = "[1,2,3][1][2]"
+    test "infer a constant: out of index with constants on String" do
+      input = "'hola buenas'[1][2]"
 
       assert_raise(
         TypeError,
-        "Error: Attempt to access index with deep 2 on a List of Integer",
+        "Error: Attempt to access index with deep 2 on a String",
         fn ->
           do_analyze(input)
         end
