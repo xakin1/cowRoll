@@ -10,13 +10,14 @@ defmodule ListUtils do
 
   defp format_input(input) when is_list(input) do
     case input do
-      [single] -> single
+      [single] -> remove_outer_parentheses(single)
       [] -> nil
       _ -> Enum.join(input, " | ")
     end
   end
 
-  defp format_input(input), do: input
+  defp format_input(input),
+    do: if(not String.contains?(input, " | "), do: remove_outer_parentheses(input), else: input)
 
   defp normalize_input(input) do
     # Se elimina el "List of " o "Map of " inicial si está presente
@@ -64,16 +65,9 @@ defmodule ListUtils do
 
   defp remove_outer_parentheses(input) do
     if String.starts_with?(input, "(") && String.ends_with?(input, ")") do
-      trimmed = String.trim_leading(input, "(")
-
       trimmed =
-        if String.ends_with?(trimmed, ")") do
-          # Si es así, quita el último carácter
-          String.slice(trimmed, 0..-2)
-        else
-          # Si no, devuelve el string original
-          trimmed
-        end
+        String.trim_leading(input, "(")
+        |> String.slice(0..-2)
 
       if trimmed == "" do
         ""
@@ -91,7 +85,6 @@ defmodule ListUtils do
   end
 
   defp do_split("", acc, 0, current_part), do: [current_part | acc]
-  defp do_split("", acc, _count, _current_part), do: acc
 
   defp do_split(")" <> rest, acc, count, current_part) when count > 0,
     do: do_split(rest, acc, count - 1, current_part <> ")")
@@ -111,12 +104,17 @@ defmodule ListUtils do
   # Devuelve false en el caso de que no sea un enumerado
   @spec split_list_and_types(any(), any()) :: false | {<<_::24, _::_*8>>, any()}
   def split_list_and_types(input, levels \\ 1) do
+    string = get_type_string()
+
     case input do
       "List" <> _ ->
         {get_type_list(), extract_types(input, levels)}
 
       "Map" <> _ ->
         {get_type_map(), extract_types(input, levels)}
+
+      ^string ->
+        {string, string}
 
       input when is_atom(input) ->
         {get_type_map(), fresh_type()}

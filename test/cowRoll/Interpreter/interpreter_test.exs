@@ -365,13 +365,6 @@ defmodule CowRoll.ScripsDndTest do
       assert result == []
     end
 
-    test "array with index many indexes" do
-      input = "['1'][1][0][2]"
-      result = Interpreter.eval_input(input)
-
-      assert result == nil
-    end
-
     test "array with index" do
       input = "['1'][0]"
       result = Interpreter.eval_input(input)

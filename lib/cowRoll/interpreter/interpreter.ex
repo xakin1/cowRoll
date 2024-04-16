@@ -5,6 +5,7 @@ defmodule Interpreter do
   import TypeError
   import NestedIndexFinder
   import Arrays
+  import TypesUtils
 
   @type expr_ast ::
           {:mult, expr_ast, expr_ast}
@@ -110,7 +111,7 @@ defmodule Interpreter do
         String.at(string, index)
 
       _ ->
-        raise_index_error(index)
+        raise_index_error(get_type(index))
     end
   end
 
@@ -120,7 +121,7 @@ defmodule Interpreter do
         Enum.at(list, index)
 
       _ ->
-        raise_index_error(index)
+        raise_index_error(get_type(index))
     end
   end
 

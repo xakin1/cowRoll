@@ -4,6 +4,7 @@ defmodule TypeInference do
   import ListUtils
   import Compatibility
   import TypeExtractor
+  import TypeError
 
   @types [:number, :string, :boolean, :list, :map]
   @basic_type [:number, :string, :boolean]
@@ -205,19 +206,91 @@ defmodule TypeInference do
     {enum_type, enum_constraints} = infer_expression(enum_value, constraints)
     index_type = check_index_type(index_value, enum_type, constraints)
     integer = get_type_integer()
+    string = get_type_string()
 
     case {enum_type, index_type} do
       {"List of" <> _, ^integer} ->
         levels = find_levels({:index, {index_value, enum_value}})
         types = extract_types(enum_type, levels)
-        # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
-        {types, enum_constraints}
+
+        case types do
+          nil ->
+            raise_index_error_out_of_bound(enum_type, levels)
+
+          # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
+          types ->
+            {types, enum_constraints}
+        end
+
+      {"List of" <> _, t1} when is_atom(t1) ->
+        levels = find_levels({:index, {index_value, enum_value}})
+        types = extract_types(enum_type, levels)
+
+        case types do
+          nil ->
+            raise_index_error_out_of_bound(enum_type, levels)
+
+          # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
+          types ->
+            {types, enum_constraints}
+        end
 
       {"Map of" <> _, ^integer} ->
         levels = find_levels({:index, {index_value, enum_value}})
         types = extract_types(enum_type, levels)
-        # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
-        {types, enum_constraints}
+
+        case types do
+          nil ->
+            raise_index_error_out_of_bound(enum_type, levels)
+
+          # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
+          types ->
+            {types, enum_constraints}
+        end
+
+      {"Map of" <> _, ^string} ->
+        levels = find_levels({:index, {index_value, enum_value}})
+        types = extract_types(enum_type, levels)
+
+        case types do
+          nil ->
+            raise_index_error_out_of_bound(enum_type, levels)
+
+          # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
+          types ->
+            {types, enum_constraints}
+        end
+
+      {"Map of" <> _, t1} when is_atom(t1) ->
+        levels = find_levels({:index, {index_value, enum_value}})
+        types = extract_types(enum_type, levels)
+
+        case types do
+          nil ->
+            raise_index_error_out_of_bound(enum_type, levels)
+
+          # Si el indice es de un tipo correcto simplemente devolvemos el tipo de la lista
+          types ->
+            {types, enum_constraints}
+        end
+
+      {^string, ^integer} ->
+        levels = find_levels({:index, {index_value, enum_value}})
+
+        if levels > 1 do
+          raise_index_error_out_of_bound(string, levels)
+        end
+
+        {string, enum_constraints}
+
+      {^string, t1} when is_atom(t1) ->
+        levels = find_levels({:index, {index_value, enum_value}})
+
+        if levels > 1 do
+          raise_index_error_out_of_bound(string, levels)
+        end
+
+        {string, enum_constraints}
 
       # Caso de varios indices sobre un array
       _ ->

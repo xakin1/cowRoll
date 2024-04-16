@@ -74,12 +74,6 @@ defmodule TypeExtractor do
     get_enum_types(rest, types)
   end
 
-  defp get_enum_types({{_key, {enum, expression}}, rest}, types) when enum in [:map, :list] do
-    type = "(#{extract_enum_types(enum, expression)})"
-    types = MapSet.put(types, type)
-    get_enum_types(rest, types)
-  end
-
   defp get_enum_types(
          {{:if_then_else, condition, then_expression, else_expression, {function, line}}, rest},
          types
@@ -89,9 +83,14 @@ defmodule TypeExtractor do
         {:if_then_else, condition, then_expression, else_expression, {function, line}}
       )
 
-    type = Enum.join(Map.to_list(constraints), " | ")
+    # Extraemos los valores del mapa y los convertimos en un MapSet
+    types_map =
+      constraints
+      |> Map.values()
+      |> MapSet.new()
 
-    types = MapSet.put(types, type)
+    # Unimos el MapSet existente con el nuevo MapSet de valores
+    types = MapSet.union(types, types_map)
     get_enum_types(rest, types)
   end
 
@@ -149,9 +148,14 @@ defmodule TypeExtractor do
         {:if_then_else, condition, then_expression, else_expression, {function, line}}
       )
 
-    type = Enum.join(Map.to_list(constraints), " | ")
+    # Extraemos los valores del mapa y los convertimos en un MapSet
+    types_map =
+      constraints
+      |> Map.values()
+      |> MapSet.new()
 
-    types = MapSet.put(types, type)
+    # Unimos el MapSet existente con el nuevo MapSet de valores
+    types = MapSet.union(types, types_map)
     get_map_types(rest, types)
   end
 
@@ -213,7 +217,21 @@ defmodule TypeExtractor do
         "#{get_type(enum)} of #{fresh_type()}"
 
       _ ->
-        "#{get_type(enum)} of #{Enum.join(types_enum, " | ")}"
+        "#{get_type(enum)} of #{join_types(types_enum)}"
+    end
+  end
+
+  defp join_types(types) do
+    types
+    |> Enum.map(&enclose_complex_types/1)
+    |> Enum.join(" | ")
+  end
+
+  defp enclose_complex_types(type) do
+    case type do
+      "List of " <> _ = complex_type -> "(" <> complex_type <> ")"
+      "Map of " <> _ = complex_type -> "(" <> complex_type <> ")"
+      _ -> type
     end
   end
 

@@ -135,6 +135,28 @@ defmodule CowRoll.TypeInference do
       assert output == expected_type
     end
 
+    test "infer a constant: List of String | Integer | (Map of (Map of Integer)) | (Map of Integer) | (Map of List of Integer | Map of Integer)" do
+      input =
+        "[if true then 3 else [1,2,3] end,5,'6']"
+
+      expected_type =
+        "List of String | Integer | Integer | (List of Integer)"
+
+      {output, _} = do_analyze(input)
+      assert output == expected_type
+    end
+
+    test "infer a constant: List with maps" do
+      input =
+        "[{a: {b:2}},{c: 3},5,'6']"
+
+      expected_type =
+        "List of String | Integer | (Map of (Map of Integer)) | (Map of Integer)"
+
+      {output, _} = do_analyze(input)
+      assert output == expected_type
+    end
+
     test "infer a constant: list of ints with operations" do
       input = "[1+1]"
       expected_type = "#{get_type_list()} of #{get_type_integer()}"
@@ -159,6 +181,15 @@ defmodule CowRoll.TypeInference do
     test "infer a constant: map of integers" do
       input = "{a: 1, b: 2}"
       expected_type = "#{get_type_map()} of #{get_type_integer()}"
+      {output, _} = do_analyze(input)
+      assert output == expected_type
+    end
+
+    test "infer a constant: map with ifs" do
+      input =
+        "{d: if true then [1,2,3] else {e: 3} end, e: if true then [1,2,3] else {e: 3} end}"
+
+      expected_type = "Map of (List of Integer) | (Map of Integer)"
       {output, _} = do_analyze(input)
       assert output == expected_type
     end
@@ -229,6 +260,51 @@ defmodule CowRoll.TypeInference do
                "#{get_type_list()} of (#{get_type_list()} of #{get_type_integer()})"
     end
 
+    test "index in list  with var" do
+      input = "[[1,2,3]][x]"
+
+      {output, _} = do_analyze(input)
+
+      assert output ==
+               "#{get_type_list()} of #{get_type_integer()}"
+    end
+
+    test "index in list with nested var" do
+      input = "[[1,2,3]][x][y]"
+
+      {output, _} = do_analyze(input)
+
+      assert output ==
+               "#{get_type_integer()}"
+    end
+
+    test "index in string with var" do
+      input = "'hola buenas'[x]"
+
+      {output, _} = do_analyze(input)
+
+      assert output ==
+               "#{get_type_string()}"
+    end
+
+    test "index in map with var" do
+      input = "{a: [1,2,3], b: 3}[x]"
+
+      {output, _} = do_analyze(input)
+
+      assert output ==
+               "Integer | (List of Integer)"
+    end
+
+    test "index in map with nested var" do
+      input = "{a: [1,2,3], b: 3}[x][y]"
+
+      {output, _} = do_analyze(input)
+
+      assert output ==
+               "#{get_type_integer()}"
+    end
+
     test "infer list of lists with different types assignment" do
       input = "x = [[1,2,3],['1','2']]"
 
@@ -266,6 +342,11 @@ defmodule CowRoll.TypeInference do
       assert output == get_type_integer()
     end
 
+    test "addition with 2 array access" do
+      {output, _} = do_analyze("[3,true][1]+ [3,2,'1'][2]")
+      assert output == get_type_integer()
+    end
+
     test "subtraction of integers" do
       {output, _} = do_analyze("3 - 3")
       assert output == get_type_integer()
@@ -286,6 +367,11 @@ defmodule CowRoll.TypeInference do
       assert output == get_type_integer()
     end
 
+    test "integer division 1" do
+      {output, _} = do_analyze("[3,'3'][1] // 3")
+      assert output == get_type_integer()
+    end
+
     test "exponentiation" do
       {output, _} = do_analyze("3^3")
       assert output == get_type_integer()
@@ -298,6 +384,41 @@ defmodule CowRoll.TypeInference do
 
     test "greater than comparison" do
       {output, _} = do_analyze("3 > 3")
+      assert output == get_type_boolean()
+    end
+
+    test "greater than comparison with  2 enums" do
+      {output, _} = do_analyze("[3,'3'][0] > {a:3, b:false}[0]")
+      assert output == get_type_boolean()
+    end
+
+    test "greater than comparison with  1 enum" do
+      {output, _} = do_analyze("[3,'3'][0] > 3")
+      assert output == get_type_boolean()
+    end
+
+    test "greater than comparison with constant and enum" do
+      {output, _} = do_analyze("3 >  [3,'3'][0]")
+      assert output == get_type_boolean()
+    end
+
+    test "greater than comparison integer boolean" do
+      {output, _} = do_analyze("3 > true")
+      assert output == get_type_boolean()
+    end
+
+    test "greater than comparison integer tx" do
+      {output, _} = do_analyze("3 > x")
+      assert output == get_type_boolean()
+    end
+
+    test "greater than comparison tx boolean" do
+      {output, _} = do_analyze("x > true")
+      assert output == get_type_boolean()
+    end
+
+    test "greater than comparison Boolean tx" do
+      {output, _} = do_analyze("true > x")
       assert output == get_type_boolean()
     end
 
@@ -326,6 +447,21 @@ defmodule CowRoll.TypeInference do
       assert output == get_type_boolean()
     end
 
+    test "logical and operation tx Boolean" do
+      {output, _} = do_analyze("x and false")
+      assert output == get_type_boolean()
+    end
+
+    test "logical and operation Boolean tx" do
+      {output, _} = do_analyze("true and x")
+      assert output == get_type_boolean()
+    end
+
+    test "logical and operation tx ty" do
+      {output, _} = do_analyze("y and x")
+      assert output == get_type_boolean()
+    end
+
     test "logical and with comparison" do
       {output, _} = do_analyze("true and 3 > 5")
       assert output == get_type_boolean()
@@ -346,6 +482,24 @@ defmodule CowRoll.TypeInference do
       assert output == get_type_string()
     end
 
+    test "string concatenation with a String var" do
+      {output, _} = do_analyze("'hola ' ++ x")
+      assert output == get_type_string()
+    end
+
+    test "string concatenation with a var String" do
+      {output, _} = do_analyze("x ++ ' Mundo'")
+      assert output == get_type_string()
+    end
+
+    test "string concatenation with a var var" do
+      {output, _} = do_analyze("x ++ y")
+
+      pattern = ~r/List of t\d+ | String/
+
+      assert Regex.match?(pattern, to_string(output))
+    end
+
     test "list concatenation" do
       {output, _} = do_analyze("[2,3,1] ++ [4,3]")
       assert output == get_type_list()
@@ -354,6 +508,20 @@ defmodule CowRoll.TypeInference do
     test "list subtraction" do
       {output, _} = do_analyze("[2,3,1] -- [4,3]")
       assert output == get_type_list()
+    end
+
+    test "negative number with var" do
+      input = "
+      -x"
+      {output, _} = do_analyze(input)
+      assert output == get_type_integer()
+    end
+
+    test "negative boolean with var" do
+      input = "
+      not x"
+      {output, _} = do_analyze(input)
+      assert output == get_type_boolean()
     end
 
     test "loop with integer accumulation" do
@@ -682,6 +850,66 @@ defmodule CowRoll.TypeInference do
       assert_raise(
         TypeError,
         "The index must be an Integer or a String but Boolean was found",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
+    test "Index error with List" do
+      input = "[1,2,3][true]"
+
+      assert_raise(
+        TypeError,
+        "The index must be an Integer but Boolean was found",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
+    test "Index error with String" do
+      input = "'hola buenas'[true]"
+
+      assert_raise(
+        TypeError,
+        "The index must be an Integer but Boolean was found",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
+    test "Index error with string out of index" do
+      input = "'hola buenas'[1][1]"
+
+      assert_raise(
+        TypeError,
+        "Error: Attempt to access index with deep 2 on a String",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
+    test "Index error with list out of index" do
+      input = "[1,2,3][1][2]"
+
+      assert_raise(
+        TypeError,
+        "Error: Attempt to access index with deep 2 on a List of Integer",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
+    test "Index error with map out of index" do
+      input = "{a:1}[1][2]"
+
+      assert_raise(
+        TypeError,
+        "Error: Attempt to access index with deep 2 on a Map of Integer",
         fn ->
           do_analyze(input)
         end

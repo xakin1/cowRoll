@@ -20,7 +20,15 @@ defmodule TypeError do
 
   def raise_index_error(type) do
     message =
-      "The index must be an Integer but #{get_type(type)} was found"
+      "The index must be an Integer but #{type} was found"
+
+    raise __MODULE__, message: message
+  end
+
+  @spec raise_index_error_out_of_bound(any(), any()) :: none()
+  def raise_index_error_out_of_bound(type, level) do
+    message =
+      "Error: Attempt to access index with deep #{level} on a #{type}"
 
     raise __MODULE__, message: message
   end
