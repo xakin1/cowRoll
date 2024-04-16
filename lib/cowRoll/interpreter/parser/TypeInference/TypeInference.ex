@@ -5,6 +5,7 @@ defmodule TypeInference do
   import Compatibility
   import TypeExtractor
   import TypeError
+  import Substitutions
 
   @types [:number, :string, :boolean, :list, :map]
   @basic_type [:number, :string, :boolean]
@@ -469,7 +470,9 @@ defmodule TypeInference do
     var_constraints = %{var_name => var_type}
     constraints = Map.merge(new_constraints, constraints)
     constraints = Map.merge(var_constraints, constraints)
-    infer_expression(expresion, constraints)
+    {expression_type, constraints} = infer_expression(expresion, constraints)
+    expression_type = "List of " <> to_string(expression_type)
+    {expression_type, constraints}
   end
 
   defp infer_expression(
@@ -484,26 +487,26 @@ defmodule TypeInference do
     # TODO: Hay que revisar que los tipos de los parámetros son correctos
     # Inferir el tipo de los parámetros
     # Lógica para determinar el tipo de retorno de la función
-    parameter_types = get_parameter_types(parameters)
+    parameter_types = get_parameter_types(parameters, constraints)
 
-    get_parameter_type(parameter_types, constraints, function_name, line)
-    {function_type, constraints}
+    constraints = get_parameter_type(parameter_types, constraints, function_name, line)
+    {substitution(function_type, constraints), constraints}
   end
 
-  defp infer_expression({:range, range}, contraints) do
+  defp infer_expression({:range, range}, constraints) do
     case range do
       # Caso de que sea una lista o mapa
       {first, _} when is_atom(first) ->
-        infer_expression(range, contraints)
+        infer_expression(range, constraints)
 
       # Caso de que sea una variable
       {first, _, _} when is_atom(first) ->
-        infer_expression(range, contraints)
+        infer_expression(range, constraints)
 
       # Estamos en el caso de x..y donde x e y tienen que ser integers
       {first, last} ->
         {t1, new_constraints} =
-          infer_range_type(first, contraints)
+          infer_range_type(first, constraints)
 
         {t2, new_constraints} = infer_range_type(last, new_constraints)
 
@@ -511,8 +514,8 @@ defmodule TypeInference do
     end
   end
 
-  defp get_parameter_types(parameters) do
-    case get_parameter_types_aux(parameters, %{}) do
+  defp get_parameter_types(parameters, constraints) do
+    case get_parameter_types_aux(parameters, constraints) do
       parameter_types when is_list(parameter_types) -> parameter_types
       parameter_types -> [parameter_types]
     end
@@ -557,10 +560,10 @@ defmodule TypeInference do
   defp get_var_name({:name, var_name, _line}), do: var_name
   defp get_line({_, _, line}), do: line
 
-  defp infer_range_type(element, contraints) do
+  defp infer_range_type(element, constraints) do
     integer = get_type_integer()
 
-    case infer_expression(element, contraints) do
+    case infer_expression(element, constraints) do
       {var_type, new_constraints} when is_atom(var_type) ->
         new_constraints = Map.put(new_constraints, get_var_name(element), integer)
         {var_type, new_constraints}

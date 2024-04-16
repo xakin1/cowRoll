@@ -372,6 +372,14 @@ defmodule CowRoll.ScripsDndTest do
       assert result == "1"
     end
 
+    test "error array with index" do
+      input = "['1']['0']"
+
+      assert_raise(TypeError, "The index must be an Integer but String was found", fn ->
+        Interpreter.eval_input(input)
+      end)
+    end
+
     test "array with an operation in index" do
       input = "['1',2,3,4,5,6][2+3]"
       result = Interpreter.eval_input(input)

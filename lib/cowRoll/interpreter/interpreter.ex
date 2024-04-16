@@ -110,6 +110,8 @@ defmodule Interpreter do
       index when is_integer(index) ->
         String.at(string, index)
 
+      # Es necesario debido a que tenemos que permitir string string en los indices por culpa de los mapas
+      # sin embargo indexar un string con un string no está permitido
       _ ->
         raise_index_error(get_type(index))
     end
@@ -119,9 +121,6 @@ defmodule Interpreter do
     case index do
       index when is_integer(index) ->
         Enum.at(list, index)
-
-      _ ->
-        raise_index_error(get_type(index))
     end
   end
 
@@ -287,53 +286,41 @@ defmodule Interpreter do
   end
 
   defp eval(scope, {:divi, {left_expression, right_expression}, _}) do
-    try do
-      dividend = eval(scope, left_expression)
-      divisor = eval(scope, right_expression)
+    dividend = eval(scope, left_expression)
+    divisor = eval(scope, right_expression)
 
-      case {dividend, divisor} do
-        {_, 0} ->
-          raise ArithmeticError, "Error: division by 0"
+    case {dividend, divisor} do
+      {_, 0} ->
+        raise ArithmeticError, "Error: division by 0"
 
-        {dividend, divisor} ->
-          div(dividend, divisor)
-      end
-    catch
-      {:error, error} -> raise RuntimeError, error
+      {dividend, divisor} ->
+        div(dividend, divisor)
     end
   end
 
   defp eval(scope, {:round_div, {left_expression, right_expression}, _}) do
-    try do
-      dividend = eval(scope, left_expression)
-      divisor = eval(scope, right_expression)
+    dividend = eval(scope, left_expression)
+    divisor = eval(scope, right_expression)
 
-      case {dividend, divisor} do
-        {_, 0} ->
-          raise ArithmeticError, "Error: division by 0"
+    case {dividend, divisor} do
+      {_, 0} ->
+        raise ArithmeticError, "Error: division by 0"
 
-        {dividend, divisor} ->
-          div(dividend, divisor) + ceil(rem(dividend, divisor) / divisor)
-      end
-    catch
-      {:error, error} -> throw({:error, error})
+      {dividend, divisor} ->
+        div(dividend, divisor) + ceil(rem(dividend, divisor) / divisor)
     end
   end
 
   defp eval(scope, {:mod, {left_expression, right_expression}, _}) do
-    try do
-      dividend = eval(scope, left_expression)
-      divisor = eval(scope, right_expression)
+    dividend = eval(scope, left_expression)
+    divisor = eval(scope, right_expression)
 
-      case {dividend, divisor} do
-        {_, 0} ->
-          raise ArithmeticError, "Error: division by 0"
+    case {dividend, divisor} do
+      {_, 0} ->
+        raise ArithmeticError, "Error: division by 0"
 
-        {dividend, divisor} ->
-          Integer.mod(dividend, divisor)
-      end
-    catch
-      {:error, error} -> throw({:error, error})
+      {dividend, divisor} ->
+        Integer.mod(dividend, divisor)
     end
   end
 

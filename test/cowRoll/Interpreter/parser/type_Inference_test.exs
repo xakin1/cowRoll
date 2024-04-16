@@ -589,6 +589,21 @@ defmodule CowRoll.TypeInference do
       assert output == get_type_integer()
     end
 
+    test "basic call function with parameters with var" do
+      input = "function hola_mundo (msg, range) do
+           for participants <- 1..range do
+             msg
+           end
+         end;
+         x= 'hola mundo '
+         y= 2
+         hola_mundo(x, y)
+         "
+      {output, _} = do_analyze(input)
+
+      assert output == "List of String"
+    end
+
     test "test statements" do
       input = "
 

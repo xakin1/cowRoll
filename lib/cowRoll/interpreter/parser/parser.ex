@@ -13,9 +13,6 @@ defmodule Parser do
         case analyze(tokens) do
           :ok ->
             case :grammar_spec.parse(tokens) do
-              {:error, error} ->
-                throw({:error, error})
-
               {:ok, input_parsed} ->
                 infer(input_parsed)
                 {:ok, input_parsed}
