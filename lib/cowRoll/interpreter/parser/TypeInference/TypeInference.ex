@@ -376,15 +376,11 @@ defmodule TypeInference do
        ) do
     {var_type, new_constraints} = infer_expression(range, constraints)
     integer = get_type_integer()
-    string = get_type_string()
 
     var_type =
       case var_type do
         ^integer ->
           integer
-
-        ^string ->
-          string
 
         "List of " <> _ ->
           [TypesUtils.get_type_list(), String.trim_leading(var_type, "List of ")]

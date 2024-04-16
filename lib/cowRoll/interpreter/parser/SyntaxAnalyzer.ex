@@ -1,4 +1,6 @@
 defmodule SyntaxAnalyzer do
+  import GrammarError
+
   def analyze(tokens) do
     analyze_aux(tokens, %{
       open_parenthesis: 0,
@@ -151,19 +153,13 @@ defmodule SyntaxAnalyzer do
         {[], _} ->
           # Si estamos aquí, significa que falta un 'end'
           {line, simbol} = hd(end_missing_blocks)
-          raise RuntimeError, message: "Error: Unexpected '#{simbol}' on line #{line}"
+          raise_error_unexpected_end(simbol, line)
 
         {_, []} ->
           # Si estamos aquí, significa que falta un inicio correspondiente (como 'do', 'if', 'for', etc.)
           {line, simbol} = hd(start_missing_blocks)
 
-          raise RuntimeError,
-            message: "Error: Missing 'end' for '#{simbol}' on line #{line}"
-
-        _ ->
-          # En este caso, tanto hay bloques de inicio como de fin faltantes, no podemos determinar cuál es el error principal.
-          {line, simbol} = hd(end_missing_blocks)
-          raise RuntimeError, message: "Error: Missing 'end' for '#{simbol}' on line #{line}"
+          raise_error_missing_end(simbol, line)
       end
     end
   end
@@ -176,18 +172,12 @@ defmodule SyntaxAnalyzer do
         {[], _} ->
           # Si estamos aquí, significa que falta un ')'
           {line, simbol} = hd(left_missing)
-          raise RuntimeError, message: "Error: Missing '#{simbol}' on line #{line}"
+          raise_error_missing_line(simbol, line)
 
         {_, []} ->
           # Si estamos aquí, significa que falta un (
           {line, simbol} = hd(right_missing)
-
-          raise RuntimeError, message: "Error: Missing '#{simbol}' on line #{line}"
-
-        _ ->
-          # En este caso, tanto hay bloques de inicio como de fin faltantes, no podemos determinar cuál es el error principal.
-          {line, simbol} = hd(left_missing)
-          raise RuntimeError, message: "Error: Missing '#{simbol}' on line #{line}"
+          raise_error_missing_line(simbol, line)
       end
     end
   end

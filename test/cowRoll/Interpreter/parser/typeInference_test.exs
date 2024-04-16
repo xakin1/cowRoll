@@ -102,6 +102,20 @@ defmodule CowRoll.TypeInference do
       assert output == get_type_integer()
     end
 
+    test "infer a constans" do
+      input = "3
+      'dos'"
+      {output, _} = do_analyze(input)
+      assert output == get_type_string()
+    end
+
+    test "infer a constans with previous lists" do
+      input = "[3]
+      'dos'"
+      {output, _} = do_analyze(input)
+      assert output == get_type_string()
+    end
+
     test "infer a constant: string" do
       input = "'3'"
       {output, _} = do_analyze(input)
@@ -489,6 +503,45 @@ defmodule CowRoll.TypeInference do
   end
 
   describe "static errors" do
+    test "error with <=" do
+      input = "[1]<=2
+           "
+
+      assert_raise(
+        TypeError,
+        "Error at line 1 in '<=' operation, Incompatible types: List of Integer, Integer were found but Boolean, Boolean were expected",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
+    test "error with <" do
+      input = "[1]<2
+           "
+
+      assert_raise(
+        TypeError,
+        "Error at line 1 in '<' operation, Incompatible types: List of Integer, Integer were found but Boolean, Boolean were expected",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
+    test "error with >=" do
+      input = "[1]>=2
+           "
+
+      assert_raise(
+        TypeError,
+        "Error at line 1 in '>=' operation, Incompatible types: List of Integer, Integer were found but Boolean, Boolean were expected",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
     test "basic call range x..y with not integers" do
       input = "
              for participants <- '1'..range do
@@ -617,6 +670,18 @@ defmodule CowRoll.TypeInference do
       assert_raise(
         TypeError,
         "Error at line 1 in '>' operation, Incompatible types: Integer, Map of Integer were found but Boolean, Boolean were expected",
+        fn ->
+          do_analyze(input)
+        end
+      )
+    end
+
+    test "Index error with Maps" do
+      input = "{a: 2}[true]"
+
+      assert_raise(
+        TypeError,
+        "The index must be an Integer or a String but Boolean was found",
         fn ->
           do_analyze(input)
         end

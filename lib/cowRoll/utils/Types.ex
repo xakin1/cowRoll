@@ -8,8 +8,6 @@ defmodule TypesUtils do
   def get_type(value) when is_binary(value), do: @string
   def get_type(value) when is_boolean(value), do: @boolean
   def get_type(value) when is_integer(value), do: @integer
-  def get_type(value) when is_map(value), do: @map
-  def get_type(value) when is_list(value), do: @list
 
   def get_type(:string), do: @string
   def get_type(:boolean), do: @boolean
