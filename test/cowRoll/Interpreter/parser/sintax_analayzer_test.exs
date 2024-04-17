@@ -10,6 +10,69 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       end)
     end
 
+    test "missing coma in map" do
+      input = "{a: 'c' d: 'c'}"
+
+      assert_raise(GrammarError, "Error at line 1: missing ','", fn ->
+        Parser.parse(input)
+      end)
+    end
+
+    test "missing coma in list" do
+      input = "[1 2]"
+      result = Parser.parse(input)
+
+      assert result == {:ok, {:list, {{:number, 1, 1}, {:number, 2, 1}}}}
+    end
+
+    test "bad assignament" do
+      input = "1=2"
+
+      assert_raise(
+        GrammarError,
+        "Error at line 1: Assignment can only be done to variables.",
+        fn ->
+          Parser.parse(input)
+        end
+      )
+    end
+
+    test "equal with expressions" do
+      input = "if true then true end <= if false then false end"
+
+      assert_raise(
+        GrammarError,
+        "Error at line 1: Expression can only be done with variables or constants.",
+        fn ->
+          Parser.parse(input)
+        end
+      )
+    end
+
+    test "equal with constant and expressions" do
+      input = "3 + if false then false end"
+
+      assert_raise(
+        GrammarError,
+        "Error at line 1: Expression can only be done with variables or constants.",
+        fn ->
+          Parser.parse(input)
+        end
+      )
+    end
+
+    test "equal with expressions and constant " do
+      input = "if false then false end * 3"
+
+      assert_raise(
+        GrammarError,
+        "Error at line 1: Expression can only be done with variables or constants.",
+        fn ->
+          Parser.parse(input)
+        end
+      )
+    end
+
     test "missing left parenthesis" do
       input = "3+1)"
 
@@ -31,6 +94,23 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       3: 1}"
 
       assert_raise(GrammarError, "Error: Missing '{' on line 2", fn ->
+        Parser.parse(input)
+      end)
+    end
+
+    test "missing right  bracket" do
+      input = "[1"
+
+      assert_raise(GrammarError, "Error: Missing ']' on line 1", fn ->
+        Parser.parse(input)
+      end)
+    end
+
+    test "missing left bracket" do
+      input = "
+      1]"
+
+      assert_raise(GrammarError, "Error: Missing '[' on line 2", fn ->
         Parser.parse(input)
       end)
     end
