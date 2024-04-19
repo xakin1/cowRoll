@@ -16,6 +16,9 @@ defmodule Parser do
               {:ok, input_parsed} ->
                 infer(input_parsed)
                 {:ok, input_parsed}
+
+              {:error, {line, :grammar_spec, _}} ->
+                raise GrammarError, message: "Unexpected error at line #{line}."
             end
         end
     end

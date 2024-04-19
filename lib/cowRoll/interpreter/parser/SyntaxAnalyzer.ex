@@ -48,8 +48,7 @@ defmodule SyntaxAnalyzer do
     start_missing_blocks: [],
     end_missing_blocks: [],
     bad_assignment: nil,
-    invalid_expression: nil,
-    missing_comma: nil
+    invalid_expression: nil
   }
   def analyze(tokens) do
     analyze_aux(tokens, @errors)
@@ -61,6 +60,11 @@ defmodule SyntaxAnalyzer do
 
   defp analyze_aux([{:name, _, _}, {:=, _line} | rest], records) do
     analyze_aux(rest, records)
+  end
+
+  defp analyze_aux([{:"]", line}, {:=, _line} | rest], records) do
+    new_records = count_bracket(:"]", records, line)
+    analyze_aux(rest, new_records)
   end
 
   defp analyze_aux([_, {:=, line} | rest], records) do
@@ -89,19 +93,8 @@ defmodule SyntaxAnalyzer do
         line
       end)
 
-    analyze_aux(rest, records_updated)
-  end
-
-  defp analyze_aux(
-         [{:name, _, _}, {:":", line}, _, {:name, _, _}, {:":", _} | rest],
-         records
-       ) do
-    records_updated =
-      Map.update!(records, :missing_comma, fn _ ->
-        line
-      end)
-
-    analyze_aux(rest, records_updated)
+    new_records = count_end_block(records_updated, line)
+    analyze_aux(rest, new_records)
   end
 
   defp analyze_aux([{:if, line} | rest], records) do
@@ -132,17 +125,7 @@ defmodule SyntaxAnalyzer do
   end
 
   defp analyze_aux([{:end, line} | rest], records) do
-    open_blocks = Map.get(records, :open_blocks, 0)
-    close_blocks = Map.get(records, :close_blocks, 0)
-
-    new_records =
-      if open_blocks > close_blocks do
-        Map.update!(records, :close_blocks, &(&1 + 1))
-      else
-        Map.update!(records, :close_blocks, &(&1 + 1))
-        |> Map.update!(:end_missing_blocks, &[{line, "end"} | &1])
-      end
-
+    new_records = count_end_block(records, line)
     analyze_aux(rest, new_records)
   end
 
@@ -193,16 +176,7 @@ defmodule SyntaxAnalyzer do
   end
 
   defp analyze_aux([{:"]", line} | rest], records) do
-    open_parenthesis = Map.get(records, :open_bracket, 0)
-    close_parenthesis = Map.get(records, :close_bracket, 0)
-
-    new_records =
-      if open_parenthesis > close_parenthesis do
-        Map.update!(records, :close_bracket, &(&1 + 1))
-      else
-        Map.update!(records, :close_bracket, &(&1 + 1))
-        |> Map.update!(:right_missing_bracket, &[{line, "["} | &1])
-      end
+    new_records = count_bracket(:"]", records, line)
 
     analyze_aux(rest, new_records)
   end
@@ -247,7 +221,6 @@ defmodule SyntaxAnalyzer do
     bad_assignment = Map.get(records, :bad_assignment, nil)
 
     bad_expression = Map.get(records, :invalid_expression, nil)
-    missing_comma = Map.get(records, :missing_comma, nil)
 
     check_open_close(
       {open_parenthesis, close_parenthesis, right_missing_parenthesis, left_missing_parenthesis}
@@ -262,7 +235,6 @@ defmodule SyntaxAnalyzer do
 
     check_bad_assignment(bad_assignment)
     check_bad_expression(bad_expression)
-    check_missing_comma(missing_comma)
 
     if open_blocks == close_blocks do
       :ok
@@ -298,14 +270,6 @@ defmodule SyntaxAnalyzer do
     raise_error_bad_expression(line)
   end
 
-  defp check_missing_comma(nil) do
-    :ok
-  end
-
-  defp check_missing_comma(line) do
-    raise_error_missing_comma(line)
-  end
-
   defp check_open_close({open, close, right_missing, left_missing}) do
     if open == close do
       :ok
@@ -321,6 +285,30 @@ defmodule SyntaxAnalyzer do
           {line, simbol} = hd(right_missing)
           raise_error_missing_line(simbol, line)
       end
+    end
+  end
+
+  defp count_end_block(records, line) do
+    open_blocks = Map.get(records, :open_blocks, 0)
+    close_blocks = Map.get(records, :close_blocks, 0)
+
+    if open_blocks > close_blocks do
+      Map.update!(records, :close_blocks, &(&1 + 1))
+    else
+      Map.update!(records, :close_blocks, &(&1 + 1))
+      |> Map.update!(:end_missing_blocks, &[{line, "end"} | &1])
+    end
+  end
+
+  defp count_bracket(:"]", records, line) do
+    open_parenthesis = Map.get(records, :open_bracket, 0)
+    close_parenthesis = Map.get(records, :close_bracket, 0)
+
+    if open_parenthesis > close_parenthesis do
+      Map.update!(records, :close_bracket, &(&1 + 1))
+    else
+      Map.update!(records, :close_bracket, &(&1 + 1))
+      |> Map.update!(:right_missing_bracket, &[{line, "["} | &1])
     end
   end
 end

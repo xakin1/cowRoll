@@ -10,10 +10,11 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       end)
     end
 
-    test "missing coma in map" do
-      input = "{a: 'c' d: 'c'}"
+    test "unexpected error" do
+      input = "
+      {a: [1,2,3] d: {f: 'c'} e: 2}"
 
-      assert_raise(GrammarError, "Error at line 1: missing ','", fn ->
+      assert_raise(GrammarError, "Unexpected error at line 2.", fn ->
         Parser.parse(input)
       end)
     end
