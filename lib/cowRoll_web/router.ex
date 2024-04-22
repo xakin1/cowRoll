@@ -7,8 +7,7 @@ defmodule CowRollWeb.Router do
 
   scope "/api", CowRollWeb do
     pipe_through :api
-    get "/command", ApiCommandController, :get
-    post "/command", ApiCommandController, :parse_command
+    get "/command", ApiController, :command
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
