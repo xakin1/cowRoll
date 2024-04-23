@@ -33,6 +33,7 @@ defmodule CowRoll.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.7.7"},
+      {:cors_plug, "~> 2.0"},
       {:phoenix_live_dashboard, "~> 0.8.0"},
       {:swoosh, "~> 1.3"},
       {:poison, "~> 5.0"},
