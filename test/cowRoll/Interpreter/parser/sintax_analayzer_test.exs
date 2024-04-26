@@ -1,12 +1,14 @@
-defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
+defmodule CowRoll.Interpreter.SintaxAnalayzerTest do
   use ExUnit.Case
+  import CowRoll.Parser
+
 
   describe "errors" do
     test "missing right parenthesis" do
       input = "(3+1"
 
       assert_raise(GrammarError, "Error: Missing ')' on line 1", fn ->
-        Parser.parse(input)
+        parse(input)
       end)
     end
 
@@ -15,13 +17,13 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       {a: [1,2,3] d: {f: 'c'} e: 2}"
 
       assert_raise(GrammarError, "Unexpected error at line 2.", fn ->
-        Parser.parse(input)
+        parse(input)
       end)
     end
 
     test "missing coma in list" do
       input = "[1 2]"
-      result = Parser.parse(input)
+      result = parse(input)
 
       assert result == {:ok, {:list, {{:number, 1, 1}, {:number, 2, 1}}}}
     end
@@ -33,7 +35,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
         GrammarError,
         "Error at line 1: Assignment can only be done to variables.",
         fn ->
-          Parser.parse(input)
+          parse(input)
         end
       )
     end
@@ -45,7 +47,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
         GrammarError,
         "Error at line 1: Expression can only be done with variables or constants.",
         fn ->
-          Parser.parse(input)
+          parse(input)
         end
       )
     end
@@ -57,7 +59,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
         GrammarError,
         "Error at line 1: Expression can only be done with variables or constants.",
         fn ->
-          Parser.parse(input)
+          parse(input)
         end
       )
     end
@@ -69,7 +71,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
         GrammarError,
         "Error at line 1: Expression can only be done with variables or constants.",
         fn ->
-          Parser.parse(input)
+          parse(input)
         end
       )
     end
@@ -78,7 +80,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       input = "3+1)"
 
       assert_raise(GrammarError, "Error: Missing '(' on line 1", fn ->
-        Parser.parse(input)
+        parse(input)
       end)
     end
 
@@ -86,7 +88,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       input = "{3: 1"
 
       assert_raise(GrammarError, "Error: Missing '}' on line 1", fn ->
-        Parser.parse(input)
+        parse(input)
       end)
     end
 
@@ -95,7 +97,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       3: 1}"
 
       assert_raise(GrammarError, "Error: Missing '{' on line 2", fn ->
-        Parser.parse(input)
+        parse(input)
       end)
     end
 
@@ -103,7 +105,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       input = "[1"
 
       assert_raise(GrammarError, "Error: Missing ']' on line 1", fn ->
-        Parser.parse(input)
+        parse(input)
       end)
     end
 
@@ -112,7 +114,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       1]"
 
       assert_raise(GrammarError, "Error: Missing '[' on line 2", fn ->
-        Parser.parse(input)
+        parse(input)
       end)
     end
 
@@ -121,7 +123,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       3"
 
       assert_raise(GrammarError, "Error: Missing 'end' for 'if' on line 1", fn ->
-        Parser.parse(input)
+        parse(input)
       end)
     end
 
@@ -129,7 +131,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       input = "for y <- x do 3"
 
       assert_raise(GrammarError, "Error: Missing 'end' for 'for' on line 1", fn ->
-        Parser.parse(input)
+        parse(input)
       end)
     end
 
@@ -137,7 +139,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       input = "function hola() do x +3"
 
       assert_raise(GrammarError, "Error: Missing 'end' for 'function hola' on line 1", fn ->
-        Parser.parse(input)
+        parse(input)
       end)
     end
 
@@ -147,7 +149,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
         end"
 
       assert_raise(GrammarError, "Error: Missing 'end' for 'for' on line 2", fn ->
-        Parser.parse(input)
+        parse(input)
       end)
     end
 
@@ -156,7 +158,7 @@ defmodule CowRoll.Interpreter.Parser.SintaxAnalayzerTest do
       end"
 
       assert_raise(GrammarError, "Error: Unexpected 'end' on line 2", fn ->
-        Parser.parse(input)
+        parse(input)
       end)
     end
   end

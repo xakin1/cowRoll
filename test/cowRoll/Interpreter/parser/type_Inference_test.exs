@@ -3,9 +3,11 @@ defmodule CowRoll.TypeInference do
   use ExUnit.Case
   import TypeInference
   import TypesUtils
+  import CowRoll.Parser
+
 
   defp do_analyze(input) do
-    case Parser.parse(input) do
+    case parse(input) do
       {:ok, tokens} ->
         infer(tokens)
 
