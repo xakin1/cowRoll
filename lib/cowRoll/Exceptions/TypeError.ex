@@ -1,6 +1,6 @@
 defmodule TypeError do
   import TypesUtils
-  defexception message: "Incompatible types"
+  defexception [message: "unknown error", line: nil]
 
   @spec raise_error(any(), any(), any(), any()) :: none()
   def raise_error(line, function, type1, expected_type) do

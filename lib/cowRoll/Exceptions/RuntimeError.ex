@@ -1,5 +1,5 @@
 defmodule Exceptions.RuntimeError do
-  defexception message: "Wrong grammar"
+  defexception [message: "unknown error", line: nil]
   import Tuples
 
 

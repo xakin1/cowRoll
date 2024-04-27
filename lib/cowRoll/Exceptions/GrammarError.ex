@@ -1,5 +1,5 @@
 defmodule GrammarError do
-  defexception message: "Wrong grammar"
+  defexception [message: "unknown error", line: nil]
 
   @spec raise_error_missing_line(any(), any()) :: none()
   def raise_error_missing_line(simbol, line) do

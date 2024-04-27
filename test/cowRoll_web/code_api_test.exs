@@ -12,8 +12,10 @@ defmodule CowRollWeb.CodeApiTest do
       # This assumes eval_input will raise an error for this input
       conn = post(conn, "/api/code", code: "hola")
 
-      assert json_response(conn, 200)["error"] ==
+      assert json_response(conn, 200)["errorCode"] ==
                "RuntimeError: Variable 'hola' is not defined on line 1"
+
+      assert json_response(conn, 200)["line"] == 1
     end
   end
 
@@ -21,6 +23,13 @@ defmodule CowRollWeb.CodeApiTest do
     test "save code successfully", %{conn: conn} do
       conn = post(conn, "/api/saveCode", code: "40+2")
       assert json_response(conn, 200)["message"] == "Code inserted successfully"
+    end
+
+    test "code save fail", %{conn: conn} do
+      conn = post(conn, "/api/saveCode", code: "40+'2'")
+      assert conn.status == 200
+      assert json_response(conn, 200)["errorCode"] == "TypeError: Error at line 1 in '+' operation, Incompatible types: Integer, String were found but Integer, Integer were expected"
+      assert json_response(conn, 200)["line"] == 1
     end
   end
 
@@ -33,7 +42,9 @@ defmodule CowRollWeb.CodeApiTest do
     test "compile code fail", %{conn: conn} do
       conn = post(conn, "/api/compile", code: "40+'2'")
       assert conn.status == 200
-      assert json_response(conn, 200)["error"] == "TypeError: Error at line 1 in '+' operation, Incompatible types: Integer, String were found but Integer, Integer were expected"
+      assert json_response(conn, 200)["errorCode"] == "TypeError: Error at line 1 in '+' operation, Incompatible types: Integer, String were found but Integer, Integer were expected"
+      assert json_response(conn, 200)["line"] == 1
     end
+
   end
 end
