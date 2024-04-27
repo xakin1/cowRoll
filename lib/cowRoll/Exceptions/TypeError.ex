@@ -7,7 +7,7 @@ defmodule TypeError do
     message =
       "Error at line #{line} in '#{get_function(function)}' operation, Incompatible type: #{type1} was found but #{expected_type} was expected"
 
-    raise __MODULE__, message: message
+    raise __MODULE__, message: message, line: line
   end
 
   @spec raise_error(any(), any(), any(), any(), any()) :: none()
@@ -15,8 +15,9 @@ defmodule TypeError do
     message =
       "Error at line #{line} in '#{get_function(function)}' operation, Incompatible types: #{type1}, #{type2} were found but #{expected_type}, #{expected_type} were expected"
 
-    raise __MODULE__, message: message
+    raise __MODULE__, message: message, line: line
   end
+
 
   def raise_index_error(type) do
     message =
@@ -44,6 +45,11 @@ defmodule TypeError do
   def raise_error_type(data) do
     raise __MODULE__,
           "Invalid type: '#{data}' it's a/an #{get_type(data)}. The type must be a list, map, or string."
+  end
+  @spec raise_error_parameters_type(any(), any(), any(), any()) :: none()
+  def raise_error_parameters_type(line, function_name, parameters_expected,parameters_found) do
+    raise __MODULE__,
+      "Error at line #{line}: bad number of parameters on '#{function_name}' expected #{parameters_expected} but got #{parameters_found}"
   end
 
   defp get_function(function) do

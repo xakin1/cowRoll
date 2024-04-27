@@ -665,7 +665,7 @@ defmodule CowRoll.ScripsDndTest do
 
     test "using  a variable without initializing" do
       assert_raise(
-        RuntimeError,
+        Exceptions.RuntimeError,
         "Variable 'x' is not defined on line 1",
         fn ->
           eval_input("x = x + 6")
@@ -1231,7 +1231,7 @@ defmodule CowRoll.ScripsDndTest do
       input = "hola_mundo()"
 
       assert_raise(
-        RuntimeError,
+        Exceptions.RuntimeError ,
         "Error at line 1, Undefined function: 'hola_mundo'",
         fn ->
           eval_input(input)

@@ -1,11 +1,11 @@
 defmodule CowRoll.Interpreter do
   import CowRoll.Parser
   import TreeNode
-  import Tuples
   import TypeError
   import NestedIndexFinder
   import Arrays
   import TypesUtils
+  import Exceptions.RuntimeError
 
   @type expr_ast ::
           {:mult, expr_ast, expr_ast}
@@ -183,7 +183,7 @@ defmodule CowRoll.Interpreter do
 
   defp eval(scope, {:name, variable, line}) do
     case get_variable_from_scope(scope, variable) do
-      false -> raise RuntimeError, "Variable '#{variable}' is not defined on line #{line}"
+      false -> runtimeError_raise_error(variable,line)
       value -> value
     end
   end
@@ -421,7 +421,7 @@ defmodule CowRoll.Interpreter do
        ) do
     case get_fuction_from_scope(function_name) do
       {false, name, line} ->
-        raise RuntimeError, "Error at line #{line}, Undefined function: '#{name}'"
+        raise runtimeError_raise_error_function_missing(name,line)
 
       {parameters_to_replace, code} ->
         call_function(scope, function_name, parameters, parameters_to_replace, code)
@@ -450,8 +450,7 @@ defmodule CowRoll.Interpreter do
 
     case initialize_function(scope, parameters_to_replace, parameters) do
       :error ->
-        raise RuntimeError,
-              "Error at line #{line}: bad number of parameters on #{function_name} expected #{count_tuples(parameters_to_replace)} but got #{count_tuples(parameters)}"
+        raise_error(line, function_name, parameters_to_replace, parameters)
 
       _ ->
         result = eval_block(node, code)

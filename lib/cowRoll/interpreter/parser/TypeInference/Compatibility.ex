@@ -1,6 +1,7 @@
 defmodule Compatibility do
   import TypesUtils
   import ListUtils
+  import TypeError
 
   def get_function_type(function, t1, line)
       when function in [:negative] do
@@ -14,7 +15,7 @@ defmodule Compatibility do
         integer_type
 
       _ ->
-        raise TypeError.raise_error(line, function, t1, integer_type)
+        raise raise_error(line, function, t1, integer_type)
     end
   end
 
@@ -30,7 +31,7 @@ defmodule Compatibility do
         boolean_type
 
       _ ->
-        raise TypeError.raise_error(line, function, t1, boolean_type)
+        raise raise_error(line, function, t1, boolean_type)
     end
   end
 
@@ -167,11 +168,11 @@ defmodule Compatibility do
                 if is_list?(enum) do
                   list_type
                 else
-                  TypeError.raise_error(line, function, t1, t2, string_type)
+                  raise_error(line, function, t1, t2, string_type)
                 end
 
               false ->
-                TypeError.raise_error(line, function, t1, t2, string_type)
+                raise_error(line, function, t1, t2, string_type)
             end
         end
     end
@@ -213,13 +214,13 @@ defmodule Compatibility do
         var_type
 
       {_, ^map_type} ->
-        raise TypeError.raise_index_map_error(var_type)
+        raise raise_index_map_error(var_type)
 
       {_, ^string_type} ->
-        raise TypeError.raise_index_error(var_type)
+        raise raise_index_error(var_type)
 
       {_, ^list_type} ->
-        raise TypeError.raise_index_error(var_type)
+        raise raise_index_error(var_type)
     end
   end
 
@@ -239,9 +240,8 @@ defmodule Compatibility do
     parameters_expected = map_size(parameters)
 
     if parameters_found != parameters_expected do
-      raise TypeError,
-        message:
-          "Error at line #{line}: bad number of parameters on '#{function_name}' expected #{parameters_expected} but got #{parameters_found}"
+      raise_error_parameters_type(line, function_name, parameters_expected,parameters_found)
+
     else
       check_parameters(parameters, parameter_types, function_name, constraints, line)
     end
@@ -275,7 +275,7 @@ defmodule Compatibility do
     if all_matched do
       updated_constraints
     else
-      raise TypeError, message: error_message
+      raise TypeError, message: error_message, line: line
     end
   end
 
@@ -291,7 +291,7 @@ defmodule Compatibility do
     if check_compatible(t1_enum?, t2_enum?, t1_aux, t2_aux, type) do
       returning_type
     else
-      raise TypeError.raise_error(line, function, t1, t2, returning_type)
+      raise raise_error(line, function, t1, t2, returning_type)
     end
   end
 

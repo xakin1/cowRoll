@@ -1,6 +1,7 @@
 defmodule CowRoll.Parser do
   import SyntaxAnalyzer
   import TypeInference
+  import GrammarError
 
   def init(code) do
     parse(code)
@@ -24,7 +25,7 @@ defmodule CowRoll.Parser do
                 {:ok, input_parsed}
 
               {:error, {line, :grammar_spec, _}} ->
-                raise GrammarError, message: "Unexpected error at line #{line}."
+                raise raise_unexpector_error(line)
             end
         end
 
