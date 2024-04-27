@@ -26,7 +26,7 @@ defmodule CowRoll.MixProject do
   def application do
     [
       mod: {CowRoll.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools,:mongodb,:phoenix_ecto]
     ]
   end
 
@@ -41,9 +41,10 @@ defmodule CowRoll.MixProject do
     [
       {:phoenix, "~> 1.7.7"},
       {:cors_plug, "~> 2.0"},
+      {:mongodb, "~> 1.0.0"},
+      {:phoenix_ecto, "~> 4.5.1"},
       {:phoenix_live_dashboard, "~> 0.8.0"},
       {:swoosh, "~> 1.3"},
-      {:poison, "~> 5.0"},
       {:finch, "~> 0.13"},
       {:excoveralls, "~> 0.18", only: :test},
       {:telemetry_metrics, "~> 0.6"},
