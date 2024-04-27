@@ -1,5 +1,4 @@
 defmodule CowRollWeb.CodeApiTest do
-  alias CowRollWeb.CodeEval
   use CowRollWeb.ConnCase, async: true
   use ExUnit.Case
 
@@ -15,6 +14,26 @@ defmodule CowRollWeb.CodeApiTest do
 
       assert json_response(conn, 200)["error"] ==
                "RuntimeError: Variable 'hola' is not defined on line 1"
+    end
+  end
+
+  describe "POST /saveCode" do
+    test "save code successfully", %{conn: conn} do
+      conn = post(conn, "/api/saveCode", code: "40+2")
+      assert json_response(conn, 200)["message"] == "Code inserted successfully"
+    end
+  end
+
+  describe "POST /compile" do
+    test "compile code successfully", %{conn: conn} do
+      conn = post(conn, "/api/compile", code: "40+2")
+      assert conn.status == 200
+    end
+
+    test "compile code fail", %{conn: conn} do
+      conn = post(conn, "/api/compile", code: "40+'2'")
+      assert conn.status == 200
+      assert json_response(conn, 200)["error"] == "TypeError: Error at line 1 in '+' operation, Incompatible types: Integer, String were found but Integer, Integer were expected"
     end
   end
 end
