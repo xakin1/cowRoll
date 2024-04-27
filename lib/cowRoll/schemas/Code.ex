@@ -12,16 +12,6 @@ defmodule CowRoll.Code do
     field :code,    :string
   end
 
-  setup do
-    # This is the correct place to put setup code for tests
-    Mix.shell().info("Reset all data")
-    # Here you might need to ensure the Mongo connection is available and the call succeeds
-    Mongo.delete_many(:mongo, "code", %{})
-    :ok
-  end
-
-
-
   def changeset_new_user(user, params \\ %{}) do
     params = scrub_params(params)  # change "" to nil
     user
