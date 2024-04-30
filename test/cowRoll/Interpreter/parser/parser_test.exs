@@ -864,6 +864,52 @@ defmodule CowRoll.ParserTest do
     end
   end
 
+  describe "comments" do
+    test "parse comments lines" do
+      input = "
+      #Este comentario no lo debería parsear
+      1+1"
+      {:ok, token} = parse(input)
+
+      assert token == {:plus, {{:number, 1, 3}, {:number, 1, 3}}, {:+, 3}}
+
+      input = "
+      #Este comentario no lo debería parsear 1+1
+      1+1"
+      {:ok, token} = parse(input)
+
+      assert token == {:plus, {{:number, 1, 3}, {:number, 1, 3}}, {:+, 3}}
+    end
+
+    test "parse comments with multiple lines lines" do
+      input = "
+      /*Este comentario no lo debería parsear
+      for x <- y do
+        x = 2 + 1
+      end */
+      1+1"
+      {:ok, token} = parse(input)
+
+      assert token == {:plus, {{:number, 1, 6}, {:number, 1, 6}}, {:+, 6}}
+    end
+
+    test "parse comments with missing close comments" do
+      input = "
+      /* for x <- y do
+        x = 2 + 1
+      end
+      1+1"
+
+      assert_raise(
+        GrammarError,
+        "Error: Missing '*/' on line 2",
+        fn ->
+          parse(input)
+        end
+      )
+    end
+  end
+
   describe "plus" do
     test "parse plus operation" do
       input = "1+1"

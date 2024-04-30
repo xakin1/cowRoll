@@ -24,6 +24,8 @@ LEFT_BRACKET        = \[
 RIGHT_BRACKET       = \]
 LEFT_CURLY_BRACKET  = \{
 RIGHT_CURLY_BRACKET = \}
+LINE_COMMENT          = \#[^\n]*
+BLOCK_COMMENT         = \/\*[^*]*\*+([^/*][^*]*\*+)*\/
 NAME              = [a-zA-Z_áéíóúÁÉÍÓÚüÜñÑ]+[a-zA-Z0-9_áéíóúÁÉÍÓÚüÜñÑ]*
 
 RANGE             = \.\.
@@ -34,6 +36,9 @@ NEGATIVE_NUMBER   = \-\s*[0-9]+
 Rules.
 
 {WHITESPACE} : skip_token.
+{LINE_COMMENT} : skip_token.
+{BLOCK_COMMENT} : skip_token.
+
 
 {RANGE}      : {token, {'..', to_string(TokenChars),TokenLine}}.
 

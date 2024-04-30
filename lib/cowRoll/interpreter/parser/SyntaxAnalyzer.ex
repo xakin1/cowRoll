@@ -29,6 +29,8 @@ defmodule SyntaxAnalyzer do
   @errors %{
     open_parenthesis: 0,
     close_parenthesis: 0,
+    open_comments: 0,
+    close_comments: 0,
     open_curly_bracket: 0,
     close_curly_bracket: 0,
     open_bracket: 0,
@@ -46,6 +48,8 @@ defmodule SyntaxAnalyzer do
     left_missing_quotes: [],
     right_missing_quotes: [],
     start_missing_blocks: [],
+    open_missing_comments: [],
+    close_missing_comments: [],
     end_missing_blocks: [],
     bad_assignment: nil,
     invalid_expression: nil
@@ -56,6 +60,29 @@ defmodule SyntaxAnalyzer do
 
   defp analyze_aux([], records) do
     process_analyze(records)
+  end
+
+  defp analyze_aux([{:*, line}, {:/, line} | rest], records) do
+    open_comment = Map.get(records, :open_comments, 0)
+    close_comment = Map.get(records, :close_comment, 0)
+
+    new_records =
+      if open_comment > close_comment do
+        Map.update!(records, :close_comment, &(&1 + 1))
+      else
+        Map.update!(records, :close_comment, &(&1 + 1))
+        |> Map.update!(:close_missing_comments, &[{line, "/*"} | &1])
+      end
+
+    analyze_aux(rest, new_records)
+  end
+
+  defp analyze_aux([{:/, line}, {:*, line} | rest], records) do
+    records_updated =
+      Map.update!(records, :open_comments, &(&1 + 1))
+      |> Map.update!(:open_missing_comments, &[{line, "*/"} | &1])
+
+    analyze_aux(rest, records_updated)
   end
 
   defp analyze_aux([{:name, _, _}, {:=, _line} | rest], records) do
@@ -197,6 +224,9 @@ defmodule SyntaxAnalyzer do
     open_parenthesis = Map.get(records, :open_parenthesis, 0)
     close_parenthesis = Map.get(records, :close_parenthesis, 0)
 
+    open_comments = Map.get(records, :open_comments, 0)
+    close_comments = Map.get(records, :close_comments, 0)
+
     right_missing_parenthesis = Map.get(records, :right_missing_parenthesis, [])
     left_missing_parenthesis = Map.get(records, :left_missing_parenthesis, [])
 
@@ -208,6 +238,9 @@ defmodule SyntaxAnalyzer do
 
     open_curly_bracket = Map.get(records, :open_curly_bracket, 0)
     close_curly_bracket = Map.get(records, :close_curly_bracket, 0)
+
+    open_missing_comments = Map.get(records, :open_missing_comments, 0)
+    close_missing_comments = Map.get(records, :close_missing_comments, 0)
 
     right_missing_curly_bracket = Map.get(records, :right_missing_curly_bracket, [])
     left_missing_curly_bracket = Map.get(records, :left_missing_curly_bracket, [])
@@ -229,6 +262,10 @@ defmodule SyntaxAnalyzer do
     check_open_close(
       {open_curly_bracket, close_curly_bracket, right_missing_curly_bracket,
        left_missing_curly_bracket}
+    )
+
+    check_open_close(
+      {open_comments, close_comments, open_missing_comments, close_missing_comments}
     )
 
     check_open_close({open_bracket, close_bracket, right_missing_bracket, left_missing_bracket})
