@@ -9,7 +9,8 @@ defmodule CowRollWeb.Router do
   scope "/api", CowRollWeb do
     pipe_through :api
     post "/code", CodeController, :run_code
-    post "/saveCode", CodeController, :save_code
+    get "/file/:id", CodeController, :get_files
+    post "/saveCode/:id", CodeController, :save_code
     post "/compile", CodeController, :compile_code
     options "/*path", CorsManagement, :handle_options
   end
