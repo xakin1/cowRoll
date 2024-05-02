@@ -34,6 +34,16 @@ defmodule CowRollWeb.ConnCase do
   end
 
   setup _tags do
+<<<<<<< Updated upstream
+=======
+    Mix.shell().info("Reset all data")
+    Mongo.delete_many(:mongo, "code", %{})
+    # Se ejecuta al final de cada test
+    on_exit(fn ->
+      Mongo.delete_many(:mongo, "code", %{})
+    end)
+
+>>>>>>> Stashed changes
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end
