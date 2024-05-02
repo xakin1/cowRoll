@@ -8,20 +8,13 @@ defmodule CowRoll.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Start the Telemetry supervisor
       CowRollWeb.Telemetry,
-      # Start the PubSub system
       {Phoenix.PubSub, name: CowRoll.PubSub},
-      # Start Finch
       {Finch, name: CowRoll.Finch},
-      # Start the Endpoint (http/https)
-      CowRollWeb.Endpoint
-      # Start a worker by calling: CowRoll.Worker.start_link(arg)
-      # {CowRoll.Worker, arg}
+      {CowRollWeb.Endpoint, []},
+      {Mongo, Application.get_env(:cowRoll, CowRoll.Mongo)}
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: CowRoll.Supervisor]
     Supervisor.start_link(children, opts)
   end

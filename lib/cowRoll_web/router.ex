@@ -3,20 +3,15 @@ defmodule CowRollWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug CORSPlug
   end
 
   scope "/api", CowRollWeb do
     pipe_through :api
-<<<<<<< Updated upstream
-    get "/command", ApiCommandController, :get
-    post "/command", ApiCommandController, :parse_command
-=======
     post "/code", CodeController, :run_code
-    get "/file/:id", CodeController, :get_files
-    post "/saveCode/:id", CodeController, :save_code
+    post "/saveCode", CodeController, :save_code
     post "/compile", CodeController, :compile_code
     options "/*path", CorsManagement, :handle_options
->>>>>>> Stashed changes
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

@@ -26,24 +26,21 @@ defmodule CowRollWeb.ConnCase do
 
       # Import conveniences for testing with connections
       import Plug.Conn
-      import Poison
       import ExUnit.Case
       import Phoenix.ConnTest
       import CowRollWeb.ConnCase
     end
   end
 
+  # Se ejecuta al principio de cada test
   setup _tags do
-<<<<<<< Updated upstream
-=======
-    Mix.shell().info("Reset all data")
+    Mix.shell.info "Reset all data"
     Mongo.delete_many(:mongo, "code", %{})
     # Se ejecuta al final de cada test
     on_exit(fn ->
       Mongo.delete_many(:mongo, "code", %{})
     end)
-
->>>>>>> Stashed changes
     {:ok, conn: Phoenix.ConnTest.build_conn()}
+
   end
 end

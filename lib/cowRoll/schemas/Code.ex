@@ -5,25 +5,22 @@ defmodule CowRoll.Code do
 
   use ExUnit.CaseTemplate
 
-  # the id maps to uuid
-  @primary_key {:id, :binary_id, autogenerate: true}
+
+  @primary_key {:id, :binary_id, autogenerate: true}  # the id maps to uuid
   schema "code" do
-    field(:userId, :integer)
-    field(:fileName, :string)
-    field(:code, :string)
+    field :user_id, :integer
+    field :code,    :string
   end
 
-  def changeset_new_file(file, params \\ %{}) do
-    # change "" to nil
-    params = scrub_params(params)
-
-    file
-    |> cast(params, [:userId, :code, :fileName])
+  def changeset_new_user(user, params \\ %{}) do
+    params = scrub_params(params)  # change "" to nil
+    user
+      |> cast(params, [:user_id, :code])
   end
 
   defp scrub_params(params) do
     Enum.reduce(params, %{}, fn {k, v}, acc ->
-      Map.put(acc, k, if(v == "", do: nil, else: v))
+      Map.put(acc, k, (if v == "", do: nil, else: v))
     end)
   end
 end

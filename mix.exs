@@ -7,6 +7,13 @@ defmodule CowRoll.MixProject do
       version: "0.1.0",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -19,7 +26,7 @@ defmodule CowRoll.MixProject do
   def application do
     [
       mod: {CowRoll.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools,:mongodb,:phoenix_ecto]
     ]
   end
 
@@ -33,10 +40,13 @@ defmodule CowRoll.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.7.7"},
+      {:cors_plug, "~> 2.0"},
+      {:mongodb, "~> 1.0.0"},
+      {:phoenix_ecto, "~> 4.5.1"},
       {:phoenix_live_dashboard, "~> 0.8.0"},
       {:swoosh, "~> 1.3"},
-      {:poison, "~> 5.0"},
       {:finch, "~> 0.13"},
+      {:excoveralls, "~> 0.18", only: :test},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},

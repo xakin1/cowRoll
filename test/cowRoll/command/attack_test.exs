@@ -1,23 +1,7 @@
 defmodule CowRoll.AttackTest do
   # Importa ExUnit.Case para definir pruebas
   use ExUnit.Case
-  import Attack
 
-<<<<<<< Updated upstream
-  @json_data %{
-    "command" => %{
-      "name" => "attack",
-      "target" => %{
-        "ca" => 12,
-        "class" => "warlock",
-        "hitPoints" => 18,
-        "race" => "tiefling",
-        "resistences" => %{
-          "fire" => %{
-            "phisical" => 0.25,
-            "magical" => 0.5
-          }
-=======
   describe "scrip test" do
     test "command creation sheet" do
       :rand.seed(:exsplus, {1, 2, 3})
@@ -25,9 +9,9 @@ defmodule CowRoll.AttackTest do
       input = "
       function roll_dices(number_of_dices, number_of_face) do
         if (number_of_dices<=0 or number_of_face <0 ) then
-        0
+        -1
         else
-        roll = rand(number_of_face)
+        roll = rand(number_of_face) - 1
         roll + roll_dices(number_of_dices - 1, number_of_face)
         end
     end
@@ -117,288 +101,152 @@ defmodule CowRoll.AttackTest do
             competencias_armas: ['dagas', 'dardos', 'hondas', 'ballesta ligera'],
             competencias_armaduras: [],
             habilidades: ['pacto arcana', 'invocaciones']
->>>>>>> Stashed changes
         }
-      },
-      "weapon" => %{
-        "name" => "daga",
-        "dice" => %{
-          "dice" => "2d4",
-          "dmgType" => "phisical piercing"
-        },
-        "bonus" => "5 + 4",
-        "additionalDice" => [
-          %{
-            "dice" => "1d4",
-            "dmgType" => "phisical poison"
-          }
-        ],
-        "attackRoll" => "1d20"
-      }
     }
-  }
 
-  describe "hit_success?/1" do
-    test "returns :ok when attackRoll is defined" do
-      resp =
-        case hit_success?(@json_data["command"]) do
-          {:ok, _} -> true
-          _ -> false
+    razas = {
+        enano: {
+            velocidad:25,
+            proficiencias_armas:['hacha de guerra', 'martillo de guerra', 'ballesta ligera', 'ballesta pesada'],
+            proficiencias_armaduras:['armaduras ligeras', 'armaduras intermedias'],
+            subrazas: {
+                montaña: {
+                    habilidades_especiales: ['portador de armadura enana']
+                },
+                colina: {
+                    habilidades_especiales: ['resistencia enana']
+                }
+            }
+        },
+        elfo: {
+            velocidad:30,
+            proficiencias_armas:['espada larga', 'arco largo', 'espada corta', 'arco corto'],
+            proficiencias_armaduras:['armaduras ligeras'],
+            subrazas: {
+                alto_elfo: {
+                    habilidades_especiales: ['trance élfico', 'conjuro de prestidigitación']
+                },
+                elfo_del_bosque: {
+                    habilidades_especiales: ['máscara natural', 'sentido del cazador']
+                }
+            }
+        },
+        humano: {
+            velocidad:30,
+            proficiencias_armas:['cualquier arma'],
+            proficiencias_armaduras:['cualquier armadura'],
+            subrazas: {
+                versátil: {
+                    habilidades_especiales: ['entrenamiento adicional']
+                }
+            }
+        },
+        halfling: {
+            velocidad:25,
+            proficiencias_armas:['honda', 'daga', 'cimitarra'],
+            proficiencias_armaduras:[],
+            subrazas: {
+                ligón: {
+                    habilidades_especiales: ['suerte', 'sigiloso']
+                },
+                robusto: {
+                    habilidades_especiales: ['resiliencia halfling']
+                }
+            }
+        },
+        mediano: {
+            velocidad:25,
+            proficiencias_armas:['honda', 'daga', 'cimitarra'],
+            proficiencias_armaduras:[],
+            subrazas: {
+                ligón: {
+                    habilidades_especiales: ['suerte', 'sigiloso']
+                },
+                robusto: {
+                    habilidades_especiales: ['resiliencia halfling']
+                }
+            }
+        },
+        dragonborn: {
+            velocidad:30,
+            proficiencias_armas:['espada larga', 'espada corta', 'ballesta ligera'],
+            proficiencias_armaduras:[],
+            subrazas: {
+                fuego: {
+                    habilidades_especiales: ['aliento de fuego']
+                },
+                hielo: {
+                    habilidades_especiales: ['aliento de hielo']
+                }
+            }
+        },
+        gnomo: {
+            velocidad:25,
+            proficiencias_armas:['espada larga', 'espada corta', 'ballesta ligera'],
+            proficiencias_armaduras:[],
+            subrazas: {
+                ingeniero: {
+                    habilidades_especiales: ['truco de herramientas de ingeniero']
+                },
+                forestal: {
+                    habilidades_especiales: ['hablar con pequeñas bestias']
+                }
+            }
+        },
+        tiefling: {
+            velocidad:30,
+            proficiencias_armas:['espada larga', 'espada corta'],
+            proficiencias_armaduras:[],
+            subrazas: {
+                asmodeus: {
+                    habilidades_especiales: ['resistencia a fuego', 'conjuro de prestidigitación']
+                },
+                mefistófeles: {
+                    habilidades_especiales: ['resistencia a fuego', 'llamas de thamaturgia']
+                }
+            }
+        }
+    }
+
+    clases_nombres = ['barbaro', 'bardo', 'clerigo', 'druida', 'hechicero', 'mago', 'monje', 'paladin', 'explorador', 'brujo']
+    razas_nombres = ['enano', 'elfo', 'humano', 'halfling', 'mediano', 'dragonborn', 'gnomo', 'tiefling']
+
+
+    function contar_longitud(lista) do
+        longitud = -1
+        for elemento <- lista do
+            longitud = longitud + 1
         end
-
-      assert resp
+        if longitud == -1 then nil else longitud end
+        longitud
     end
 
-    test "shoud be true dice > ca" do
-      json = %{
-        "command" => %{
-          "name" => "attack",
-          "target" => %{
-            "ca" => 12,
-            "class" => "warlock",
-            "hitPoints" => 18,
-            "race" => "tiefling",
-            "resistences" => %{
-              "fire" => %{
-                "phisical" => 0.25,
-                "magical" => 0.5
-              }
-            }
-          },
-          "weapon" => %{
-            "name" => "daga",
-            "dice" => %{
-              "dice" => "2d4",
-              "dmgType" => "phisical piercing"
-            },
-            "bonus" => "5 + 4",
-            "additionalDice" => [
-              %{
-                "dice" => "1d4",
-                "dmgType" => "phisical poison"
-              }
-            ],
-            "attackRoll" => "15d20"
-          }
-        }
-      }
-
-      assert hit_success?(json["command"]) == {:ok, true}
-    end
-
-    test "shoud return an error ca nil" do
-      json = %{
-        "command" => %{
-          "name" => "attack",
-          "target" => %{
-            "ca" => nil,
-            "class" => "warlock",
-            "hitPoints" => 18,
-            "race" => "tiefling",
-            "resistences" => %{
-              "fire" => %{
-                "phisical" => 0.25,
-                "magical" => 0.5
-              }
-            }
-          },
-          "weapon" => %{
-            "name" => "daga",
-            "dice" => %{
-              "dice" => "2d4",
-              "dmgType" => "phisical piercing"
-            },
-            "bonus" => "5 + 4",
-            "additionalDice" => [
-              %{
-                "dice" => "1d4",
-                "dmgType" => "phisical poison"
-              }
-            ],
-            "attackRoll" => "1d10"
-          }
-        }
-      }
-
-      assert hit_success?(json["command"]) == {:error, "No CA was found"}
-    end
-
-    test "shoud be false dice < ca" do
-      json = %{
-        "command" => %{
-          "name" => "attack",
-          "target" => %{
-            "ca" => 12,
-            "class" => "warlock",
-            "hitPoints" => 18,
-            "race" => "tiefling",
-            "resistences" => %{
-              "fire" => %{
-                "phisical" => 0.25,
-                "magical" => 0.5
-              }
-            }
-          },
-          "weapon" => %{
-            "name" => "daga",
-            "dice" => %{
-              "dice" => "2d4",
-              "dmgType" => "phisical piercing"
-            },
-            "bonus" => "5 + 4",
-            "additionalDice" => [
-              %{
-                "dice" => "1d4",
-                "dmgType" => "phisical poison"
-              }
-            ],
-            "attackRoll" => "1d10"
-          }
-        }
-      }
-
-      assert hit_success?(json["command"]) == {:ok, false}
-    end
-  end
-
-  describe "do_attack/1" do
-    test "shoud return hit and return true" do
-      json = %{
-        "command" => %{
-          "name" => "attack",
-          "target" => %{
-            "ca" => 12,
-            "class" => "warlock",
-            "hitPoints" => 18,
-            "race" => "tiefling",
-            "resistences" => %{
-              "fire" => %{
-                "phisical" => 0.25,
-                "magical" => 0.5
-              }
-            }
-          },
-          "weapon" => %{
-            "name" => "daga",
-            "dice" => %{
-              "dice" => "2d4",
-              "dmgType" => "phisical piercing"
-            },
-            "bonus" => "5 + 4",
-            "additionalDice" => [
-              %{
-                "dice" => "1d4",
-                "dmgType" => "phisical poison"
-              }
-            ],
-            "attackRoll" => "12d20"
-          }
-        }
-      }
-
-      resp =
-        case do_attack(json["command"]) do
-          {:ok, _, _} ->
-            true
-
-          {:ok, _} ->
-            true
-
-          {:error, _} ->
-            false
+    function obtener_vida_por_nivel(clase) do
+        if clase == 'barbaro' then
+            roll_dices(1,12)
+        elseif clase == 'bardo' then
+            roll_dices(1,8)
+        elseif clase == 'clerigo' then
+            roll_dices(1,8)
+        elseif clase == 'fruida' then
+            roll_dices(1,8)
+        elseif clase == 'hechicero' then
+            roll_dices(1,6)
+        elseif clase == 'mago' then
+            roll_dices(1,6)
+        elseif clase == 'monje' then
+            roll_dices(1,8)
+        elseif clase == 'paladín' then
+            roll_dices(1,10)
+        elseif clase == 'pícaro' then
+            roll_dices(1,8)
+        elseif clase == 'ranger' then
+            roll_dices(1,10)
+        elseif clase == 'brujo' then
+            roll_dices(1,8)
+        else
+            0
         end
-
-      assert resp
-    end
-
-    test "shoud return fail" do
-      json = %{
-        "command" => %{
-          "name" => "attack",
-          "target" => %{
-            "ca" => 12,
-            "class" => "warlock",
-            "hitPoints" => 18,
-            "race" => "tiefling",
-            "resistences" => %{
-              "fire" => %{
-                "phisical" => 0.25,
-                "magical" => 0.5
-              }
-            }
-          },
-          "weapon" => %{
-            "name" => "daga",
-            "dice" => %{
-              "dice" => "2d4",
-              "dmgType" => "phisical piercing"
-            },
-            "bonus" => "5 + 4",
-            "additionalDice" => [
-              %{
-                "dice" => "1dx",
-                "dmgType" => "phisical poison"
-              }
-            ],
-            "attackRoll" => "12d20"
-          }
-        }
-      }
-
-      assert do_attack(json["command"]) == {:error, "Invalid input format"}
-    end
-
-    test "shoud apply resistences" do
-      json = %{
-        "command" => %{
-          "name" => "attack",
-          "target" => %{
-            "ca" => 12,
-            "class" => "warlock",
-            "hitPoints" => 18,
-            "race" => "tiefling",
-            "resistences" => %{
-              "fire" => %{
-                "phisical" => 0.25,
-                "magical" => 0.5
-              }
-            }
-          },
-          "weapon" => %{
-            "name" => "daga",
-            "dice" => %{
-              "dice" => "2d4",
-              "dmgType" => "phisical piercing"
-            },
-            "bonus" => "5 + 4",
-            "additionalDice" => [
-              %{
-                "dice" => "1d4",
-                "dmgType" => "phisical fire"
-              }
-            ],
-            "attackRoll" => "12d20"
-          }
-        }
-      }
-
-      for _ <- 1..100 do
-        case do_attack(json["command"]) do
-          {:ok, _, total_damage} ->
-            check = 2 <= total_damage and total_damage <= 8 + 4 * 0.25
-
-            if false == check do
-              IO.puts(to_string(total_damage))
-            end
-
-            assert check
-
-          {:error, _} ->
-            false
-        end
-<<<<<<< Updated upstream
-      end
-=======
     end
 
     function generar_estadisticas_base() do
@@ -417,8 +265,8 @@ defmodule CowRoll.AttackTest do
         edad = roll_dices(1,20 + 10)
         estadisticas = generar_estadisticas_base()
 
-        numero_de_clases = rand(contar_longitud(clases_nombres))
-        numero_de_razas = rand(contar_longitud(razas_nombres))
+        numero_de_clases = contar_longitud(clases_nombres)
+        numero_de_razas = contar_longitud(razas_nombres)
         nombre_de_clase = clases_nombres[numero_de_clases]
         nombre_de_raza = razas_nombres[numero_de_razas]
         clase_aleatoria = clases[nombre_de_clase]
@@ -481,7 +329,6 @@ defmodule CowRoll.AttackTest do
                },
                "vida_total" => 11
              }
->>>>>>> Stashed changes
     end
   end
 end
