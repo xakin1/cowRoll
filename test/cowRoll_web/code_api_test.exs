@@ -69,6 +69,15 @@ defmodule CowRollWeb.CodeApiTest do
       assert conn.status == 200
     end
 
+    test "get overwrite documments", %{conn: conn} do
+      conn = post(conn, "/api/saveCode/1", code: "42+2", fileName: "example")
+      assert conn.status == 200
+      conn = post(conn, "/api/saveCode/1", code: "40+2", fileName: "example")
+      assert conn.status == 200
+      conn = get(conn, "/api/file/1")
+      assert json_response(conn, 200)["data"] == [%{"code" => "40+2", "fileName" => "example"}]
+    end
+
     test "get documments succesfully", %{conn: conn} do
       conn = post(conn, "/api/saveCode/1", code: "40+2", fileName: "example")
       assert conn.status == 200

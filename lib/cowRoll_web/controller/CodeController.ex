@@ -21,62 +21,43 @@ defmodule CowRollWeb.CodeController do
 
   def save_code(conn, %{"id" => user_id}) do
     user_id = String.to_integer(user_id)
-
     code = conn.body_params["code"]
     name = conn.body_params["fileName"]
 
-    if(name != "" and name != nil) do
-      try do
-        changeset =
-          CowRoll.Code.changeset_new_file(%CowRoll.Code{}, %{
-            fileName: name,
-            code: code,
-            userId: user_id
-          })
+    if name not in [nil, ""] do
+      case find_or_create_code(name, user_id, code) do
+        {:ok, _result} ->
+          json(conn, %{message: "Code saved successfully"})
 
-        parse(code)
-
-        case Mongo.insert_one(:mongo, "code", changeset.changes) do
-          {:ok, _result} ->
-            json(conn, %{message: "Code inserted successfully"})
-
-          {:error, _} ->
-            json(conn, %{error: %{error: "Failed to insert code", errorCode: "", line: nil}})
-        end
-      rescue
-        e ->
-          error_type = e.__struct__ |> Module.split() |> List.last()
-          error_message = Exception.message(e)
-          full_message = "#{error_type}: #{error_message}"
-
-          changeset =
-            CowRoll.Code.changeset_new_file(%CowRoll.Code{}, %{
-              code: code,
-              fileName: name,
-              userId: user_id
-            })
-
-          case Mongo.insert_one(:mongo, "code", changeset.changes) do
-            {:ok, _result} ->
-              json(conn, %{
-                message: "Code inserted successfully",
-                error: %{error: "Failed to insert code", errorCode: full_message, line: e.line}
-              })
-
-            {:error, _} ->
-              json(conn, %{
-                error: %{error: "Failed to insert code", errorCode: full_message, line: e.line}
-              })
-          end
+        {:error, reason} ->
+          json(conn, %{error: reason})
       end
     else
       json(conn, %{
-        error: %{
-          error: "Failed to insert code",
-          errorCode: "File name cant be empty",
-          line: nil
-        }
+        error: "File name can't be empty"
       })
+    end
+  end
+
+  defp find_or_create_code(name, user_id, code) do
+    query = %{
+      userId: user_id,
+      fileName: name
+    }
+
+    changeset =
+      CowRoll.Code.changeset_new_file(%CowRoll.Code{}, %{
+        fileName: name,
+        code: code,
+        userId: user_id
+      })
+
+    case Mongo.find_one(:mongo, "code", query) do
+      nil ->
+        Mongo.insert_one(:mongo, "code", changeset.changes)
+
+      %{"_id" => existing_id} ->
+        Mongo.update_one(:mongo, "code", %{_id: existing_id}, %{"$set" => %{code: code}})
     end
   end
 

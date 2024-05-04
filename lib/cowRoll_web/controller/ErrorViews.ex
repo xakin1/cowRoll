@@ -1,4 +1,4 @@
-defmodule CowRollWeb.ErrorView do
+defmodule CowRollWeb.ErrorJSON do
   def render("500.json", _assigns) do
     %{error: "Internal server error"}
   end

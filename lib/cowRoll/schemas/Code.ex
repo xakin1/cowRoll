@@ -19,6 +19,7 @@ defmodule CowRoll.Code do
 
     file
     |> cast(params, [:userId, :code, :fileName])
+    |> validate_required([:userId, :fileName, :code])
   end
 
   defp scrub_params(params) do
