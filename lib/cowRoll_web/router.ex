@@ -10,8 +10,9 @@ defmodule CowRollWeb.Router do
     pipe_through :api
     post "/code", CodeController, :run_code
     get "/file/:id", CodeController, :get_files
-    post "/renameFile/:id", CodeController, :rename_file
-    post "/saveCode/:id", CodeController, :save_code
+    post "/editFile/:id", CodeController, :edit_file
+    post "/editDirectory/:id", CodeController, :edit_directory
+    post "/insertContent/:id", CodeController, :insert_content
     post "/compile", CodeController, :compile_code
     options "/*path", CorsManagement, :handle_options
   end

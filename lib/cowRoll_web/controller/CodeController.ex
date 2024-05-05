@@ -2,6 +2,8 @@ defmodule CowRollWeb.CodeController do
   alias CowRoll.Interpreter
   import Interpreter
   import CowRoll.Parser
+  import CowRoll.Directory
+  import CowRoll.File
   use CowRollWeb, :controller
   require Logger
 
@@ -19,101 +21,61 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def save_code(conn, %{"id" => user_id}) do
-    user_id = String.to_integer(user_id)
-    code = conn.body_params["content"]
+  def insert_content(conn, %{"id" => user_id}) do
+    user_id = parse_id(user_id, conn)
+    content = conn.body_params["content"]
     name = conn.body_params["name"]
-    directory_name = conn.body_params["directoryName"]
+    directory_name = conn.body_params["directory"]
+    parent_directory_id = conn.body_params["parentId"]
 
-    case find_or_create_directory(directory_name, user_id) do
-      {:ok, directory_name} ->
-        if name not in [nil, ""] do
-          case find_or_create_code(name, user_id, code, directory_name.inserted_id) do
-            {:ok, _result} ->
-              try do
-                parse(code)
-                json(conn, %{message: "Code saved successfully"})
-              rescue
-                e ->
-                  error_type = e.__struct__ |> Module.split() |> List.last()
-                  error_message = Exception.message(e)
-                  full_message = "#{error_type}: #{error_message}"
-
-                  json(conn, %{
-                    message: "Code inserted successfully",
-                    error: %{
-                      error: "Failed to insert code",
-                      errorCode: full_message,
-                      line: e.line
-                    }
-                  })
-              end
-
-            {:error, reason} ->
-              json(conn, %{error: reason})
-          end
-        else
-          if(code in [nil, ""]) do
-            json(conn, %{
-              message: "Directory create was created succesfully"
-            })
-          else
-            json(conn, %{
-              error: "File name can't be empty"
-            })
-          end
-        end
-
-      {:error, reason} ->
-        json(conn, %{error: reason})
+    case find_or_create_directory(user_id, directory_name, parent_directory_id) do
+      {:ok, directory_id} -> insert_content(directory_id, name, user_id, content, conn)
+      {:error, reason} -> conn |> put_status(:not_found) |> json(%{error: reason})
     end
   end
 
-  defp find_or_create_directory(name, user_id) do
-    query = %{userId: user_id, name: name, type: "directory"}
+  defp insert_content(directory_id, name, user_id, code, conn) do
+    if name not in [nil, ""] do
+      case update_or_create_file(name, user_id, code, directory_id) do
+        {:ok, _result} ->
+          try do
+            parse(code)
+            json(conn, %{message: "Code saved successfully"})
+          rescue
+            e ->
+              error_type = e.__struct__ |> Module.split() |> List.last()
+              error_message = Exception.message(e)
+              full_message = "#{error_type}: #{error_message}"
 
-    case Mongo.find_one(:mongo, "code", query) do
-      nil ->
-        changeset =
-          CowRoll.Directory.changeset(
-            %CowRoll.Directory{},
-            %{userId: user_id, name: name, type: "directory"}
-          )
+              json(conn, %{
+                message: "Code saved successfully",
+                error: %{
+                  error: "Failed to compile code",
+                  errorCode: full_message,
+                  line: e.line
+                }
+              })
+          end
 
-        Mongo.insert_one(:mongo, "code", changeset.changes)
-
-      directory ->
-        directory
-    end
-  end
-
-  defp find_or_create_code(name, user_id, code, directory_id) do
-    query = %{
-      userId: user_id,
-      name: name,
-      directory_id: directory_id
-    }
-
-    changeset =
-      CowRoll.File.changeset(%CowRoll.File{}, %{
-        name: name,
-        content: code,
-        userId: user_id,
-        directory_id: directory_id
-      })
-
-    case Mongo.find_one(:mongo, "code", query) do
-      nil ->
-        Mongo.insert_one(:mongo, "code", changeset.changes)
-
-      %{"_id" => existing_id} ->
-        Mongo.update_one(:mongo, "code", %{_id: existing_id}, %{"$set" => %{content: code}})
+        {:error, reason} ->
+          json(conn, %{error: reason})
+      end
+    else
+      if(code in [nil, ""]) do
+        json(conn, %{
+          message: "Directory create was created succesfully"
+        })
+      else
+        json(conn, %{
+          error: "File name can't be empty"
+        })
+      end
     end
   end
 
   def compile_code(conn, _) do
     try do
-      code = conn.body_params["code"]
+      code = conn.body_params["content"]
 
       parse(code)
       send_resp(conn, 200, "")
@@ -127,64 +89,55 @@ defmodule CowRollWeb.CodeController do
   end
 
   def get_files(conn, %{"id" => user_id}) do
-    try do
-      case Integer.parse(user_id) do
-        :error ->
-          conn
-          |> put_status(:bad_request)
-          |> json(%{error: "Invalid user ID"})
+    user_id = parse_id(user_id, conn)
+    tree = get_directory_structure(user_id)
 
-        {user_id_int, _} ->
-          cursor = Mongo.find(:mongo, "code", %{userId: user_id_int})
+    json(conn, %{data: tree})
+  end
 
-          codes =
-            Enum.map(Enum.to_list(cursor), fn doc ->
-              %{
-                content: Map.get(doc, "content"),
-                name: Map.get(doc, "name")
-              }
-            end)
+  def edit_file(conn, %{"id" => user_id}) do
+    user_id = parse_id(user_id, conn)
+    fileId = conn.body_params["fileId"]
 
-          json(conn, %{data: codes})
-      end
-    rescue
-      exception ->
-        IO.inspect(exception)
+    attributes = CowRoll.File.get_attributes(conn.body_params)
 
+    case update_file(user_id, fileId, attributes) do
+      {:ok, _result} ->
+        json(conn, %{message: "File name updated successfully"})
+
+      {:error, reason} ->
         conn
-        |> put_status(:internal_server_error)
-        |> json(%{error: "Internal server error"})
+        |> put_status(:not_found)
+        |> json(%{error: reason})
     end
   end
 
-  def rename_file(conn, %{"id" => user_id}) do
-    user_id = String.to_integer(user_id)
-    name = conn.body_params["name"]
-    newName = conn.body_params["newName"]
+  def edit_directory(conn, %{"id" => user_id}) do
+    user_id = parse_id(user_id, conn)
+    directoryId = conn.body_params["directoryId"]
 
-    query = %{
-      userId: user_id,
-      name: name
-    }
+    attributes = CowRoll.Directory.get_attributes(conn.body_params)
 
-    case Mongo.find_one(:mongo, "code", query) do
-      nil ->
+    case update_directory(user_id, directoryId, attributes) do
+      {:ok, _result} ->
+        json(conn, %{message: "Directory name updated successfully"})
+
+      {:error, reason} ->
         conn
         |> put_status(:not_found)
-        |> json(%{error: "File not found"})
+        |> json(%{error: reason})
+    end
+  end
 
-      %{"_id" => existing_id} ->
-        case Mongo.update_one(:mongo, "code", %{_id: existing_id}, %{
-               "$set" => %{name: newName}
-             }) do
-          {:ok, _result} ->
-            json(conn, %{message: "File name updated successfully"})
+  defp parse_id(id, conn) do
+    case Integer.parse(id) do
+      {id, ""} ->
+        id
 
-          {:error, _reason} ->
-            conn
-            |> put_status(:internal_server_error)
-            |> json(%{error: "Failed to update file"})
-        end
+      :error ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: "Invalid user ID"})
     end
   end
 end

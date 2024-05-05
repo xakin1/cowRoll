@@ -1,9 +1,5 @@
 defmodule TreeNode do
-  # def create_new_map do
-  #   tree_name \\ @tree_name = create_unique_id()
-  #   create_varMap(tree_name \\ @tree_name)
-  #   tree_name \\ @tree_name
-  # end
+  import CowRoll.Utils.Functions
 
   @tree :tree
 
@@ -16,7 +12,7 @@ defmodule TreeNode do
 
   defp create_unique_id do
     var_map_name =
-      String.to_atom("#{:erlang.unique_integer([:positive, :monotonic])}")
+      String.to_atom("#{get_unique_id()}")
 
     var_map_name
   end
