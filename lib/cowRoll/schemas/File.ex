@@ -51,6 +51,19 @@ defmodule CowRoll.File do
     end
   end
 
+  def delete_files(params) do
+    query = %{
+      type: @file_type
+    }
+
+    query = Map.merge(query, params)
+
+    case Mongo.delete_many(:mongo, @directory_collection, query) do
+      {:ok, deletes} -> deletes.deleted_count
+      _ -> 0
+    end
+  end
+
   def delete_file(user_id, file_id) do
     query = %{
       user_id: user_id,

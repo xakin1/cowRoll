@@ -22,8 +22,7 @@ defmodule CowRoll.Directory do
       type: @directory_type
     }
 
-    files = get_files(%{user_id: user_id, directory_id: directory_id})
-    Enum.map(files, fn file -> delete_file(user_id, file["id"]) end)
+    delete_files(%{user_id: user_id, directory_id: directory_id})
 
     deletes = Mongo.delete_one!(:mongo, @directory_collection, query)
     deletes.deleted_count

@@ -11,7 +11,7 @@ defmodule CowRollWeb.CodeController do
     code = conn.body_params["content"]
 
     try do
-      json(conn, %{output: eval_input(code)})
+      json(conn, %{message: eval_input(code)})
     rescue
       e ->
         error_type = e.__struct__ |> Module.split() |> List.last()
@@ -40,7 +40,7 @@ defmodule CowRollWeb.CodeController do
         {:ok, _result} ->
           try do
             parse(code)
-            json(conn, %{message: "Code saved successfully"})
+            json(conn, %{message: "Content saved successfully"})
           rescue
             e ->
               error_type = e.__struct__ |> Module.split() |> List.last()
@@ -48,7 +48,7 @@ defmodule CowRollWeb.CodeController do
               full_message = "#{error_type}: #{error_message}"
 
               json(conn, %{
-                message: "Code saved successfully",
+                message: "Content saved successfully",
                 error: %{
                   error: "Failed to compile code",
                   errorCode: full_message,
