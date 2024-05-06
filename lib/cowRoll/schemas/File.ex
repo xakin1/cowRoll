@@ -16,7 +16,7 @@ defmodule CowRoll.File do
 
   def update_or_create_file(name, user_id, content, directory_id) do
     query = %{
-      userId: user_id,
+      user_id: user_id,
       name: name,
       directory_id: directory_id
     }
@@ -34,7 +34,7 @@ defmodule CowRoll.File do
 
   def update_file(user_id, file_id, attrs) do
     query = %{
-      userId: user_id,
+      user_id: user_id,
       id: file_id,
       type: @file_type
     }
@@ -51,10 +51,51 @@ defmodule CowRoll.File do
     end
   end
 
+  def delete_file(user_id, file_id) do
+    query = %{
+      user_id: user_id,
+      id: file_id,
+      type: @file_type
+    }
+
+    deletes = Mongo.delete_one!(:mongo, @directory_collection, query)
+    deletes.deleted_count
+  end
+
+  def get_file(user_id, file_id) do
+    query = %{
+      user_id: user_id,
+      id: file_id,
+      type: @file_type
+    }
+
+    file = Mongo.find_one(:mongo, @directory_collection, query)
+
+    if(file != nil) do
+      %{
+        fileId: file["id"],
+        name: file["name"],
+        content: file["content"],
+        directoryId: file["directory_id"]
+      }
+    else
+      %{}
+    end
+  end
+
+  def get_files(params) do
+    query = %{
+      type: @file_type
+    }
+
+    query = Map.merge(query, params)
+    Mongo.find(:mongo, @directory_collection, query) |> Enum.to_list()
+  end
+
   def insert_one(user_id, name, content, directory_id, type \\ @file_type) do
     Mongo.insert_one(:mongo, @directory_collection, %{
       id: get_unique_id(),
-      userId: user_id,
+      user_id: user_id,
       name: name,
       content: content,
       type: type,

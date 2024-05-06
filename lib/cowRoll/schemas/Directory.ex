@@ -2,6 +2,7 @@ defmodule CowRoll.Directory do
   use Ecto.Schema
   import CowRoll.Utils.Functions
   import CowRoll.Schemas.Helper
+  import CowRoll.File
   @root_name "Root"
   @directory_type "Directory"
   @file_type "File"
@@ -12,6 +13,20 @@ defmodule CowRoll.Directory do
       name: params["name"],
       parent_id: params["parentId"]
     }
+  end
+
+  def delete_directory(user_id, directory_id) do
+    query = %{
+      userId: user_id,
+      id: directory_id,
+      type: @directory_type
+    }
+
+    files = get_files(%{user_id: user_id, directory_id: directory_id})
+    Enum.map(files, fn file -> delete_file(user_id, file["id"]) end)
+
+    deletes = Mongo.delete_one!(:mongo, @directory_collection, query)
+    deletes.deleted_count
   end
 
   def searchParent(user_id, parent_id) do
@@ -71,9 +86,14 @@ defmodule CowRoll.Directory do
         {:error, reason}
 
       {:ok, parent_id} ->
-        name = if(name in [nil, ""], do: @root_name, else: name)
-
-        query = %{userId: user_id, id: parent_id, name: name, type: @directory_type}
+        query =
+          if name not in [nil, ""] do
+            #  Queremos crear un directorio
+            %{userId: user_id, id: parent_id, name: name, type: @directory_type}
+          else
+            # Queremos insertar un fichero en un directorio
+            %{userId: user_id, id: parent_id, type: @directory_type}
+          end
 
         case Mongo.find_one(:mongo, @directory_collection, query) do
           nil ->

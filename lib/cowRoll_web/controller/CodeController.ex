@@ -95,6 +95,20 @@ defmodule CowRollWeb.CodeController do
     json(conn, %{data: tree})
   end
 
+  def get_file_by_id(conn, %{"id" => user_id, "file_id" => file_id}) do
+    user_id = parse_id(user_id, conn)
+    file_id = parse_id(file_id, conn)
+    file = get_file(user_id, file_id)
+
+    if file == %{} do
+      conn
+      |> put_status(:not_found)
+      |> json(%{error: "File not found"})
+    else
+      json(conn, %{data: file})
+    end
+  end
+
   def edit_file(conn, %{"id" => user_id}) do
     user_id = parse_id(user_id, conn)
     fileId = conn.body_params["fileId"]
@@ -112,13 +126,26 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
+  def remove_file(conn, %{"id" => user_id}) do
+    user_id = parse_id(user_id, conn)
+    file_id = conn.body_params["fileId"]
+
+    deleted_count = delete_file(user_id, file_id)
+
+    if deleted_count > 0 do
+      json(conn, %{message: "File was deleted successfully"})
+    else
+      json(conn, %{message: "No files have been deleted"})
+    end
+  end
+
   def edit_directory(conn, %{"id" => user_id}) do
     user_id = parse_id(user_id, conn)
-    directoryId = conn.body_params["directoryId"]
+    directory_id = conn.body_params["directoryId"]
 
     attributes = CowRoll.Directory.get_attributes(conn.body_params)
 
-    case update_directory(user_id, directoryId, attributes) do
+    case update_directory(user_id, directory_id, attributes) do
       {:ok, _result} ->
         json(conn, %{message: "Directory name updated successfully"})
 
@@ -126,6 +153,19 @@ defmodule CowRollWeb.CodeController do
         conn
         |> put_status(:not_found)
         |> json(%{error: reason})
+    end
+  end
+
+  def remove_directory(conn, %{"id" => user_id}) do
+    user_id = parse_id(user_id, conn)
+    directory_id = conn.body_params["directoryId"]
+
+    deleted_count = delete_directory(user_id, directory_id)
+
+    if deleted_count > 0 do
+      json(conn, %{message: "Directory was deleted successfully"})
+    else
+      json(conn, %{message: "No directories have been deleted"})
     end
   end
 

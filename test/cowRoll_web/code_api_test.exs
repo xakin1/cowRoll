@@ -19,7 +19,7 @@ defmodule CowRollWeb.CodeApiTest do
     end
   end
 
-  describe "POST /saveCode" do
+  describe "POST /saveContent" do
     test "save code successfully", %{conn: conn} do
       conn = post(conn, "/api/insertContent/1", content: "40+2", name: "example")
       assert json_response(conn, 200)["message"] == "Code saved successfully"
@@ -406,6 +406,106 @@ defmodule CowRollWeb.CodeApiTest do
                  "name" => "Root",
                  "type" => "Directory"
                }
+    end
+  end
+
+  describe "GET /filesById" do
+    test "try get a not existing file", %{conn: conn} do
+      conn = get(conn, "/api/file/1/1")
+      assert conn.status == 404
+    end
+
+    test "try get an existing file", %{conn: conn} do
+      conn =
+        post(conn, "/api/insertContent/1", directory: "code")
+
+      conn =
+        post(conn, "/api/insertContent/1",
+          parentId: 2,
+          content: "40+2",
+          name: "example"
+        )
+
+      conn = get(conn, "/api/file/1/3")
+      assert conn.status == 200
+
+      assert json_response(conn, 200)["data"] == %{
+               "content" => "40+2",
+               "directoryId" => 2,
+               "fileId" => 3,
+               "name" => "example"
+             }
+    end
+  end
+
+  describe "DELETE /deleteFile" do
+    test "delete a non existing file", %{conn: conn} do
+      conn = delete(conn, "/api/deleteFile/1", fileId: 1)
+      assert conn.status == 200
+      assert json_response(conn, 200)["message"] == "No files have been deleted"
+    end
+
+    test "delete a existing file", %{conn: conn} do
+      conn =
+        post(conn, "/api/insertContent/1",
+          directory: "code",
+          content: "40+2",
+          name: "example"
+        )
+
+      conn = delete(conn, "/api/deleteFile/1", fileId: 3)
+      assert conn.status == 200
+      assert json_response(conn, 200)["message"] == "File was deleted successfully"
+    end
+
+    test "delete a non existing directory", %{conn: conn} do
+      conn = delete(conn, "/api/deleteDirectory/1", directoryId: 1)
+      assert conn.status == 200
+      assert json_response(conn, 200)["message"] == "No directories have been deleted"
+    end
+
+    test "delete a existing directory without files", %{conn: conn} do
+      conn =
+        post(conn, "/api/insertContent/1", directory: "code")
+
+      conn = delete(conn, "/api/deleteDirectory/1", directoryId: 1)
+      assert conn.status == 200
+      assert json_response(conn, 200)["message"] == "Directory was deleted successfully"
+    end
+
+    test "delete a existing directory with files", %{conn: conn} do
+      conn =
+        post(conn, "/api/insertContent/1", directory: "code")
+
+      conn =
+        post(conn, "/api/insertContent/1",
+          parentId: 2,
+          content: "40+2",
+          name: "example"
+        )
+
+      conn =
+        post(conn, "/api/insertContent/1",
+          parentId: 2,
+          content: "'hola ' ++ 'mundo'",
+          name: "example2"
+        )
+
+      conn = delete(conn, "/api/deleteDirectory/1", directoryId: 2)
+      assert conn.status == 200
+      assert json_response(conn, 200)["message"] == "Directory was deleted successfully"
+
+      conn = get(conn, "/api/file/1")
+
+      assert json_response(conn, 200)["data"] == %{
+               "children" => [],
+               "id" => 1,
+               "name" => "Root",
+               "type" => "Directory"
+             }
+
+      conn = get(conn, "/api/file/1/3")
+      assert conn.status == 404
     end
   end
 end
