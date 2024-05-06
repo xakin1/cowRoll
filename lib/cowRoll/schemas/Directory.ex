@@ -131,6 +131,7 @@ defmodule CowRoll.Directory do
     %{
       id: directory["id"],
       name: directory["name"],
+      parentId: directory["parent_id"],
       type: @directory_type,
       children:
         Enum.map(files, fn file ->
@@ -138,7 +139,8 @@ defmodule CowRoll.Directory do
             id: file["id"],
             name: file["name"],
             type: file["type"],
-            content: file["content"]
+            content: file["content"],
+            directoryId: file["directoryId"]
           }
         end) ++ Enum.map(subdirectories, &build_structure/1)
     }
