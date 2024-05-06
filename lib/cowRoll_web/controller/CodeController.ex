@@ -7,6 +7,7 @@ defmodule CowRollWeb.CodeController do
   use CowRollWeb, :controller
   require Logger
 
+  @spec run_code(Plug.Conn.t(), any()) :: Plug.Conn.t()
   def run_code(conn, _) do
     code = conn.body_params["content"]
 
@@ -181,5 +182,9 @@ defmodule CowRollWeb.CodeController do
         |> put_status(:bad_request)
         |> json(%{error: "Invalid user ID"})
     end
+  end
+
+  def delete_all(_, _) do
+    Mongo.delete_many(:mongo, "code", %{})
   end
 end

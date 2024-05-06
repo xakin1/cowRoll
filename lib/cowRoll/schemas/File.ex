@@ -10,7 +10,7 @@ defmodule CowRoll.File do
     %{
       "name" => params["name"],
       "directory_id" => params["directoryId"],
-      "cantent" => params["content"]
+      "content" => params["content"]
     }
   end
 

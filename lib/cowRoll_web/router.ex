@@ -17,6 +17,7 @@ defmodule CowRollWeb.Router do
     post "/editDirectory/:id", CodeController, :edit_directory
     post "/createDirectory/:id", CodeController, :create_directory
     delete "/deleteDirectory/:id/:directoryId", CodeController, :remove_directory
+    delete "/test/reset", CodeController, :delete_all
     post "/compile", CodeController, :compile_code
     options "/*path", CorsManagement, :handle_options
   end
