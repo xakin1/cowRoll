@@ -21,55 +21,56 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def insert_content(conn, %{"id" => user_id}) do
+  def create_directory(conn, %{"id" => user_id}) do
     user_id = parse_id(user_id, conn)
-    content = conn.body_params["content"]
-    name = conn.body_params["name"]
-    directory_name = conn.body_params["directory"]
-    parent_directory_id = conn.body_params["parentId"]
+    attributes = CowRoll.Directory.get_attributes(conn.body_params)
 
-    case find_or_create_directory(user_id, directory_name, parent_directory_id) do
-      {:ok, directory_id} -> insert_content(directory_id, name, user_id, content, conn)
-      {:error, reason} -> conn |> put_status(:not_found) |> json(%{error: reason})
+    case CowRoll.Directory.create_directory(user_id, attributes) do
+      {:ok, directory_id} -> json(conn, %{message: directory_id})
+      {:error, reason} -> json(conn, %{error: reason})
     end
   end
 
-  defp insert_content(directory_id, name, user_id, code, conn) do
-    if name not in [nil, ""] do
-      case update_or_create_file(name, user_id, code, directory_id) do
-        {:ok, _result} ->
-          try do
-            parse(code)
-            json(conn, %{message: "Content saved successfully"})
-          rescue
-            e ->
-              error_type = e.__struct__ |> Module.split() |> List.last()
-              error_message = Exception.message(e)
-              full_message = "#{error_type}: #{error_message}"
+  def insert_content(conn, %{"id" => user_id}) do
+    user_id = parse_id(user_id, conn)
 
-              json(conn, %{
-                message: "Content saved successfully",
-                error: %{
-                  error: "Failed to compile code",
-                  errorCode: full_message,
-                  line: e.line
-                }
-              })
-          end
+    parent_directory_id = conn.body_params["directoryId"]
+    params = CowRoll.File.get_attributes(conn.body_params)
 
-        {:error, reason} ->
-          json(conn, %{error: reason})
-      end
-    else
-      if(code in [nil, ""]) do
-        json(conn, %{
-          message: "Directory create was created succesfully"
-        })
-      else
-        json(conn, %{
-          error: "File name can't be empty"
-        })
-      end
+    case find_directory(user_id, parent_directory_id) do
+      {:ok, directory_id} ->
+        params = update_directory_id(params, directory_id)
+        insert_content(conn, user_id, params)
+
+      {:error, reason} ->
+        conn |> put_status(:not_found) |> json(%{error: reason})
+    end
+  end
+
+  defp insert_content(conn, user_id, params) do
+    case update_or_create_file(user_id, params) do
+      {:ok, _result} ->
+        try do
+          parse(conn.body_params["content"])
+          json(conn, %{message: "Content saved successfully"})
+        rescue
+          e ->
+            error_type = e.__struct__ |> Module.split() |> List.last()
+            error_message = Exception.message(e)
+            full_message = "#{error_type}: #{error_message}"
+
+            json(conn, %{
+              message: "Content saved successfully",
+              error: %{
+                error: "Failed to compile code",
+                errorCode: full_message,
+                line: e.line
+              }
+            })
+        end
+
+      {:error, reason} ->
+        json(conn, %{error: reason})
     end
   end
 
@@ -92,10 +93,11 @@ defmodule CowRollWeb.CodeController do
     user_id = parse_id(user_id, conn)
     tree = get_directory_structure(user_id)
 
-    json(conn, %{data: tree})
+    json(conn, %{message: tree})
   end
 
-  def get_file_by_id(conn, %{"id" => user_id, "file_id" => file_id}) do
+  @spec get_file_by_id(Plug.Conn.t(), map()) :: Plug.Conn.t()
+  def get_file_by_id(conn, %{"id" => user_id, "fileId" => file_id}) do
     user_id = parse_id(user_id, conn)
     file_id = parse_id(file_id, conn)
     file = get_file(user_id, file_id)
@@ -105,17 +107,17 @@ defmodule CowRollWeb.CodeController do
       |> put_status(:not_found)
       |> json(%{error: "File not found"})
     else
-      json(conn, %{data: file})
+      json(conn, %{message: file})
     end
   end
 
   def edit_file(conn, %{"id" => user_id}) do
     user_id = parse_id(user_id, conn)
-    fileId = conn.body_params["fileId"]
+    file_id = conn.body_params["id"]
 
     attributes = CowRoll.File.get_attributes(conn.body_params)
 
-    case update_file(user_id, fileId, attributes) do
+    case update_file(user_id, file_id, attributes) do
       {:ok, _result} ->
         json(conn, %{message: "File name updated successfully"})
 
@@ -126,22 +128,22 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def remove_file(conn, %{"id" => user_id}) do
+  def remove_file(conn, %{"id" => user_id, "fileId" => file_id}) do
     user_id = parse_id(user_id, conn)
-    file_id = conn.body_params["fileId"]
+    file_id = parse_id(file_id, conn)
 
     deleted_count = delete_file(user_id, file_id)
 
     if deleted_count > 0 do
       json(conn, %{message: "File was deleted successfully"})
     else
-      json(conn, %{message: "No files have been deleted"})
+      resp(conn, 204, "")
     end
   end
 
   def edit_directory(conn, %{"id" => user_id}) do
     user_id = parse_id(user_id, conn)
-    directory_id = conn.body_params["directoryId"]
+    directory_id = conn.body_params["id"]
 
     attributes = CowRoll.Directory.get_attributes(conn.body_params)
 
@@ -156,16 +158,16 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def remove_directory(conn, %{"id" => user_id}) do
+  def remove_directory(conn, %{"id" => user_id, "directoryId" => directory_id}) do
     user_id = parse_id(user_id, conn)
-    directory_id = conn.body_params["directoryId"]
+    directory_id = parse_id(directory_id, conn)
 
     deleted_count = delete_directory(user_id, directory_id)
 
     if deleted_count > 0 do
       json(conn, %{message: "Directory was deleted successfully"})
     else
-      json(conn, %{message: "No directories have been deleted"})
+      resp(conn, 204, "")
     end
   end
 
