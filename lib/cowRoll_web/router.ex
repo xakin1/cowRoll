@@ -6,6 +6,11 @@ defmodule CowRollWeb.Router do
     plug CORSPlug
   end
 
+  pipeline :test do
+    plug :accepts, ["json"]
+    plug CORSPlug
+  end
+
   scope "/api", CowRollWeb do
     pipe_through :api
     post "/code", CodeController, :run_code
@@ -17,8 +22,13 @@ defmodule CowRollWeb.Router do
     post "/editDirectory/:id", CodeController, :edit_directory
     post "/createDirectory/:id", CodeController, :create_directory
     delete "/deleteDirectory/:id/:directoryId", CodeController, :remove_directory
-    delete "/test/reset", CodeController, :delete_all
     post "/compile", CodeController, :compile_code
+    options "/*path", CorsManagement, :handle_options
+  end
+
+  scope "/test", CowRollWeb do
+    pipe_through :test
+    delete "/reset", CodeController, :delete_all
     options "/*path", CorsManagement, :handle_options
   end
 

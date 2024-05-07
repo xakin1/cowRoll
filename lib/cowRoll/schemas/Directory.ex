@@ -140,7 +140,7 @@ defmodule CowRoll.Directory do
             name: file["name"],
             type: file["type"],
             content: file["content"],
-            directoryId: file["directoryId"]
+            directoryId: file["directory_id"]
           }
         end) ++ Enum.map(subdirectories, &build_structure/1)
     }

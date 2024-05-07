@@ -210,7 +210,7 @@ defmodule CowRollWeb.CodeApiTest do
                      "children" => [
                        %{
                          "content" => "40+2",
-                         "directoryId" => nil,
+                         "directoryId" => 1,
                          "id" => 4,
                          "name" => "example",
                          "type" => "File"
@@ -219,7 +219,7 @@ defmodule CowRollWeb.CodeApiTest do
                          "children" => [
                            %{
                              "content" => "'hola ' ++ 'mundo'",
-                             "directoryId" => nil,
+                             "directoryId" => 5,
                              "id" => 7,
                              "name" => "example2",
                              "type" => "File"
@@ -240,7 +240,7 @@ defmodule CowRollWeb.CodeApiTest do
                      "children" => [
                        %{
                          "content" => "'hola ' ++ 'mundo'",
-                         "directoryId" => nil,
+                         "directoryId" => 8,
                          "id" => 10,
                          "name" => "createPj",
                          "type" => "File"
@@ -249,7 +249,7 @@ defmodule CowRollWeb.CodeApiTest do
                          "children" => [
                            %{
                              "content" => "'hola ' ++ 'mundo'",
-                             "directoryId" => nil,
+                             "directoryId" => 11,
                              "id" => 13,
                              "name" => "do_things",
                              "type" => "File"
@@ -294,7 +294,7 @@ defmodule CowRollWeb.CodeApiTest do
                      "children" => [
                        %{
                          "content" => "40+2",
-                         "directoryId" => nil,
+                         "directoryId" => 1,
                          "id" => 4,
                          "name" => "example",
                          "type" => "File"
@@ -316,14 +316,14 @@ defmodule CowRollWeb.CodeApiTest do
                      "children" => [
                        %{
                          "content" => "Im am a metamorph content",
-                         "directoryId" => nil,
+                         "directoryId" => 8,
                          "id" => 7,
                          "name" => "I change my name",
                          "type" => "File"
                        },
                        %{
                          "content" => "'hola ' ++ 'mundo'",
-                         "directoryId" => nil,
+                         "directoryId" => 8,
                          "id" => 10,
                          "name" => "createPj",
                          "type" => "File"
@@ -332,7 +332,7 @@ defmodule CowRollWeb.CodeApiTest do
                          "children" => [
                            %{
                              "content" => "'hola ' ++ 'mundo'",
-                             "directoryId" => nil,
+                             "directoryId" => 11,
                              "id" => 13,
                              "name" => "do_things",
                              "type" => "File"
@@ -398,14 +398,14 @@ defmodule CowRollWeb.CodeApiTest do
                "children" => [
                  %{
                    "content" => "42+2",
-                   "directoryId" => nil,
+                   "directoryId" => 1,
                    "id" => 3,
                    "name" => "example",
                    "type" => "File"
                  },
                  %{
                    "content" => "40+2",
-                   "directoryId" => nil,
+                   "directoryId" => 1,
                    "id" => 5,
                    "name" => "example",
                    "type" => "File"
@@ -435,7 +435,7 @@ defmodule CowRollWeb.CodeApiTest do
                      "children" => [
                        %{
                          "content" => "40+2",
-                         "directoryId" => nil,
+                         "directoryId" => 1,
                          "id" => 4,
                          "name" => "example",
                          "type" => "File"
@@ -520,7 +520,7 @@ defmodule CowRollWeb.CodeApiTest do
                      "children" => [
                        %{
                          "content" => "40+2",
-                         "directoryId" => nil,
+                         "directoryId" => 1,
                          "id" => 4,
                          "name" => "example",
                          "type" => "File"
@@ -529,7 +529,7 @@ defmodule CowRollWeb.CodeApiTest do
                          "children" => [
                            %{
                              "content" => "'hola ' ++ 'mundo'",
-                             "directoryId" => nil,
+                             "directoryId" => 5,
                              "id" => 7,
                              "name" => "example2",
                              "type" => "File"
@@ -550,7 +550,7 @@ defmodule CowRollWeb.CodeApiTest do
                      "children" => [
                        %{
                          "content" => "'hola ' ++ 'mundo'",
-                         "directoryId" => nil,
+                         "directoryId" => 8,
                          "id" => 10,
                          "name" => "createPj",
                          "type" => "File"
@@ -559,7 +559,7 @@ defmodule CowRollWeb.CodeApiTest do
                          "children" => [
                            %{
                              "content" => "'hola ' ++ 'mundo'",
-                             "directoryId" => nil,
+                             "directoryId" => 11,
                              "id" => 13,
                              "name" => "do_things",
                              "type" => "File"
@@ -623,7 +623,6 @@ defmodule CowRollWeb.CodeApiTest do
     test "delete a existing file", %{conn: conn} do
       conn =
         post(conn, "/api/insertContent/1",
-          directory: "code",
           content: "40+2",
           name: "example"
         )
@@ -640,7 +639,7 @@ defmodule CowRollWeb.CodeApiTest do
 
     test "delete a existing directory without files", %{conn: conn} do
       conn =
-        post(conn, "/api/insertContent/1", directory: "code")
+        post(conn, "/api/createDirectory/1", name: "code")
 
       conn = delete(conn, "/api/deleteDirectory/1/1")
       assert conn.status == 200
@@ -675,6 +674,7 @@ defmodule CowRollWeb.CodeApiTest do
                "children" => [],
                "id" => 2,
                "name" => "Root",
+               "parentId" => nil,
                "type" => "Directory"
              }
 
