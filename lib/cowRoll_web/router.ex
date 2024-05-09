@@ -16,12 +16,13 @@ defmodule CowRollWeb.Router do
     post "/code", CodeController, :run_code
     get "/file/:id", CodeController, :get_files
     get "/file/:id/:fileId", CodeController, :get_file_by_id
-    post "/editFile/:id", CodeController, :edit_file
-    delete "/deleteFile/:id/:fileId", CodeController, :remove_file
-    post "/insertContent/:id", CodeController, :insert_content
-    post "/editDirectory/:id", CodeController, :edit_directory
+    post "/createFile/:id", CodeController, :create_file
     post "/createDirectory/:id", CodeController, :create_directory
+    delete "/deleteFile/:id/:fileId", CodeController, :remove_file
     delete "/deleteDirectory/:id/:directoryId", CodeController, :remove_directory
+    post "/editFile/:id", CodeController, :edit_file
+    post "/editDirectory/:id", CodeController, :edit_directory
+    post "/insertContent/:id", CodeController, :insert_content
     post "/compile", CodeController, :compile_code
     options "/*path", CorsManagement, :handle_options
   end

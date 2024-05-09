@@ -9,4 +9,11 @@ defmodule CowRoll.Schemas.Helper do
       end
     end)
   end
+
+  def clean_params(attrs) do
+    Enum.reduce(attrs, %{}, fn
+      {_key, nil}, acc -> acc
+      {key, value}, acc -> Map.put(acc, key, value)
+    end)
+  end
 end

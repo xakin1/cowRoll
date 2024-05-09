@@ -21,12 +21,17 @@ defmodule CowRollWeb.CodeApiTest do
 
   describe "POST /insertContent" do
     test "save code successfully", %{conn: conn} do
-      conn = post(conn, "/api/insertContent/1", content: "40+2", name: "example")
+      conn = post(conn, "/api/insertFile/1", name: "example")
+      id = json_response(conn, 200)["message"]
+      conn = post(conn, "/api/insertContent/1", content: "40+2", id: id)
       assert json_response(conn, 200)["message"] == "Content saved successfully"
     end
 
     test "code save fail", %{conn: conn} do
-      conn = post(conn, "/api/insertContent/1", content: "40+'2'", name: "Example")
+      conn = post(conn, "/api/insertFile/1", name: "Example")
+      id = json_response(conn, 200)["message"]
+
+      conn = post(conn, "/api/insertContent/1", content: "40+'2'", id: id)
       assert conn.status == 200
 
       assert json_response(conn, 200)["error"]["errorCode"] ==
@@ -40,13 +45,18 @@ defmodule CowRollWeb.CodeApiTest do
       assert conn.status == 200
 
       assert json_response(conn, 200)["error"] ==
-               "The name of the file can't be empty."
+               "File not found."
     end
   end
 
   describe "POST /compile" do
     test "compile code successfully", %{conn: conn} do
       conn = post(conn, "/api/compile", content: "40+2")
+      assert conn.status == 200
+    end
+
+    test "compile empty code successfully", %{conn: conn} do
+      conn = post(conn, "/api/compile", content: "")
       assert conn.status == 200
     end
 
@@ -147,10 +157,17 @@ defmodule CowRollWeb.CodeApiTest do
         post(conn, "/api/createDirectory/1", name: "code")
 
       conn =
-        post(conn, "/api/insertContent/1",
+        post(conn, "/api/createFile/1",
           directoryId: 1,
-          content: "40+2",
           name: "example"
+        )
+
+      id = json_response(conn, 200)["message"]
+
+      conn =
+        post(conn, "/api/insertContent/1",
+          id: id,
+          content: "40+2"
         )
 
       assert conn.status == 200
@@ -159,45 +176,69 @@ defmodule CowRollWeb.CodeApiTest do
         post(conn, "/api/createDirectory/1", name: "code", parentId: 1)
 
       conn =
-        post(conn, "/api/insertContent/1",
-          directoryId: 5,
-          content: "'hola ' ++ 'mundo'",
+        post(conn, "/api/createFile/1",
+          directoryId: 1,
           name: "example2"
+        )
+
+      id = json_response(conn, 200)["message"]
+
+      conn =
+        post(conn, "/api/insertContent/1",
+          id: id,
+          content: "'hola ' ++ 'mundo'"
         )
 
       conn =
         post(conn, "/api/createDirectory/1", name: "pj")
 
       conn =
-        post(conn, "/api/insertContent/1",
-          content: "'hola ' ++ 'mundo'",
-          directoryId: 8,
+        post(conn, "/api/createFile/1",
+          directoryId: 6,
           name: "createPj"
         )
 
-      conn =
-        post(conn, "/api/createDirectory/1", name: "do_things", parentId: 8)
+      id = json_response(conn, 200)["message"]
 
       conn =
         post(conn, "/api/insertContent/1",
-          directoryId: 11,
-          content: "'hola ' ++ 'mundo'",
+          id: id,
+          content: "'hola ' ++ 'mundo'"
+        )
+
+      conn =
+        post(conn, "/api/createDirectory/1", name: "do_things", parentId: 6)
+
+      conn =
+        post(conn, "/api/createFile/1",
+          directoryId: 8,
           name: "do_things"
+        )
+
+      id = json_response(conn, 200)["message"]
+
+      conn =
+        post(conn, "/api/insertContent/1",
+          id: id,
+          content: "'hola ' ++ 'mundo'"
         )
 
       {:ok, conn: Phoenix.ConnTest.build_conn()}
     end
 
-    test "get files error", %{conn: conn} do
+    test "edit file error", %{conn: conn} do
       conn =
-        post(conn, "/api/editContent/1", content: "40+2", name: "example", newName: "example2")
+        post(conn, "/api/createFile/1", name: "example")
+
+      conn =
+        post(conn, "/api/editFile/1", id: -1, content: "40+2", name: "example")
 
       assert conn.status == 404
     end
 
     test "move a directory", %{conn: conn} do
       conn =
-        post(conn, "/api/editDirectory/1", id: 5, parentId: 1, name: "I change my name")
+        post(conn, "/api/editDirectory/1", id: 6, parentId: 1, name: "I change my name")
 
       assert conn.status == 200
 
@@ -211,21 +252,50 @@ defmodule CowRollWeb.CodeApiTest do
                        %{
                          "content" => "40+2",
                          "directoryId" => 1,
-                         "id" => 4,
+                         "id" => 3,
                          "name" => "example",
                          "type" => "File"
+                       },
+                       %{
+                         "content" => "'hola ' ++ 'mundo'",
+                         "directoryId" => 1,
+                         "id" => 5,
+                         "name" => "example2",
+                         "type" => "File"
+                       },
+                       %{
+                         "children" => [],
+                         "id" => 4,
+                         "name" => "code",
+                         "parentId" => 1,
+                         "type" => "Directory"
                        },
                        %{
                          "children" => [
                            %{
                              "content" => "'hola ' ++ 'mundo'",
-                             "directoryId" => 5,
+                             "directoryId" => 6,
                              "id" => 7,
-                             "name" => "example2",
+                             "name" => "createPj",
                              "type" => "File"
+                           },
+                           %{
+                             "children" => [
+                               %{
+                                 "content" => "'hola ' ++ 'mundo'",
+                                 "directoryId" => 8,
+                                 "id" => 9,
+                                 "name" => "do_things",
+                                 "type" => "File"
+                               }
+                             ],
+                             "id" => 8,
+                             "name" => "do_things",
+                             "parentId" => 6,
+                             "type" => "Directory"
                            }
                          ],
-                         "id" => 5,
+                         "id" => 6,
                          "name" => "I change my name",
                          "parentId" => 1,
                          "type" => "Directory"
@@ -233,36 +303,6 @@ defmodule CowRollWeb.CodeApiTest do
                      ],
                      "id" => 1,
                      "name" => "code",
-                     "parentId" => 2,
-                     "type" => "Directory"
-                   },
-                   %{
-                     "children" => [
-                       %{
-                         "content" => "'hola ' ++ 'mundo'",
-                         "directoryId" => 8,
-                         "id" => 10,
-                         "name" => "createPj",
-                         "type" => "File"
-                       },
-                       %{
-                         "children" => [
-                           %{
-                             "content" => "'hola ' ++ 'mundo'",
-                             "directoryId" => 11,
-                             "id" => 13,
-                             "name" => "do_things",
-                             "type" => "File"
-                           }
-                         ],
-                         "id" => 11,
-                         "name" => "do_things",
-                         "parentId" => 8,
-                         "type" => "Directory"
-                       }
-                     ],
-                     "id" => 8,
-                     "name" => "pj",
                      "parentId" => 2,
                      "type" => "Directory"
                    }
@@ -295,13 +335,20 @@ defmodule CowRollWeb.CodeApiTest do
                        %{
                          "content" => "40+2",
                          "directoryId" => 1,
-                         "id" => 4,
+                         "id" => 3,
                          "name" => "example",
                          "type" => "File"
                        },
                        %{
-                         "children" => [],
+                         "content" => "'hola ' ++ 'mundo'",
+                         "directoryId" => 1,
                          "id" => 5,
+                         "name" => "example2",
+                         "type" => "File"
+                       },
+                       %{
+                         "children" => [],
+                         "id" => 4,
                          "name" => "code",
                          "parentId" => 1,
                          "type" => "Directory"
@@ -315,36 +362,29 @@ defmodule CowRollWeb.CodeApiTest do
                    %{
                      "children" => [
                        %{
-                         "content" => "Im am a metamorph content",
-                         "directoryId" => 8,
-                         "id" => 7,
-                         "name" => "I change my name",
-                         "type" => "File"
-                       },
-                       %{
-                         "content" => "'hola ' ++ 'mundo'",
-                         "directoryId" => 8,
-                         "id" => 10,
-                         "name" => "createPj",
-                         "type" => "File"
-                       },
-                       %{
                          "children" => [
                            %{
+                             "content" => "Im am a metamorph content",
+                             "directoryId" => 8,
+                             "id" => 7,
+                             "name" => "I change my name",
+                             "type" => "File"
+                           },
+                           %{
                              "content" => "'hola ' ++ 'mundo'",
-                             "directoryId" => 11,
-                             "id" => 13,
+                             "directoryId" => 8,
+                             "id" => 9,
                              "name" => "do_things",
                              "type" => "File"
                            }
                          ],
-                         "id" => 11,
+                         "id" => 8,
                          "name" => "do_things",
-                         "parentId" => 8,
+                         "parentId" => 6,
                          "type" => "Directory"
                        }
                      ],
-                     "id" => 8,
+                     "id" => 6,
                      "name" => "pj",
                      "parentId" => 2,
                      "type" => "Directory"
@@ -471,10 +511,17 @@ defmodule CowRollWeb.CodeApiTest do
         post(conn, "/api/createDirectory/1", name: "code")
 
       conn =
-        post(conn, "/api/insertContent/1",
+        post(conn, "/api/createFile/1",
           directoryId: 1,
-          content: "40+2",
           name: "example"
+        )
+
+      id = json_response(conn, 200)["message"]
+
+      conn =
+        post(conn, "/api/insertContent/1",
+          id: id,
+          content: "40+2"
         )
 
       assert conn.status == 200
@@ -483,30 +530,51 @@ defmodule CowRollWeb.CodeApiTest do
         post(conn, "/api/createDirectory/1", name: "code", parentId: 1)
 
       conn =
-        post(conn, "/api/insertContent/1",
-          directoryId: 5,
-          content: "'hola ' ++ 'mundo'",
+        post(conn, "/api/createFile/1",
+          directoryId: 4,
           name: "example2"
+        )
+
+      id = json_response(conn, 200)["message"]
+
+      conn =
+        post(conn, "/api/insertContent/1",
+          id: id,
+          content: "'hola ' ++ 'mundo'"
         )
 
       conn =
         post(conn, "/api/createDirectory/1", name: "pj")
 
       conn =
+        post(conn, "/api/createFile/1",
+          directoryId: 6,
+          name: "createPj"
+        )
+
+      id = json_response(conn, 200)["message"]
+
+      conn =
         post(conn, "/api/insertContent/1",
-          content: "'hola ' ++ 'mundo'",
-          directoryId: 8,
+          id: id,
           name: "createPj"
         )
 
       conn =
-        post(conn, "/api/createDirectory/1", name: "do_things", parentId: 8)
+        post(conn, "/api/createDirectory/1", name: "do_things", parentId: 6)
+
+      conn =
+        post(conn, "/api/createFile/1",
+          directoryId: 8,
+          name: "do_things"
+        )
+
+      id = json_response(conn, 200)["message"]
 
       conn =
         post(conn, "/api/insertContent/1",
-          directoryId: 11,
-          content: "'hola ' ++ 'mundo'",
-          name: "do_things"
+          id: id,
+          content: "'hola ' ++ 'mundo'"
         )
 
       assert conn.status == 200
@@ -521,7 +589,7 @@ defmodule CowRollWeb.CodeApiTest do
                        %{
                          "content" => "40+2",
                          "directoryId" => 1,
-                         "id" => 4,
+                         "id" => 3,
                          "name" => "example",
                          "type" => "File"
                        },
@@ -529,13 +597,13 @@ defmodule CowRollWeb.CodeApiTest do
                          "children" => [
                            %{
                              "content" => "'hola ' ++ 'mundo'",
-                             "directoryId" => 5,
-                             "id" => 7,
+                             "directoryId" => 4,
+                             "id" => 5,
                              "name" => "example2",
                              "type" => "File"
                            }
                          ],
-                         "id" => 5,
+                         "id" => 4,
                          "name" => "code",
                          "parentId" => 1,
                          "type" => "Directory"
@@ -549,9 +617,9 @@ defmodule CowRollWeb.CodeApiTest do
                    %{
                      "children" => [
                        %{
-                         "content" => "'hola ' ++ 'mundo'",
-                         "directoryId" => 8,
-                         "id" => 10,
+                         "content" => nil,
+                         "directoryId" => 6,
+                         "id" => 7,
                          "name" => "createPj",
                          "type" => "File"
                        },
@@ -559,19 +627,19 @@ defmodule CowRollWeb.CodeApiTest do
                          "children" => [
                            %{
                              "content" => "'hola ' ++ 'mundo'",
-                             "directoryId" => 11,
-                             "id" => 13,
+                             "directoryId" => 8,
+                             "id" => 9,
                              "name" => "do_things",
                              "type" => "File"
                            }
                          ],
-                         "id" => 11,
+                         "id" => 8,
                          "name" => "do_things",
-                         "parentId" => 8,
+                         "parentId" => 6,
                          "type" => "Directory"
                        }
                      ],
-                     "id" => 8,
+                     "id" => 6,
                      "name" => "pj",
                      "parentId" => 2,
                      "type" => "Directory"
@@ -582,6 +650,42 @@ defmodule CowRollWeb.CodeApiTest do
                  "parentId" => nil,
                  "type" => "Directory"
                }
+    end
+  end
+
+  describe "POST /createFiles" do
+    test "create file", %{conn: conn} do
+      conn =
+        post(conn, "/api/createDirectory/1", name: "code")
+
+      conn =
+        post(conn, "/api/createFile/1",
+          directoryId: 1,
+          name: "example"
+        )
+
+      assert conn.status == 200
+    end
+
+    test "insert content", %{conn: conn} do
+      conn =
+        post(conn, "/api/createDirectory/1", name: "code")
+
+      conn =
+        post(conn, "/api/createFile/1",
+          directoryId: 1,
+          name: "example"
+        )
+
+      id = json_response(conn, 200)["message"]
+
+      conn =
+        post(conn, "/api/insertContent/1",
+          id: 1,
+          content: "40+2"
+        )
+
+      assert conn.status == 200
     end
   end
 
@@ -596,19 +700,26 @@ defmodule CowRollWeb.CodeApiTest do
         post(conn, "/api/createDirectory/1", name: "code")
 
       conn =
-        post(conn, "/api/insertContent/1",
+        post(conn, "/api/createFile/1",
           directoryId: 1,
-          content: "40+2",
           name: "example"
         )
 
-      conn = get(conn, "/api/file/1/4")
+      id = json_response(conn, 200)["message"]
+
+      conn =
+        post(conn, "/api/insertContent/1",
+          id: id,
+          content: "40+2"
+        )
+
+      conn = get(conn, "/api/file/1/#{id}")
       assert conn.status == 200
 
       assert json_response(conn, 200)["message"] == %{
                "content" => "40+2",
                "directoryId" => 1,
-               "id" => 4,
+               "id" => 3,
                "name" => "example"
              }
     end
@@ -622,12 +733,17 @@ defmodule CowRollWeb.CodeApiTest do
 
     test "delete a existing file", %{conn: conn} do
       conn =
+        post(conn, "/api/createFile/1", name: "example")
+
+      id = json_response(conn, 200)["message"]
+
+      conn =
         post(conn, "/api/insertContent/1",
           content: "40+2",
-          name: "example"
+          id: id
         )
 
-      conn = delete(conn, "/api/deleteFile/1/3")
+      conn = delete(conn, "/api/deleteFile/1/#{id}")
       assert conn.status == 200
       assert json_response(conn, 200)["message"] == "File was deleted successfully"
     end
@@ -651,17 +767,31 @@ defmodule CowRollWeb.CodeApiTest do
         post(conn, "/api/createDirectory/1", name: "code")
 
       conn =
-        post(conn, "/api/insertContent/1",
+        post(conn, "/api/createFile/1",
           directoryId: 1,
-          content: "40+2",
           name: "example"
         )
 
+      id = json_response(conn, 200)["message"]
+
       conn =
         post(conn, "/api/insertContent/1",
+          id: id,
+          content: "40+2"
+        )
+
+      conn =
+        post(conn, "/api/createFile/1",
           directoryId: 1,
-          content: "'hola ' ++ 'mundo'",
           name: "example2"
+        )
+
+      id = json_response(conn, 200)["message"]
+
+      conn =
+        post(conn, "/api/insertContent/1",
+          id: id,
+          content: "'hola ' ++ 'mundo'"
         )
 
       conn = delete(conn, "/api/deleteDirectory/1/1")
@@ -678,7 +808,7 @@ defmodule CowRollWeb.CodeApiTest do
                "type" => "Directory"
              }
 
-      conn = get(conn, "/api/file/1/3")
+      conn = get(conn, "/api/file/1/#{id}")
       assert conn.status == 404
     end
   end

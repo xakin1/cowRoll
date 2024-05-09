@@ -24,69 +24,72 @@ defmodule CowRollWeb.CodeController do
 
   def create_directory(conn, %{"id" => user_id}) do
     user_id = parse_id(user_id, conn)
-    attributes = CowRoll.Directory.get_attributes(conn.body_params)
+    params = CowRoll.Directory.get_attributes(conn.body_params)
 
-    case CowRoll.Directory.create_directory(user_id, attributes) do
+    case CowRoll.Directory.create_directory(user_id, params) do
       {:ok, directory_id} -> json(conn, %{message: directory_id})
       {:error, reason} -> json(conn, %{error: reason})
     end
   end
 
-  def insert_content(conn, %{"id" => user_id}) do
+  def create_file(conn, %{"id" => user_id}) do
     user_id = parse_id(user_id, conn)
 
-    parent_directory_id = conn.body_params["directoryId"]
     params = CowRoll.File.get_attributes(conn.body_params)
 
-    case find_directory(user_id, parent_directory_id) do
+    case find_directory(user_id, params) do
       {:ok, directory_id} ->
         params = update_directory_id(params, directory_id)
-        insert_content(conn, user_id, params)
+
+        case CowRoll.File.create_file(user_id, params) do
+          {:ok, file_id} -> json(conn, %{message: file_id})
+          {:error, reason} -> json(conn, %{error: reason})
+        end
 
       {:error, reason} ->
         conn |> put_status(:not_found) |> json(%{error: reason})
     end
   end
 
-  defp insert_content(conn, user_id, params) do
-    case update_or_create_file(user_id, params) do
-      {:ok, _result} ->
-        try do
-          parse(conn.body_params["content"])
-          json(conn, %{message: "Content saved successfully"})
-        rescue
-          e ->
-            error_type = e.__struct__ |> Module.split() |> List.last()
-            error_message = Exception.message(e)
-            full_message = "#{error_type}: #{error_message}"
+  def insert_content(conn, %{"id" => user_id}) do
+    user_id = parse_id(user_id, conn)
 
-            json(conn, %{
-              message: "Content saved successfully",
-              error: %{
-                error: "Failed to compile code",
-                errorCode: full_message,
-                line: e.line
-              }
-            })
+    params = CowRoll.File.get_attributes(conn.body_params)
+
+    case update_file(user_id, params) do
+      {:error, error} ->
+        json(conn, %{error: error})
+
+      _ ->
+        case compile(get_content(params)) do
+          :ok -> json(conn, %{message: "Content saved successfully"})
+          {:error, error} -> json(conn, %{message: "Content saved successfully", error: error})
         end
-
-      {:error, reason} ->
-        json(conn, %{error: reason})
     end
   end
 
   def compile_code(conn, _) do
-    try do
-      code = conn.body_params["content"]
+    code = conn.body_params["content"]
 
-      parse(code)
-      send_resp(conn, 200, "")
+    case compile(code) do
+      :ok ->
+        json(conn, "")
+
+      {:error, error} ->
+        json(conn, %{error: error})
+    end
+  end
+
+  defp compile(content) do
+    try do
+      if content != nil and content != "", do: parse(content)
+      :ok
     rescue
       e ->
         error_type = e.__struct__ |> Module.split() |> List.last()
         error_message = Exception.message(e)
         full_message = "#{error_type}: #{error_message}"
-        json(conn, %{error: %{error: "", errorCode: full_message, line: e.line}})
+        {:error, %{error: "", errorCode: full_message, line: e.line}}
     end
   end
 
@@ -114,11 +117,10 @@ defmodule CowRollWeb.CodeController do
 
   def edit_file(conn, %{"id" => user_id}) do
     user_id = parse_id(user_id, conn)
-    file_id = conn.body_params["id"]
 
     attributes = CowRoll.File.get_attributes(conn.body_params)
 
-    case update_file(user_id, file_id, attributes) do
+    case update_file(user_id, attributes) do
       {:ok, _result} ->
         json(conn, %{message: "File name updated successfully"})
 
@@ -144,11 +146,9 @@ defmodule CowRollWeb.CodeController do
 
   def edit_directory(conn, %{"id" => user_id}) do
     user_id = parse_id(user_id, conn)
-    directory_id = conn.body_params["id"]
-
     attributes = CowRoll.Directory.get_attributes(conn.body_params)
 
-    case update_directory(user_id, directory_id, attributes) do
+    case update_directory(user_id, attributes) do
       {:ok, _result} ->
         json(conn, %{message: "Directory name updated successfully"})
 

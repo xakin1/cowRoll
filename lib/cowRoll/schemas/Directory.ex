@@ -11,7 +11,8 @@ defmodule CowRoll.Directory do
   def get_attributes(params) do
     %{
       "name" => params["name"],
-      "parent_id" => params["parentId"]
+      "parent_id" => params["parentId"],
+      "id" => params["id"]
     }
   end
 
@@ -42,10 +43,10 @@ defmodule CowRoll.Directory do
     end
   end
 
-  def update_directory(user_id, directory_id, params) do
+  def update_directory(user_id, params) do
     query = %{
       "userId" => user_id,
-      "id" => directory_id,
+      "id" => params["id"],
       "type" => @directory_type
     }
 
@@ -61,8 +62,9 @@ defmodule CowRoll.Directory do
   end
 
   @spec find_directory(any(), any()) :: {:error, <<_::128>>} | {:ok, any()}
-  def find_directory(user_id, parent_id) do
-    # Si no existe el root se lo tenemos que crear
+  def find_directory(user_id, params) do
+    parent_id = params["directory_id"]
+
     if parent_id == nil do
       {:ok, get_root(user_id)}
     else
@@ -150,13 +152,13 @@ defmodule CowRoll.Directory do
     id = get_unique_id()
 
     default_params = %{
-      "id" => id,
       "userId" => user_id,
       "name" => @root_name,
       "type" => @directory_type
     }
 
     params = Map.merge(default_params, params)
+    params = Map.put(params, "id", id)
 
     if(params["name"] == "" or params["name"] == nil) do
       {:error, "The name of the folder can't be empty."}
@@ -172,6 +174,8 @@ defmodule CowRoll.Directory do
           current_value ->
             current_value
         end)
+
+      params = clean_params(params)
 
       Mongo.insert_one(:mongo, @directory_collection, params)
 
