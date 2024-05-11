@@ -96,6 +96,16 @@ defmodule CowRollWeb.CodeApiTest do
                }
     end
 
+    test "create directory with the same name", %{conn: conn} do
+      conn =
+        post(conn, "/api/createDirectory/1", name: "code")
+
+      conn =
+        post(conn, "/api/createDirectory/1", name: "code")
+
+      assert json_response(conn, 200) == %{"error" => "A folder with that name already exists."}
+    end
+
     test "create a subdirectory successfully", %{conn: conn} do
       conn = post(conn, "/api/createDirectory/1", name: "code")
       assert conn.status == 200
@@ -665,6 +675,26 @@ defmodule CowRollWeb.CodeApiTest do
         )
 
       assert conn.status == 200
+      assert json_response(conn, 200) == %{"message" => 3}
+    end
+
+    test "create file with the same name", %{conn: conn} do
+      conn =
+        post(conn, "/api/createDirectory/1", name: "code")
+
+      conn =
+        post(conn, "/api/createFile/1",
+          directoryId: 1,
+          name: "example"
+        )
+
+      conn =
+        post(conn, "/api/createFile/1",
+          directoryId: 1,
+          name: "example"
+        )
+
+      assert json_response(conn, 200) == %{"error" => "A file with that name already exists."}
     end
 
     test "insert content", %{conn: conn} do

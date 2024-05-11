@@ -36,6 +36,7 @@ defmodule CowRollWeb.CodeController do
     user_id = parse_id(user_id, conn)
 
     params = CowRoll.File.get_attributes(conn.body_params)
+    params = set_parent_id(params, get_directory_id(params))
 
     case find_directory(user_id, params) do
       {:ok, directory_id} ->

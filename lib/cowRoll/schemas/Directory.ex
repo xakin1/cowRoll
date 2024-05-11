@@ -2,35 +2,72 @@ defmodule CowRoll.Directory do
   use Ecto.Schema
   import CowRoll.Utils.Functions
   import CowRoll.Schemas.Helper
-  import CowRoll.File
+  alias CowRoll.File
   @root_name "Root"
   @directory_type "Directory"
   @file_type "File"
   @directory_collection "code"
 
+  @parent_id "parent_id"
+  @directory_id "directory_id"
+
+  @name "name"
+  @content "content"
+  @id "id"
+  @user_id "user_id"
+  @type_key "type"
+  @mongo_id "_id"
+
   def get_attributes(params) do
     %{
-      "name" => params["name"],
-      "parent_id" => params["parentId"],
-      "id" => params["id"]
+      @name => params["name"],
+      @parent_id => params["parentId"],
+      @id => params["id"]
     }
+  end
+
+  defp get_parent_id(user_id, params) do
+    parent_id = params[@parent_id]
+
+    if parent_id == nil and get_name(params) != @root_name do
+      get_root(user_id)
+    else
+      parent_id
+    end
+  end
+
+  defp get_name(params) do
+    params[@name]
+  end
+
+  defp get_id(params) do
+    params[@id]
+  end
+
+  def set_parent_id(params, parent_id) do
+    Map.merge(params, %{@parent_id => parent_id})
+  end
+
+  defp get_parent_id(params) do
+    params[@parent_id]
   end
 
   def delete_directory(user_id, directory_id) do
     query = %{
-      "userId" => user_id,
-      "id" => directory_id,
-      "type" => @directory_type
+      @user_id => user_id,
+      @id => directory_id,
+      @type_key => @directory_type
     }
 
-    delete_files(%{"user_id" => user_id, "directory_id" => directory_id})
+    # Esto no me acaba de convencer, estaría mejor si esta clase no supiese formar un mapa para la clase File
+    File.delete_files(%{@user_id => user_id, @directory_id => directory_id})
 
     deletes = Mongo.delete_one!(:mongo, @directory_collection, query)
     deletes.deleted_count
   end
 
   def get_root(user_id) do
-    query = %{"userId" => user_id, "name" => @root_name, "type" => @directory_type}
+    query = %{@user_id => user_id, @name => @root_name, @type_key => @directory_type}
 
     case Mongo.find_one(:mongo, @directory_collection, query) do
       nil ->
@@ -39,42 +76,37 @@ defmodule CowRoll.Directory do
         get_root(user_id)
 
       directory ->
-        directory["id"]
+        get_id(directory)
     end
   end
 
   def update_directory(user_id, params) do
     query = %{
-      "userId" => user_id,
-      "id" => params["id"],
-      "type" => @directory_type
+      @user_id => user_id,
+      @id => get_id(params),
+      @type_key => @directory_type
     }
 
     case Mongo.find_one(:mongo, @directory_collection, query) do
       nil ->
         {:error, "File not found"}
 
-      %{"_id" => existing_id} ->
+      %{@mongo_id => existing_id} ->
         updates = get_updates(params)
 
-        Mongo.update_one(:mongo, @directory_collection, %{"_id" => existing_id}, updates)
+        Mongo.update_one(:mongo, @directory_collection, %{@mongo_id => existing_id}, updates)
     end
   end
 
-  @spec find_directory(any(), any()) :: {:error, <<_::128>>} | {:ok, any()}
   def find_directory(user_id, params) do
-    parent_id = params["directory_id"]
+    parent_id = get_parent_id(user_id, params)
 
-    if parent_id == nil do
-      {:ok, get_root(user_id)}
-    else
-      case Mongo.find_one(:mongo, @directory_collection, %{"id" => parent_id}) do
-        nil ->
-          {:error, "parent not found"}
+    case Mongo.find_one(:mongo, @directory_collection, %{@id => parent_id}) do
+      nil ->
+        {:error, "parent not found"}
 
-        directory ->
-          {:ok, directory["id"]}
-      end
+      directory ->
+        {:ok, get_id(directory)}
     end
   end
 
@@ -86,7 +118,7 @@ defmodule CowRoll.Directory do
       _ -> parent_id
     end
 
-    case Mongo.find_one(:mongo, @directory_collection, %{"id" => parent_id}) do
+    case Mongo.find_one(:mongo, @directory_collection, %{@id => parent_id}) do
       nil ->
         {:error, "parent not found"}
 
@@ -96,7 +128,12 @@ defmodule CowRoll.Directory do
   end
 
   def create_directory(user_id, params) do
-    case Mongo.find_one(:mongo, @directory_collection, params) do
+    query = %{
+      @parent_id => get_parent_id(user_id, params),
+      @name => get_name(params)
+    }
+
+    case Mongo.find_one(:mongo, @directory_collection, query) do
       nil ->
         insert_one(user_id, params)
 
@@ -116,33 +153,33 @@ defmodule CowRoll.Directory do
     # Recupera subdirectorios
     subdirectories =
       Mongo.find(:mongo, @directory_collection, %{
-        "parent_id" => directory["id"],
-        "type" => @directory_type
+        @parent_id => get_id(directory),
+        @type_key => @directory_type
       })
       |> Enum.to_list()
 
     # Recupera archivos en el directorio actual
     files =
       Mongo.find(:mongo, @directory_collection, %{
-        "directory_id" => directory["id"],
-        "type" => @file_type
+        @directory_id => get_id(directory),
+        @type_key => @file_type
       })
       |> Enum.to_list()
 
     # Mapa de datos para el directorio actual
     %{
-      id: directory["id"],
-      name: directory["name"],
-      parentId: directory["parent_id"],
+      id: get_id(directory),
+      name: get_name(directory),
+      parentId: get_parent_id(directory),
       type: @directory_type,
       children:
         Enum.map(files, fn file ->
           %{
-            id: file["id"],
-            name: file["name"],
-            type: file["type"],
-            content: file["content"],
-            directoryId: file["directory_id"]
+            id: File.get_id(file),
+            name: File.get_name(file),
+            type: File.get_type(file),
+            content: File.get_content(file),
+            directoryId: File.get_directory_id(file)
           }
         end) ++ Enum.map(subdirectories, &build_structure/1)
     }
@@ -152,19 +189,20 @@ defmodule CowRoll.Directory do
     id = get_unique_id()
 
     default_params = %{
-      "userId" => user_id,
-      "name" => @root_name,
-      "type" => @directory_type
+      @user_id => user_id,
+      @name => @root_name,
+      @type_key => @directory_type
     }
 
     params = Map.merge(default_params, params)
-    params = Map.put(params, "id", id)
+    params = Map.put(params, @id, id)
+    name = get_name(params)
 
-    if(params["name"] == "" or params["name"] == nil) do
+    if(name == "" or name == nil) do
       {:error, "The name of the folder can't be empty."}
     else
       params =
-        Map.update(params, "parent_id", nil, fn
+        Map.update(params, @parent_id, nil, fn
           "" ->
             get_root(user_id)
 

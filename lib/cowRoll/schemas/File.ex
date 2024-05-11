@@ -5,74 +5,107 @@ defmodule CowRoll.File do
 
   @file_type "File"
   @directory_collection "code"
+  @directory_id "directory_id"
+  @name "name"
+  @content "content"
+  @id "id"
+  @user_id "user_id"
+  @type_key "type"
+  @mongo_id "_id"
 
   def get_attributes(params) do
     %{
-      "name" => params["name"],
-      "directory_id" => params["directoryId"],
-      "content" => params["content"],
-      "id" => params["id"]
+      @name => params["name"],
+      @directory_id => params["directoryId"],
+      @content => params["content"],
+      @id => params["id"]
     }
   end
 
   def get_content(params) do
-    params["content"]
+    params[@content]
+  end
+
+  def get_id(params) do
+    params[@id]
+  end
+
+  def get_directory_id(params) do
+    params[@directory_id]
+  end
+
+  def set_directory_id(params, directory_id) do
+    Map.merge(params, %{@directory_id => directory_id})
+  end
+
+  def get_name(params) do
+    params[@name]
+  end
+
+  def get_type(params) do
+    params[@type_key]
   end
 
   def update_directory_id(params, directory_id) do
-    Map.merge(params, %{"directory_id" => directory_id})
+    set_directory_id(params, directory_id)
   end
 
   def update_or_create_file(user_id, params) do
     query =
       %{
-        "user_id" => user_id,
-        "id" => params["id"]
+        @user_id => user_id,
+        @id => get_id(params)
       }
 
     case Mongo.find_one(:mongo, @directory_collection, query) do
       nil ->
         insert_one_file(user_id, params)
 
-      %{"_id" => existing_id} ->
+      %{@mongo_id => existing_id} ->
         updates = get_updates(params)
 
-        Mongo.update_one(:mongo, @directory_collection, %{"_id" => existing_id}, updates)
+        Mongo.update_one(:mongo, @directory_collection, %{@mongo_id => existing_id}, updates)
     end
   end
 
   def create_file(user_id, params) do
-    case Mongo.find_one(:mongo, @directory_collection, params) do
+    query = %{
+      @user_id => user_id,
+      @directory_id => get_directory_id(params),
+      @name => get_name(params)
+    }
+
+    case Mongo.find_one(:mongo, @directory_collection, query) do
       nil ->
         insert_one_file(user_id, params)
 
       _ ->
-        {:error, "A folder with that name already exists."}
+        {:error, "A file with that name already exists."}
     end
   end
 
   def update_file(user_id, params) do
     query = %{
-      "user_id" => user_id,
-      "id" => params["id"],
-      "type" => @file_type
+      @user_id => user_id,
+      @id => get_id(params),
+      @type_key => @file_type
     }
 
     case Mongo.find_one(:mongo, @directory_collection, query) do
       nil ->
         {:error, "File not found"}
 
-      %{"_id" => existing_id} ->
+      %{@mongo_id => existing_id} ->
         updates = get_updates(params)
 
-        Mongo.update_one(:mongo, @directory_collection, %{"_id" => existing_id}, updates)
+        Mongo.update_one(:mongo, @directory_collection, %{@mongo_id => existing_id}, updates)
         {:ok, "File updated"}
     end
   end
 
   def delete_files(params) do
     query = %{
-      "type" => @file_type
+      @type_key => @file_type
     }
 
     query = Map.merge(query, params)
@@ -85,9 +118,9 @@ defmodule CowRoll.File do
 
   def delete_file(user_id, file_id) do
     query = %{
-      "user_id" => user_id,
-      "id" => file_id,
-      "type" => @file_type
+      @user_id => user_id,
+      @id => file_id,
+      @type_key => @file_type
     }
 
     deletes = Mongo.delete_one!(:mongo, @directory_collection, query)
@@ -96,19 +129,19 @@ defmodule CowRoll.File do
 
   def get_file(user_id, file_id) do
     query = %{
-      "user_id" => user_id,
-      "id" => file_id,
-      "type" => @file_type
+      @user_id => user_id,
+      @id => file_id,
+      @type_key => @file_type
     }
 
     file = Mongo.find_one(:mongo, @directory_collection, query)
 
     if(file != nil) do
       %{
-        :id => file["id"],
-        :name => file["name"],
-        :content => file["content"],
-        :directoryId => file["directory_id"]
+        :id => file[@id],
+        :name => file[@name],
+        :content => file[@content],
+        :directoryId => file[@directory_id]
       }
     else
       %{}
@@ -126,35 +159,37 @@ defmodule CowRoll.File do
 
   def find_file(user_id, params) do
     case Mongo.find_one(:mongo, @directory_collection, %{
-           "id" => params["id"],
+           @id => get_id(params),
            # No debería hacer falte pero por si acaso
-           "user_id" => user_id
+           @user_id => user_id
          }) do
       nil ->
         {:error, "File not found."}
 
       file ->
-        {:ok, file["id"]}
+        {:ok, file[@id]}
     end
   end
 
   def insert_one_file(user_id, params \\ %{}) do
     id = get_unique_id()
     params = clean_params(params)
+    name = get_name(params)
+    directory_id = get_directory_id(params)
 
-    if(params["name"] == "" or params["name"] == nil) do
+    if(name == "" or name == nil) do
       {:error, "The name of the file can't be empty."}
     else
-      if(params["directory_id"] == "" or params["directory_id"] == nil) do
+      if(directory_id == "" or directory_id == nil) do
         {:error, "The file needs a parent directory"}
       else
         default_params = %{
-          "user_id" => user_id,
-          "type" => @file_type
+          @user_id => user_id,
+          @type_key => @file_type
         }
 
         params = Map.merge(default_params, params)
-        params = Map.put(params, "id", id)
+        params = Map.put(params, @id, id)
         Mongo.insert_one(:mongo, @directory_collection, params)
 
         {:ok, id}
