@@ -12,7 +12,6 @@ defmodule CowRoll.Directory do
   @directory_id "directory_id"
 
   @name "name"
-  @content "content"
   @id "id"
   @user_id "user_id"
   @type_key "type"
