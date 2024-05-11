@@ -2,6 +2,8 @@ defmodule CowRoll.File do
   use Ecto.Schema
   import CowRoll.Utils.Functions
   import CowRoll.Schemas.Helper
+  import CowRollWeb.ErrorCodes
+  import CowRollWeb.SuccesCodes
 
   @file_type "File"
   @directory_collection "code"
@@ -80,7 +82,7 @@ defmodule CowRoll.File do
         insert_one_file(user_id, params)
 
       _ ->
-        {:error, "A file with that name already exists."}
+        {:error, file_name_already_exits()}
     end
   end
 
@@ -93,13 +95,13 @@ defmodule CowRoll.File do
 
     case Mongo.find_one(:mongo, @directory_collection, query) do
       nil ->
-        {:error, "File not found"}
+        {:error, file_not_found()}
 
       %{@mongo_id => existing_id} ->
         updates = get_updates(params)
 
         Mongo.update_one(:mongo, @directory_collection, %{@mongo_id => existing_id}, updates)
-        {:ok, "File updated"}
+        {:ok, file_updated()}
     end
   end
 
@@ -164,7 +166,7 @@ defmodule CowRoll.File do
            @user_id => user_id
          }) do
       nil ->
-        {:error, "File not found."}
+        {:error, file_not_found()}
 
       file ->
         {:ok, file[@id]}
@@ -178,10 +180,10 @@ defmodule CowRoll.File do
     directory_id = get_directory_id(params)
 
     if(name == "" or name == nil) do
-      {:error, "The name of the file can't be empty."}
+      {:error, empty_file_name()}
     else
       if(directory_id == "" or directory_id == nil) do
-        {:error, "The file needs a parent directory"}
+        {:error, parent_not_found()}
       else
         default_params = %{
           @user_id => user_id,

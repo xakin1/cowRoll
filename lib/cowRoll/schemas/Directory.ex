@@ -2,6 +2,7 @@ defmodule CowRoll.Directory do
   use Ecto.Schema
   import CowRoll.Utils.Functions
   import CowRoll.Schemas.Helper
+  import CowRollWeb.ErrorCodes
   alias CowRoll.File
   @root_name "Root"
   @directory_type "Directory"
@@ -88,7 +89,7 @@ defmodule CowRoll.Directory do
 
     case Mongo.find_one(:mongo, @directory_collection, query) do
       nil ->
-        {:error, "File not found"}
+        {:error, file_not_found()}
 
       %{@mongo_id => existing_id} ->
         updates = get_updates(params)
@@ -102,7 +103,7 @@ defmodule CowRoll.Directory do
 
     case Mongo.find_one(:mongo, @directory_collection, %{@id => parent_id}) do
       nil ->
-        {:error, "parent not found"}
+        {:error, parent_not_found()}
 
       directory ->
         {:ok, get_id(directory)}
@@ -119,7 +120,7 @@ defmodule CowRoll.Directory do
 
     case Mongo.find_one(:mongo, @directory_collection, %{@id => parent_id}) do
       nil ->
-        {:error, "parent not found"}
+        {:error, parent_not_found()}
 
       directory ->
         {:ok, directory}
@@ -137,7 +138,7 @@ defmodule CowRoll.Directory do
         insert_one(user_id, params)
 
       _ ->
-        {:error, "A folder with that name already exists."}
+        {:error, directory_name_already_exits()}
     end
   end
 
@@ -198,7 +199,7 @@ defmodule CowRoll.Directory do
     name = get_name(params)
 
     if(name == "" or name == nil) do
-      {:error, "The name of the folder can't be empty."}
+      {:error, empty_folder_name()}
     else
       params =
         Map.update(params, @parent_id, nil, fn

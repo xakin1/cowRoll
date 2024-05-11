@@ -4,6 +4,8 @@ defmodule CowRollWeb.CodeController do
   import CowRoll.Parser
   import CowRoll.Directory
   import CowRoll.File
+  import CowRollWeb.ErrorCodes
+  import CowRollWeb.SuccesCodes
   use CowRollWeb, :controller
   require Logger
 
@@ -63,8 +65,8 @@ defmodule CowRollWeb.CodeController do
 
       _ ->
         case compile(get_content(params)) do
-          :ok -> json(conn, %{message: "Content saved successfully"})
-          {:error, error} -> json(conn, %{message: "Content saved successfully", error: error})
+          :ok -> json(conn, %{message: content_inserted()})
+          {:error, error} -> json(conn, %{message: content_inserted(), error: error})
         end
     end
   end
@@ -110,7 +112,7 @@ defmodule CowRollWeb.CodeController do
     if file == %{} do
       conn
       |> put_status(:not_found)
-      |> json(%{error: "File not found"})
+      |> json(%{error: empty_folder_name()})
     else
       json(conn, %{message: file})
     end
@@ -123,7 +125,7 @@ defmodule CowRollWeb.CodeController do
 
     case update_file(user_id, attributes) do
       {:ok, _result} ->
-        json(conn, %{message: "File name updated successfully"})
+        json(conn, %{message: file_updated()})
 
       {:error, reason} ->
         conn
@@ -139,7 +141,7 @@ defmodule CowRollWeb.CodeController do
     deleted_count = delete_file(user_id, file_id)
 
     if deleted_count > 0 do
-      json(conn, %{message: "File was deleted successfully"})
+      json(conn, %{message: file_deleted()})
     else
       resp(conn, 204, "")
     end
@@ -151,7 +153,7 @@ defmodule CowRollWeb.CodeController do
 
     case update_directory(user_id, attributes) do
       {:ok, _result} ->
-        json(conn, %{message: "Directory name updated successfully"})
+        json(conn, %{message: directory_deleted()})
 
       {:error, reason} ->
         conn
@@ -167,7 +169,7 @@ defmodule CowRollWeb.CodeController do
     deleted_count = delete_directory(user_id, directory_id)
 
     if deleted_count > 0 do
-      json(conn, %{message: "Directory was deleted successfully"})
+      json(conn, %{message: directory_deleted()})
     else
       resp(conn, 204, "")
     end
@@ -181,7 +183,7 @@ defmodule CowRollWeb.CodeController do
       :error ->
         conn
         |> put_status(:bad_request)
-        |> json(%{error: "Invalid user ID"})
+        |> json(%{error: invalid_user_id()})
     end
   end
 
