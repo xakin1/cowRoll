@@ -29,8 +29,13 @@ defmodule CowRollWeb.CodeController do
     params = CowRoll.Directory.get_attributes(conn.body_params)
 
     case CowRoll.Directory.create_directory(user_id, params) do
-      {:ok, directory_id} -> json(conn, %{message: directory_id})
-      {:error, reason} -> json(conn, %{error: reason})
+      {:ok, directory_id} ->
+        json(conn, %{message: directory_id})
+
+      {:error, reason} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: reason})
     end
   end
 
@@ -45,8 +50,13 @@ defmodule CowRollWeb.CodeController do
         params = update_directory_id(params, directory_id)
 
         case CowRoll.File.create_file(user_id, params) do
-          {:ok, file_id} -> json(conn, %{message: file_id})
-          {:error, reason} -> json(conn, %{error: reason})
+          {:ok, file_id} ->
+            json(conn, %{message: file_id})
+
+          {:error, reason} ->
+            conn
+            |> put_status(:forbidden)
+            |> json(%{error: reason})
         end
 
       {:error, reason} ->
@@ -61,7 +71,9 @@ defmodule CowRollWeb.CodeController do
 
     case update_file(user_id, params) do
       {:error, error} ->
-        json(conn, %{error: error})
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: error})
 
       _ ->
         case compile(get_content(params)) do
@@ -149,14 +161,20 @@ defmodule CowRollWeb.CodeController do
   def edit_directory(conn, %{"id" => user_id}) do
     user_id = parse_id(user_id, conn)
     attributes = CowRoll.Directory.get_attributes(conn.body_params)
+    reason = directory_not_found()
 
     case update_directory(user_id, attributes) do
       {:ok, _result} ->
         json(conn, %{message: directory_deleted()})
 
-      {:error, reason} ->
+      {:error, ^reason} ->
         conn
         |> put_status(:not_found)
+        |> json(%{error: reason})
+
+      {:error, reason} ->
+        conn
+        |> put_status(:forbidden)
         |> json(%{error: reason})
     end
   end

@@ -89,13 +89,48 @@ defmodule CowRoll.Directory do
 
     case Mongo.find_one(:mongo, @directory_collection, query) do
       nil ->
-        {:error, file_not_found()}
+        {:error, directory_not_found()}
 
       %{@mongo_id => existing_id} ->
-        updates = get_updates(params)
+        if is_descendant?(user_id, get_id(params), get_parent_id(params)) do
+          {:error, parent_into_child()}
+        else
+          updates = get_updates(params)
 
-        Mongo.update_one(:mongo, @directory_collection, %{@mongo_id => existing_id}, updates)
+          Mongo.update_one(:mongo, @directory_collection, %{@mongo_id => existing_id}, updates)
+        end
     end
+  end
+
+  # Verifica si el destino es un descendiente del directorio actual
+  defp is_descendant?(user_id, directory_id, parent_id) do
+    {:ok, directory} = get_directory(user_id, parent_id)
+
+    cursor = get_descendants(get_id(directory))
+
+    Enum.any?(cursor |> Enum.to_list(), fn doc ->
+      Enum.any?(doc["descendants"], fn descendant ->
+        get_id(descendant) == directory_id
+      end)
+    end)
+  end
+
+  defp get_descendants(directory_id) do
+    # filtra los documentos en la colección para encontrar el documento que coincide con el id
+    aggregation_pipeline = [
+      %{"$match" => %{@id => directory_id}},
+      %{
+        "$graphLookup" => %{
+          from: @directory_collection,
+          startWith: "$id",
+          connectFromField: @parent_id,
+          connectToField: @id,
+          as: "descendants"
+        }
+      }
+    ]
+
+    Mongo.aggregate(:mongo, @directory_collection, aggregation_pipeline)
   end
 
   def find_directory(user_id, params) do
