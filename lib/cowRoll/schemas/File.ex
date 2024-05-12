@@ -24,6 +24,7 @@ defmodule CowRoll.File do
     }
   end
 
+  @spec get_content(nil | maybe_improper_list() | map()) :: any()
   def get_content(params) do
     params[@content]
   end
@@ -80,7 +81,7 @@ defmodule CowRoll.File do
 
     case Mongo.find_one(:mongo, @directory_collection, query) do
       nil ->
-        insert_one_file(user_id, params)
+        insert_one_file(user_id, query)
 
       _ ->
         {:error, file_name_already_exits()}
