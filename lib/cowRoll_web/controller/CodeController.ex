@@ -106,7 +106,7 @@ defmodule CowRollWeb.CodeController do
   @spec get_file_by_id(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def get_file_by_id(conn, %{"id" => user_id, "fileId" => file_id}) do
     user_id = parse_id(user_id, conn)
-    file_id = parse_id(file_id, conn)
+
     file = get_file(user_id, file_id)
 
     if file == %{} do
@@ -136,7 +136,6 @@ defmodule CowRollWeb.CodeController do
 
   def remove_file(conn, %{"id" => user_id, "fileId" => file_id}) do
     user_id = parse_id(user_id, conn)
-    file_id = parse_id(file_id, conn)
 
     deleted_count = delete_file(user_id, file_id)
 
@@ -164,7 +163,6 @@ defmodule CowRollWeb.CodeController do
 
   def remove_directory(conn, %{"id" => user_id, "directoryId" => directory_id}) do
     user_id = parse_id(user_id, conn)
-    directory_id = parse_id(directory_id, conn)
 
     deleted_count = delete_directory(user_id, directory_id)
 

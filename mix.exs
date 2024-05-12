@@ -26,7 +26,7 @@ defmodule CowRoll.MixProject do
   def application do
     [
       mod: {CowRoll.Application, []},
-      extra_applications: [:logger, :runtime_tools,:mongodb,:phoenix_ecto]
+      extra_applications: [:logger, :runtime_tools, :mongodb, :phoenix_ecto]
     ]
   end
 
@@ -40,6 +40,7 @@ defmodule CowRoll.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.7.7"},
+      {:uuid, "~> 1.1.8"},
       {:cors_plug, "~> 2.0"},
       {:mongodb, "~> 1.0.0"},
       {:phoenix_ecto, "~> 4.5.1"},

@@ -74,7 +74,8 @@ defmodule CowRoll.File do
     query = %{
       @user_id => user_id,
       @directory_id => get_directory_id(params),
-      @name => get_name(params)
+      @name => get_name(params),
+      @type_key => @file_type
     }
 
     case Mongo.find_one(:mongo, @directory_collection, query) do

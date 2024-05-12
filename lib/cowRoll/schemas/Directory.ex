@@ -130,7 +130,8 @@ defmodule CowRoll.Directory do
   def create_directory(user_id, params) do
     query = %{
       @parent_id => get_parent_id(user_id, params),
-      @name => get_name(params)
+      @name => get_name(params),
+      @type_key => @directory_type
     }
 
     case Mongo.find_one(:mongo, @directory_collection, query) do

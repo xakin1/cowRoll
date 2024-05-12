@@ -2,7 +2,7 @@ defmodule CowRollWeb.SuccesCodes do
   @file_updated "FILE_UPDATED"
   @file_deleted "FILE_DELETED"
   @directory_updated "DIRECTORY_UPDATED"
-  @directory_deleted "DIRECTORY_NAME_UPDATED"
+  @directory_deleted "DIRECTORY_DELETED"
   @content_inserted "CONTENT_INSERTED"
 
   def file_updated, do: @file_updated
