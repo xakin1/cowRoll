@@ -1,5 +1,4 @@
 defmodule CowRoll.File do
-  use Ecto.Schema
   import CowRoll.Utils.Functions
   import CowRoll.Schemas.Helper
   import CowRollWeb.ErrorCodes
@@ -194,9 +193,14 @@ defmodule CowRoll.File do
 
         params = Map.merge(default_params, params)
         params = Map.put(params, @id, id)
-        Mongo.insert_one(:mongo, @directory_collection, params)
 
-        {:ok, id}
+        case Mongo.insert_one(:mongo, @directory_collection, params) do
+          {:ok, _result} ->
+            {:ok, id}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
       end
     end
   end

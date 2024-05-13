@@ -1,5 +1,4 @@
 defmodule CowRoll.Directory do
-  use Ecto.Schema
   import CowRoll.Utils.Functions
   import CowRoll.Schemas.Helper
   import CowRollWeb.ErrorCodes
@@ -251,9 +250,13 @@ defmodule CowRoll.Directory do
 
       params = clean_params(params)
 
-      Mongo.insert_one(:mongo, @directory_collection, params)
+      case Mongo.insert_one(:mongo, @directory_collection, params) do
+        {:ok, _result} ->
+          {:ok, id}
 
-      {:ok, id}
+        {:error, reason} ->
+          {:error, reason}
+      end
     end
   end
 end

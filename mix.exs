@@ -43,6 +43,7 @@ defmodule CowRoll.MixProject do
       {:uuid, "~> 1.1.8"},
       {:cors_plug, "~> 2.0"},
       {:mongodb, "~> 1.0.0"},
+      {:argon2_elixir, "~> 4.0"},
       {:phoenix_ecto, "~> 4.5.1"},
       {:phoenix_live_dashboard, "~> 0.8.0"},
       {:swoosh, "~> 1.3"},
