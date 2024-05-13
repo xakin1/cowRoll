@@ -240,8 +240,7 @@ defmodule Compatibility do
     parameters_expected = map_size(parameters)
 
     if parameters_found != parameters_expected do
-      raise_error_parameters_type(line, function_name, parameters_expected,parameters_found)
-
+      raise_error_parameters_type(line, function_name, parameters_expected, parameters_found)
     else
       check_parameters(parameters, parameter_types, function_name, constraints, line)
     end

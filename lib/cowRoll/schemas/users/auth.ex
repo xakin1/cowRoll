@@ -1,8 +1,7 @@
 defmodule CowRoll.Schemas.Users.Auth do
   import Argon2
   import CowRollWeb.ErrorCodes
-  import CowRollWeb.SuccesCodes
-  import CowRoll.Utils.Functions
+  import CowRoll.Schemas.Users.Users
 
   @collection "users"
 
@@ -27,21 +26,13 @@ defmodule CowRoll.Schemas.Users.Auth do
 
     case validate_params(params) do
       {:ok, []} ->
-        case Mongo.find_one(:mongo, @collection, %{username: username}) do
+        case get_user_by_username(username) do
           nil ->
             # Posiblemente esto venga haseado de la web pero mientras tanto lo hasheamos local
             hashed_password = password |> hash_pwd_salt()
-            id = get_unique_id()
 
-            user = %{id: id, username: username, password: hashed_password}
-
-            case Mongo.insert_one(:mongo, @collection, user) do
-              {:ok, _result} ->
-                {:ok, id}
-
-              {:error, reason} ->
-                {:error, reason}
-            end
+            user = %{username: username, password: hashed_password}
+            insert_user(user)
 
           _ ->
             {:error, user_name_already_exits()}
@@ -55,9 +46,10 @@ defmodule CowRoll.Schemas.Users.Auth do
   def login_user(params) do
     case Mongo.find(:mongo, @collection, %{username: get_username(params)}, limit: 1)
          |> Enum.to_list() do
-      [%{"password" => db_password}] ->
+      [%{"password" => db_password, "id" => user_id}] ->
         if params |> get_password() |> Argon2.verify_pass(db_password) do
-          {:ok, authentication_ok()}
+          token = generate_jwt_token(user_id)
+          {:ok, token}
         else
           {:error, invalid_credentials()}
         end
@@ -65,6 +57,11 @@ defmodule CowRoll.Schemas.Users.Auth do
       [] ->
         {:error, user_not_found()}
     end
+  end
+
+  defp generate_jwt_token(user_id) do
+    data = %{"user_id" => user_id}
+    CowRoll.Token.sign(data)
   end
 
   # Valida todos los parametros si es que tienen una función de validación

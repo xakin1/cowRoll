@@ -7,6 +7,10 @@ defmodule CowRollWeb.ErrorJSON do
     %{error: "Resource not found"}
   end
 
+  def render("401.json", _assigns) do
+    %{error: "Unauthorized"}
+  end
+
   def render("400.json", _assigns) do
     %{error: "Bad request"}
   end

@@ -24,8 +24,8 @@ defmodule CowRollWeb.UserController do
     params = Auth.get_attributes(conn.body_params)
 
     case Auth.login_user(params) do
-      {:ok, id} ->
-        json(conn, %{message: id})
+      {:ok, token} ->
+        json(conn, %{message: token})
 
       {:error, ^reason} ->
         conn

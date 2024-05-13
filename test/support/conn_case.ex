@@ -37,6 +37,7 @@ defmodule CowRollWeb.ConnCase do
     collections = ["code", "users"]
     Mix.shell().info("Reset all data")
     Enum.map(collections, fn collection -> Mongo.delete_many(:mongo, collection, %{}) end)
+
     # Se ejecuta al final de cada test
     on_exit(fn ->
       Enum.map(collections, fn collection -> Mongo.delete_many(:mongo, collection, %{}) end)

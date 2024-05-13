@@ -6,6 +6,7 @@ defmodule CowRollWeb.CodeController do
   import CowRoll.File
   import CowRollWeb.ErrorCodes
   import CowRollWeb.SuccesCodes
+  import CowRollWeb.Controller.HelpersControllers
   use CowRollWeb, :controller
   require Logger
 
@@ -24,8 +25,8 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def create_directory(conn, %{"id" => user_id}) do
-    user_id = parse_id(user_id, conn)
+  def create_directory(conn, _) do
+    user_id = get_current_user(conn)
     params = CowRoll.Directory.get_attributes(conn.body_params)
 
     case CowRoll.Directory.create_directory(user_id, params) do
@@ -39,8 +40,8 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def create_file(conn, %{"id" => user_id}) do
-    user_id = parse_id(user_id, conn)
+  def create_file(conn, _) do
+    user_id = get_current_user(conn)
 
     params = CowRoll.File.get_attributes(conn.body_params)
     params = set_parent_id(params, get_directory_id(params))
@@ -64,8 +65,8 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def insert_content(conn, %{"id" => user_id}) do
-    user_id = parse_id(user_id, conn)
+  def insert_content(conn, _) do
+    user_id = get_current_user(conn)
 
     params = CowRoll.File.get_attributes(conn.body_params)
 
@@ -108,16 +109,16 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def get_files(conn, %{"id" => user_id}) do
-    user_id = parse_id(user_id, conn)
+  def get_files(conn, _) do
+    user_id = get_current_user(conn)
     tree = get_directory_structure(user_id)
 
     json(conn, %{message: tree})
   end
 
   @spec get_file_by_id(Plug.Conn.t(), map()) :: Plug.Conn.t()
-  def get_file_by_id(conn, %{"id" => user_id, "fileId" => file_id}) do
-    user_id = parse_id(user_id, conn)
+  def get_file_by_id(conn, %{"fileId" => file_id}) do
+    user_id = get_current_user(conn)
 
     file = get_file(user_id, file_id)
 
@@ -130,8 +131,8 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def edit_file(conn, %{"id" => user_id}) do
-    user_id = parse_id(user_id, conn)
+  def edit_file(conn, _) do
+    user_id = get_current_user(conn)
 
     attributes = CowRoll.File.get_attributes(conn.body_params)
 
@@ -146,8 +147,8 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def remove_file(conn, %{"id" => user_id, "fileId" => file_id}) do
-    user_id = parse_id(user_id, conn)
+  def remove_file(conn, %{"fileId" => file_id}) do
+    user_id = get_current_user(conn)
 
     deleted_count = delete_file(user_id, file_id)
 
@@ -158,8 +159,8 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def edit_directory(conn, %{"id" => user_id}) do
-    user_id = parse_id(user_id, conn)
+  def edit_directory(conn, _) do
+    user_id = get_current_user(conn)
     attributes = CowRoll.Directory.get_attributes(conn.body_params)
     reason = directory_not_found()
 
@@ -179,8 +180,8 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def remove_directory(conn, %{"id" => user_id, "directoryId" => directory_id}) do
-    user_id = parse_id(user_id, conn)
+  def remove_directory(conn, %{"directoryId" => directory_id}) do
+    user_id = get_current_user(conn)
 
     deleted_count = delete_directory(user_id, directory_id)
 
@@ -188,18 +189,6 @@ defmodule CowRollWeb.CodeController do
       json(conn, %{message: directory_deleted()})
     else
       resp(conn, 204, "")
-    end
-  end
-
-  defp parse_id(id, conn) do
-    case Integer.parse(id) do
-      {id, ""} ->
-        id
-
-      :error ->
-        conn
-        |> put_status(:bad_request)
-        |> json(%{error: invalid_user_id()})
     end
   end
 

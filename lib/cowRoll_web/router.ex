@@ -6,9 +6,34 @@ defmodule CowRollWeb.Router do
     plug CORSPlug
   end
 
+  pipeline :authenticated do
+    plug CowRollWeb.Plug.Authenticate
+  end
+
   pipeline :test do
     plug :accepts, ["json"]
     plug CORSPlug
+  end
+
+  scope "/api", CowRollWeb do
+    pipe_through [:api, :authenticated]
+
+    # Code
+    get "/file", CodeController, :get_files
+    get "/file/:fileId", CodeController, :get_file_by_id
+
+    post "/code", CodeController, :run_code
+    post "/createFile", CodeController, :create_file
+    post "/createDirectory", CodeController, :create_directory
+    post "/editFile", CodeController, :edit_file
+    post "/editDirectory", CodeController, :edit_directory
+    post "/insertContent", CodeController, :insert_content
+    post "/compile", CodeController, :compile_code
+
+    delete "/deleteFile/:fileId", CodeController, :remove_file
+    delete "/deleteDirectory/:directoryId", CodeController, :remove_directory
+
+    options "/*path", CorsManagement, :handle_options
   end
 
   scope "/api", CowRollWeb do
@@ -16,22 +41,6 @@ defmodule CowRollWeb.Router do
     # Users
     post "/signUp", UserController, :register_user
     post "/login", UserController, :login_user
-    # Code
-    get "/file/:id", CodeController, :get_files
-    get "/file/:id/:fileId", CodeController, :get_file_by_id
-
-    post "/code", CodeController, :run_code
-    post "/createFile/:id", CodeController, :create_file
-    post "/createDirectory/:id", CodeController, :create_directory
-    post "/editFile/:id", CodeController, :edit_file
-    post "/editDirectory/:id", CodeController, :edit_directory
-    post "/insertContent/:id", CodeController, :insert_content
-    post "/compile", CodeController, :compile_code
-
-    delete "/deleteFile/:id/:fileId", CodeController, :remove_file
-    delete "/deleteDirectory/:id/:directoryId", CodeController, :remove_directory
-
-    options "/*path", CorsManagement, :handle_options
   end
 
   scope "/test", CowRollWeb do
