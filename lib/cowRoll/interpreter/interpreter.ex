@@ -44,12 +44,6 @@ defmodule CowRoll.Interpreter do
           | {:call_function, String.t(), {:parameters, expr_ast}}
           | {:call_function, String.t()}
 
-  @type aterm ::
-          {:number, any(), integer()}
-          | {:dice, charlist()}
-          | {:not_defined, charlist()}
-          | expr_ast
-
   @spec eval_input(any()) :: any()
   def eval_input(input) do
     # Creamos un arbol que va a tener el scope de las variables
@@ -183,7 +177,7 @@ defmodule CowRoll.Interpreter do
 
   defp eval(scope, {:name, variable, line}) do
     case get_variable_from_scope(scope, variable) do
-      false -> runtimeError_raise_error(variable,line)
+      false -> runtimeError_raise_error(variable, line)
       value -> value
     end
   end
@@ -421,7 +415,7 @@ defmodule CowRoll.Interpreter do
        ) do
     case get_fuction_from_scope(function_name) do
       {false, name, line} ->
-        raise runtimeError_raise_error_function_missing(name,line)
+        raise runtimeError_raise_error_function_missing(name, line)
 
       {parameters_to_replace, code} ->
         call_function(scope, function_name, parameters, parameters_to_replace, code)

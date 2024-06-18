@@ -34,13 +34,15 @@ defmodule CowRollWeb.ConnCase do
 
   # Se ejecuta al principio de cada test
   setup _tags do
-    Mix.shell.info "Reset all data"
-    Mongo.delete_many(:mongo, "code", %{})
+    collections = ["code", "users"]
+    Mix.shell().info("Reset all data")
+    Enum.map(collections, fn collection -> Mongo.delete_many(:mongo, collection, %{}) end)
+
     # Se ejecuta al final de cada test
     on_exit(fn ->
-      Mongo.delete_many(:mongo, "code", %{})
+      Enum.map(collections, fn collection -> Mongo.delete_many(:mongo, collection, %{}) end)
     end)
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
 
+    {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end
