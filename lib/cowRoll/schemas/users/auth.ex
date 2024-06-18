@@ -32,7 +32,10 @@ defmodule CowRoll.Schemas.Users.Auth do
             hashed_password = password |> hash_pwd_salt()
 
             user = %{username: username, password: hashed_password}
-            insert_user(user)
+
+            with {:ok, id} <- insert_user(user) do
+              {:ok, generate_jwt_token(id)}
+            end
 
           _ ->
             {:error, user_name_already_exits()}

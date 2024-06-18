@@ -214,6 +214,7 @@ defmodule CowRoll.Directory do
             name: File.get_name(file),
             type: File.get_type(file),
             content: File.get_content(file),
+            contentSchema: File.get_content_schema(file),
             directoryId: File.get_directory_id(file)
           }
         end) ++ Enum.map(subdirectories, &build_structure/1)

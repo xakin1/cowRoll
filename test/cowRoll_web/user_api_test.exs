@@ -65,5 +65,12 @@ defmodule CowRollWeb.UserApiTest do
       conn = post(conn, "/api/login", username: "sujeto1", password: "aAcs1234.")
       assert json_response(conn, 200)["message"]
     end
+
+    test "login successfully and execute an operation", %{conn: conn} do
+      conn = post(conn, "/api/signUp", username: "sujeto1", password: "aAcs1234.")
+      conn = post(conn, "/api/login", username: "sujeto1", password: "aAcs1234.")
+      conn = delete(conn, "/api/deleteFile/-1")
+      assert conn.status == 204
+    end
   end
 end

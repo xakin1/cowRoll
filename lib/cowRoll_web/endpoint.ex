@@ -23,6 +23,8 @@ defmodule CowRollWeb.Endpoint do
     gzip: false,
     only: CowRollWeb.static_paths()
 
+  plug CORSPlug, origin: ["http://localhost:4321"], allow_credentials: true
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do

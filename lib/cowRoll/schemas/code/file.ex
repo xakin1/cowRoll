@@ -9,6 +9,7 @@ defmodule CowRoll.File do
   @directory_id "directory_id"
   @name "name"
   @content "content"
+  @content_schema "content_schema"
   @id "id"
   @user_id "user_id"
   @type_key "type"
@@ -19,6 +20,7 @@ defmodule CowRoll.File do
       @name => params["name"],
       @directory_id => params["directoryId"],
       @content => params["content"],
+      @content_schema => params["contentSchema"],
       @id => params["id"]
     }
   end
@@ -26,6 +28,10 @@ defmodule CowRoll.File do
   @spec get_content(nil | maybe_improper_list() | map()) :: any()
   def get_content(params) do
     params[@content]
+  end
+
+  def get_content_schema(params) do
+    params[@content_schema]
   end
 
   def get_id(params) do
@@ -144,6 +150,7 @@ defmodule CowRoll.File do
         :id => file[@id],
         :name => file[@name],
         :content => file[@content],
+        :contentSchema => file[@content_schema],
         :directoryId => file[@directory_id]
       }
     else

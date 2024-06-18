@@ -3,7 +3,7 @@ defmodule CowRollWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug CORSPlug
+    plug CORSPlug, origin: ["http://localhost:4321"], allow_credentials: true
   end
 
   pipeline :authenticated do
@@ -32,8 +32,6 @@ defmodule CowRollWeb.Router do
 
     delete "/deleteFile/:fileId", CodeController, :remove_file
     delete "/deleteDirectory/:directoryId", CodeController, :remove_directory
-
-    options "/*path", CorsManagement, :handle_options
   end
 
   scope "/api", CowRollWeb do
@@ -46,7 +44,6 @@ defmodule CowRollWeb.Router do
   scope "/test", CowRollWeb do
     pipe_through :test
     delete "/reset", CodeController, :delete_all
-    options "/*path", CorsManagement, :handle_options
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

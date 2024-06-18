@@ -26,7 +26,7 @@ defmodule CowRollWeb.CodeController do
   end
 
   def create_directory(conn, _) do
-    user_id = get_current_user(conn)
+    user_id = get_user_id(conn)
     params = CowRoll.Directory.get_attributes(conn.body_params)
 
     case CowRoll.Directory.create_directory(user_id, params) do
@@ -41,7 +41,7 @@ defmodule CowRollWeb.CodeController do
   end
 
   def create_file(conn, _) do
-    user_id = get_current_user(conn)
+    user_id = get_user_id(conn)
 
     params = CowRoll.File.get_attributes(conn.body_params)
     params = set_parent_id(params, get_directory_id(params))
@@ -66,7 +66,7 @@ defmodule CowRollWeb.CodeController do
   end
 
   def insert_content(conn, _) do
-    user_id = get_current_user(conn)
+    user_id = get_user_id(conn)
 
     params = CowRoll.File.get_attributes(conn.body_params)
 
@@ -110,7 +110,7 @@ defmodule CowRollWeb.CodeController do
   end
 
   def get_files(conn, _) do
-    user_id = get_current_user(conn)
+    user_id = get_user_id(conn)
     tree = get_directory_structure(user_id)
 
     json(conn, %{message: tree})
@@ -118,7 +118,7 @@ defmodule CowRollWeb.CodeController do
 
   @spec get_file_by_id(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def get_file_by_id(conn, %{"fileId" => file_id}) do
-    user_id = get_current_user(conn)
+    user_id = get_user_id(conn)
 
     file = get_file(user_id, file_id)
 
@@ -132,7 +132,7 @@ defmodule CowRollWeb.CodeController do
   end
 
   def edit_file(conn, _) do
-    user_id = get_current_user(conn)
+    user_id = get_user_id(conn)
 
     attributes = CowRoll.File.get_attributes(conn.body_params)
 
@@ -148,7 +148,7 @@ defmodule CowRollWeb.CodeController do
   end
 
   def remove_file(conn, %{"fileId" => file_id}) do
-    user_id = get_current_user(conn)
+    user_id = get_user_id(conn)
 
     deleted_count = delete_file(user_id, file_id)
 
@@ -160,7 +160,8 @@ defmodule CowRollWeb.CodeController do
   end
 
   def edit_directory(conn, _) do
-    user_id = get_current_user(conn)
+    user_id = get_user_id(conn)
+    IO.puts(user_id)
     attributes = CowRoll.Directory.get_attributes(conn.body_params)
     reason = directory_not_found()
 
@@ -181,7 +182,7 @@ defmodule CowRollWeb.CodeController do
   end
 
   def remove_directory(conn, %{"directoryId" => directory_id}) do
-    user_id = get_current_user(conn)
+    user_id = get_user_id(conn)
 
     deleted_count = delete_directory(user_id, directory_id)
 
@@ -192,7 +193,10 @@ defmodule CowRollWeb.CodeController do
     end
   end
 
-  def delete_all(_, _) do
-    Mongo.delete_many(:mongo, "code", %{})
+  def delete_all(conn, _) do
+    collections = ["code", "users"]
+    Enum.map(collections, fn collection -> Mongo.delete_many(:mongo, collection, %{}) end)
+
+    resp(conn, 200, "")
   end
 end

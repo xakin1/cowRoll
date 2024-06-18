@@ -827,6 +827,7 @@ defmodule CowRollWeb.CodeApiTest do
 
       assert %{
                "content" => "40+2",
+               "contentSchema" => nil,
                "name" => "example"
              } == drop_ids(response)
     end

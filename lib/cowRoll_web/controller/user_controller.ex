@@ -8,8 +8,10 @@ defmodule CowRollWeb.UserController do
     params = Auth.get_attributes(conn.body_params)
     # Aquí hay que devolver el id
     case Auth.register_user(params) do
-      {:ok, id} ->
-        json(conn, %{message: id})
+      {:ok, token} ->
+        conn
+        |> put_resp_cookie("token", token, http_only: true, secure: false, same_site: "Lax")
+        |> json(%{message: token})
 
       {:error, reason} ->
         conn
@@ -25,7 +27,9 @@ defmodule CowRollWeb.UserController do
 
     case Auth.login_user(params) do
       {:ok, token} ->
-        json(conn, %{message: token})
+        conn
+        |> put_resp_cookie("token", token, http_only: true, secure: true, same_site: "Strict")
+        |> json(%{message: token})
 
       {:error, ^reason} ->
         conn
