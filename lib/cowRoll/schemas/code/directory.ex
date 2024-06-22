@@ -209,14 +209,7 @@ defmodule CowRoll.Directory do
       type: @directory_type,
       children:
         Enum.map(files, fn file ->
-          %{
-            id: File.get_id(file),
-            name: File.get_name(file),
-            type: File.get_type(file),
-            content: File.get_content(file),
-            contentSchema: File.get_content_schema(file),
-            directoryId: File.get_directory_id(file)
-          }
+          File.file_to_json(file)
         end) ++ Enum.map(subdirectories, &build_structure/1)
     }
   end

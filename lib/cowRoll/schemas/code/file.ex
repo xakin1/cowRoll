@@ -10,6 +10,7 @@ defmodule CowRoll.File do
   @name "name"
   @content "content"
   @content_schema "content_schema"
+  @backpack_schema "backpack_schema"
   @id "id"
   @user_id "user_id"
   @type_key "type"
@@ -21,6 +22,7 @@ defmodule CowRoll.File do
       @directory_id => params["directoryId"],
       @content => params["content"],
       @content_schema => params["contentSchema"],
+      @backpack_schema => params["backpackSchema"],
       @id => params["id"]
     }
   end
@@ -32,6 +34,10 @@ defmodule CowRoll.File do
 
   def get_content_schema(params) do
     params[@content_schema]
+  end
+
+  def get_backpack_schema(params) do
+    params[@backpack_schema]
   end
 
   def get_id(params) do
@@ -145,17 +151,7 @@ defmodule CowRoll.File do
 
     file = Mongo.find_one(:mongo, @directory_collection, query)
 
-    if(file != nil) do
-      %{
-        :id => file[@id],
-        :name => file[@name],
-        :content => file[@content],
-        :contentSchema => file[@content_schema],
-        :directoryId => file[@directory_id]
-      }
-    else
-      %{}
-    end
+    file_to_json(file)
   end
 
   def get_files(params) do
@@ -165,6 +161,22 @@ defmodule CowRoll.File do
 
     query = Map.merge(query, params)
     Mongo.find(:mongo, @directory_collection, query) |> Enum.to_list()
+  end
+
+  def file_to_json(file) do
+    if(file != nil) do
+      %{
+        id: get_id(file),
+        name: get_name(file),
+        type: get_type(file),
+        content: get_content(file),
+        contentSchema: get_content_schema(file),
+        backpackSchema: get_backpack_schema(file),
+        directoryId: get_directory_id(file)
+      }
+    else
+      %{}
+    end
   end
 
   def find_file(user_id, params) do
