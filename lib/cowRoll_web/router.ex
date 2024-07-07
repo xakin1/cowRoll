@@ -15,28 +15,48 @@ defmodule CowRollWeb.Router do
     plug CORSPlug
   end
 
-  scope "/api", CowRollWeb do
+  # Code
+  scope "/api/code", CowRollWeb do
     pipe_through [:api, :authenticated]
 
-    # Code
-    get "/file", CodeController, :get_files
-    get "/file/:fileId", CodeController, :get_file_by_id
-
-    post "/code", CodeController, :run_code
-    post "/createFile", CodeController, :create_file
-    post "/createDirectory", CodeController, :create_directory
-    post "/editFile", CodeController, :edit_file
-    post "/editDirectory", CodeController, :edit_directory
-    post "/insertContent", CodeController, :insert_content
     post "/compile", CodeController, :compile_code
+    post "/run", CodeController, :run_code
 
-    delete "/deleteFile/:fileId", CodeController, :remove_file
-    delete "/deleteDirectory/:directoryId", CodeController, :remove_directory
+    get "", CodeController, :get_files
+    get "/:fileId", CodeController, :get_file_by_id
+
+    post "/create", CodeController, :create_file
+    post "/edit", CodeController, :edit_file
+    post "/save", CodeController, :insert_content
+
+    delete "/delete/:fileId", CodeController, :remove_file
   end
 
+  scope "/api/directory", CowRollWeb do
+    pipe_through [:api, :authenticated]
+
+    post "/create", DirectoryController, :create_directory
+    post "/edit", DirectoryController, :edit_directory
+
+    delete "/delete/:directoryId", DirectoryController, :remove_directory
+  end
+
+  # Sheets
+  scope "/api/sheet", CowRollWeb do
+    pipe_through [:api, :authenticated]
+
+    get "", SheetController, :get_sheets
+    get "/:sheetId", SheetController, :get_sheet_by_id
+
+    post "/save", SheetController, :save_sheet
+    post "/create", SheetController, :create_sheet
+
+    delete "/remove/:sheetId", SheetController, :remove_sheet
+  end
+
+  # Users
   scope "/api", CowRollWeb do
     pipe_through :api
-    # Users
     post "/signUp", UserController, :register_user
     post "/login", UserController, :login_user
   end

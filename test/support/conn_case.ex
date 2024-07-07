@@ -29,12 +29,21 @@ defmodule CowRollWeb.ConnCase do
       import ExUnit.Case
       import Phoenix.ConnTest
       import CowRollWeb.ConnCase
+      # Función auxiliar para eliminar los IDs dinámicos para comparar estructuras
+      defp drop_ids(map) when is_map(map) do
+        map
+        |> Map.drop(["id", "parentId", "directoryId"])
+        |> Map.new(fn {key, val} -> {key, drop_ids(val)} end)
+      end
+
+      defp drop_ids(list) when is_list(list), do: Enum.map(list, &drop_ids/1)
+      defp drop_ids(value), do: value
     end
   end
 
   # Se ejecuta al principio de cada test
   setup _tags do
-    collections = ["code", "users"]
+    collections = ["code", "users", "file_system"]
     Mix.shell().info("Reset all data")
     Enum.map(collections, fn collection -> Mongo.delete_many(:mongo, collection, %{}) end)
 

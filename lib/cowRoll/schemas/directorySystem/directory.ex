@@ -5,7 +5,6 @@ defmodule CowRoll.Directory do
   alias CowRoll.File
   @root_name "Root"
   @directory_type "Directory"
-  @file_type "File"
   @directory_collection "code"
 
   @parent_id "parent_id"
@@ -194,12 +193,7 @@ defmodule CowRoll.Directory do
       |> Enum.to_list()
 
     # Recupera archivos en el directorio actual
-    files =
-      Mongo.find(:mongo, @directory_collection, %{
-        @directory_id => get_id(directory),
-        @type_key => @file_type
-      })
-      |> Enum.to_list()
+    files = File.get_files(%{@directory_id => get_id(directory)})
 
     # Mapa de datos para el directorio actual
     %{
@@ -209,7 +203,7 @@ defmodule CowRoll.Directory do
       type: @directory_type,
       children:
         Enum.map(files, fn file ->
-          File.file_to_json(file)
+          File.default_file_to_json(file)
         end) ++ Enum.map(subdirectories, &build_structure/1)
     }
   end
