@@ -22,7 +22,7 @@ defmodule CowRollWeb.Router do
     post "/compile", CodeController, :compile_code
     post "/run", CodeController, :run_code
 
-    get "", CodeController, :get_files
+    get "/", CodeController, :get_files
     get "/:fileId", CodeController, :get_file_by_id
 
     post "/create", CodeController, :create_file
@@ -45,7 +45,7 @@ defmodule CowRollWeb.Router do
   scope "/api/sheet", CowRollWeb do
     pipe_through [:api, :authenticated]
 
-    get "", SheetController, :get_sheets
+    get "/", SheetController, :get_sheets
     get "/:sheetId", SheetController, :get_sheet_by_id
 
     post "/save", SheetController, :save_sheet
