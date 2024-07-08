@@ -21,15 +21,19 @@ defmodule CowRollWeb.Router do
 
     post "/compile", CodeController, :compile_code
     post "/run", CodeController, :run_code
+  end
 
-    get "/", CodeController, :get_files
-    get "/:fileId", CodeController, :get_file_by_id
+  scope "/api/file", CowRollWeb do
+    pipe_through [:api, :authenticated]
 
-    post "/create", CodeController, :create_file
-    post "/edit", CodeController, :edit_file
-    post "/save", CodeController, :insert_content
+    get "/", FileController, :get_files
+    get "/:fileId", FileController, :get_file_by_id
 
-    delete "/delete/:fileId", CodeController, :remove_file
+    post "/create", FileController, :create_file
+    post "/edit", FileController, :edit_file
+    post "/save", FileController, :insert_content
+
+    delete "/delete/:fileId", FileController, :remove_file
   end
 
   scope "/api/directory", CowRollWeb do
@@ -39,31 +43,6 @@ defmodule CowRollWeb.Router do
     post "/edit", DirectoryController, :edit_directory
 
     delete "/delete/:directoryId", DirectoryController, :remove_directory
-  end
-
-  # Sheets
-  scope "/api/sheet", CowRollWeb do
-    pipe_through [:api, :authenticated]
-
-    get "/", SheetController, :get_sheets
-    get "/:sheetId", SheetController, :get_sheet_by_id
-
-    post "/save", SheetController, :save_sheet
-    post "/create", SheetController, :create_sheet
-
-    delete "/remove/:sheetId", SheetController, :remove_sheet
-  end
-
-  scope "/api/rol", CowRollWeb do
-    pipe_through [:api, :authenticated]
-
-    get "/", RolController, :get_roles
-    get "/:rolId", RolController, :get_rol_by_id
-
-    post "/save", RolController, :save_rol
-    post "/create", RolController, :create_rol
-
-    delete "/remove/:rolId", RolController, :remove_rol
   end
 
   # Users

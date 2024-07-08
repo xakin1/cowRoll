@@ -17,16 +17,16 @@ defmodule CowRollWeb.SheetApiTest do
 
   describe "GET /sheets" do
     test "get sheets succesfully", %{conn: conn} do
-      conn = get(conn, "/api/sheet/", content: "40+2", name: "example")
+      conn = get(conn, "/api/file/", content: "40+2", name: "example")
       assert conn.status == 200
     end
 
     test "get overwrite documments", %{conn: conn} do
-      conn = post(conn, "/api/sheet/create", name: "example")
+      conn = post(conn, "/api/file/create", type: "Sheet", name: "example", type: "Sheet")
       sheet_id = json_response(conn, 200)["message"]
-      conn = post(conn, "/api/sheet/save", content: "40+2", id: sheet_id)
+      conn = post(conn, "/api/file/save", content: "40+2", id: sheet_id, type: "Sheet")
       assert conn.status == 200
-      conn = get(conn, "/api/sheet")
+      conn = get(conn, "/api/file")
 
       response = json_response(conn, 200)["message"]
 
@@ -50,15 +50,15 @@ defmodule CowRollWeb.SheetApiTest do
       sheet_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/create", directoryId: sheet_id, name: "example")
+        post(conn, "/api/file/create", type: "Sheet", directoryId: sheet_id, name: "example")
 
       sheet_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/save", id: sheet_id, content: "40+2")
+        post(conn, "/api/file/save", type: "Sheet", id: sheet_id, content: "40+2")
 
       assert conn.status == 200
-      conn = get(conn, "/api/sheet")
+      conn = get(conn, "/api/file")
 
       response = json_response(conn, 200)["message"]
 
@@ -82,7 +82,7 @@ defmodule CowRollWeb.SheetApiTest do
     end
 
     test "get 0 documments", %{conn: conn} do
-      conn = get(conn, "/api/sheet")
+      conn = get(conn, "/api/file")
 
       response = json_response(conn, 200)["message"]
 
@@ -100,7 +100,8 @@ defmodule CowRollWeb.SheetApiTest do
       sheet_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/create",
+        post(conn, "/api/file/create",
+          type: "Sheet",
           directoryId: sheet_id,
           name: "example"
         )
@@ -108,7 +109,8 @@ defmodule CowRollWeb.SheetApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/save",
+        post(conn, "/api/file/save",
+          type: "Sheet",
           id: id,
           content: "40+2"
         )
@@ -121,7 +123,8 @@ defmodule CowRollWeb.SheetApiTest do
       sheet2_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/create",
+        post(conn, "/api/file/create",
+          type: "Sheet",
           directoryId: sheet2_id,
           name: "example2"
         )
@@ -129,7 +132,8 @@ defmodule CowRollWeb.SheetApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/save",
+        post(conn, "/api/file/save",
+          type: "Sheet",
           id: id,
           content: "'hola ' ++ 'mundo'"
         )
@@ -140,7 +144,8 @@ defmodule CowRollWeb.SheetApiTest do
       pj_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/create",
+        post(conn, "/api/file/create",
+          type: "Sheet",
           directoryId: pj_id,
           name: "createPj"
         )
@@ -148,7 +153,8 @@ defmodule CowRollWeb.SheetApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/save",
+        post(conn, "/api/file/save",
+          type: "Sheet",
           id: id,
           name: "createPj"
         )
@@ -159,7 +165,8 @@ defmodule CowRollWeb.SheetApiTest do
       do_things_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/create",
+        post(conn, "/api/file/create",
+          type: "Sheet",
           directoryId: do_things_id,
           name: "do_things"
         )
@@ -167,14 +174,15 @@ defmodule CowRollWeb.SheetApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/save",
+        post(conn, "/api/file/save",
+          type: "Sheet",
           id: id,
           content: "'hola ' ++ 'mundo'"
         )
 
       assert conn.status == 200
 
-      conn = get(conn, "/api/sheet")
+      conn = get(conn, "/api/file")
 
       response = json_response(conn, 200)["message"]
 
@@ -233,7 +241,7 @@ defmodule CowRollWeb.SheetApiTest do
 
   describe "GET /sheet/file" do
     test "try get a not existing file", %{conn: conn} do
-      conn = get(conn, "/api/sheet/1")
+      conn = get(conn, "/api/file/1")
       assert conn.status == 404
     end
 
@@ -244,20 +252,23 @@ defmodule CowRollWeb.SheetApiTest do
       sheet_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/create",
+        post(conn, "/api/file/create",
+          type: "Sheet",
           directoryId: sheet_id,
-          name: "example"
+          name: "example",
+          type: "Sheet"
         )
 
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/save",
+        post(conn, "/api/file/save",
           id: id,
-          content: "40+2"
+          content: "40+2",
+          type: "Sheet"
         )
 
-      conn = get(conn, "/api/sheet/#{id}")
+      conn = get(conn, "/api/file/#{id}")
       assert conn.status == 200
 
       response = json_response(conn, 200)["message"]
@@ -272,38 +283,38 @@ defmodule CowRollWeb.SheetApiTest do
 
   describe "POST /sheet/create" do
     test "save sheet successfully", %{conn: conn} do
-      conn = post(conn, "/api/sheet/create", name: "example")
+      conn = post(conn, "/api/file/create", type: "Sheet", name: "example")
       id = json_response(conn, 200)["message"]
-      conn = post(conn, "/api/sheet/save", content: "40+2", id: id)
+      conn = post(conn, "/api/file/save", content: "40+2", id: id, type: "Sheet")
       assert json_response(conn, 200)["message"] == content_inserted()
     end
 
     test "code sheet fail beacause empty name", %{conn: conn} do
-      conn = post(conn, "/api/sheet/save", content: "40+'2'")
+      conn = post(conn, "/api/file/save", content: "40+'2'")
 
       assert json_response(conn, 404)["error"] == file_not_found()
     end
   end
 
-  describe "DELETE /sheet/remove" do
+  describe "DELETE /sheet/delete" do
     test "delete a non existing file", %{conn: conn} do
-      conn = delete(conn, "/api/sheet/remove/-1")
+      conn = delete(conn, "/api/file/delete/-1")
       assert conn.status == 204
     end
 
     test "delete a existing file", %{conn: conn} do
       conn =
-        post(conn, "/api/sheet/create", name: "example")
+        post(conn, "/api/file/create", type: "Sheet", name: "example")
 
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/save",
+        post(conn, "/api/file/save",
           content: "40+2",
           id: id
         )
 
-      conn = delete(conn, "/api/sheet/remove/#{id}")
+      conn = delete(conn, "/api/file/delete/#{id}")
       assert conn.status == 200
       assert json_response(conn, 200)["message"] == "FILE_DELETED"
     end
@@ -331,7 +342,8 @@ defmodule CowRollWeb.SheetApiTest do
       sheet_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/create",
+        post(conn, "/api/file/create",
+          type: "Sheet",
           directoryId: sheet_id,
           name: "example"
         )
@@ -339,13 +351,14 @@ defmodule CowRollWeb.SheetApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/save",
+        post(conn, "/api/file/save",
           id: id,
           content: "40+2"
         )
 
       conn =
-        post(conn, "/api/sheet/create",
+        post(conn, "/api/file/create",
+          type: "Sheet",
           directoryId: sheet_id,
           name: "example2"
         )
@@ -353,7 +366,7 @@ defmodule CowRollWeb.SheetApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/sheet/save",
+        post(conn, "/api/file/save",
           id: id,
           content: "'hola ' ++ 'mundo'"
         )
@@ -362,7 +375,7 @@ defmodule CowRollWeb.SheetApiTest do
       assert conn.status == 200
       assert json_response(conn, 200)["message"] == "DIRECTORY_DELETED"
 
-      conn = get(conn, "/api/sheet")
+      conn = get(conn, "/api/file")
 
       response = json_response(conn, 200)["message"]
 
@@ -372,7 +385,7 @@ defmodule CowRollWeb.SheetApiTest do
                "type" => "Directory"
              } == drop_ids(response)
 
-      conn = get(conn, "/api/sheet/#{id}")
+      conn = get(conn, "/api/file/#{id}")
       assert conn.status == 404
     end
   end

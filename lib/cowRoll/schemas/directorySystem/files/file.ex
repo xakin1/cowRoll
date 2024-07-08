@@ -20,7 +20,13 @@ defmodule CowRoll.File do
   @rol_type "Rol"
   @content "content"
   @mongo_id "_id"
+  @type_key "type"
 
+  @type_mappings %{
+    @code_type => CowRoll.Code,
+    @sheet_type => CowRoll.Sheet,
+    @rol_type => CowRoll.Rol
+  }
   defmacro __using__(_) do
     quote do
       @behaviour CowRoll.FileBehaviour
@@ -36,7 +42,7 @@ defmodule CowRoll.File do
       def delete_file(user_id, id), do: CowRoll.File.delete_file(user_id, id)
       def get_file(user_id, id), do: CowRoll.File.get_file(user_id, id)
       def get_files(params), do: CowRoll.File.get_files(params)
-      def update_file(user_id, params, type), do: CowRoll.File.update_file(user_id, params, type)
+      def update_file(user_id, params), do: CowRoll.File.update_file(user_id, params)
 
       def update_directory_id(params, directory_id),
         do: CowRoll.File.update_directory_id(params, directory_id)
@@ -51,7 +57,8 @@ defmodule CowRoll.File do
       @name => params["name"],
       @content => params["content"],
       @directory_id => params["directoryId"],
-      @id => params["id"]
+      @id => params["id"],
+      @type_key => params["type"]
     }
   end
 
@@ -136,11 +143,11 @@ defmodule CowRoll.File do
     Mongo.find(:mongo, @file_system, params) |> Enum.to_list()
   end
 
-  def update_file(user_id, params, type) do
+  def update_file(user_id, params) do
     query = %{
       @user_id => user_id,
       @id => get_id(params),
-      @type_key => type
+      @type_key => get_type(params)
     }
 
     case Mongo.find_one(:mongo, @file_system, query) do
@@ -191,14 +198,25 @@ defmodule CowRoll.File do
     end
   end
 
+  defp call_function(type, func_name, args) do
+    case Map.get(@type_mappings, type) do
+      nil -> %{}
+      module -> apply(module, func_name, args)
+    end
+  end
+
   def default_file_to_json(file) do
     type = get_type(file)
+    call_function(type, :file_to_json, [file])
+  end
 
-    case type do
-      @code_type -> CowRoll.Code.file_to_json(file)
-      @sheet_type -> CowRoll.Sheet.file_to_json(file)
-      @rol_type -> CowRoll.Rol.file_to_json(file)
-      _ -> %{}
-    end
+  def base_create_file(user_id, params) do
+    type = get_type(params)
+    call_function(type, :create_file, [user_id, params])
+  end
+
+  def base_get_attributes(params) do
+    type = get_type(params)
+    call_function(type, :get_attributes, [params])
   end
 end

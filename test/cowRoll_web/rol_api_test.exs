@@ -17,16 +17,16 @@ defmodule CowRollWeb.RolApiTest do
 
   describe "GET /roles" do
     test "get roles succesfully", %{conn: conn} do
-      conn = get(conn, "/api/rol/", content: "40+2", name: "example")
+      conn = get(conn, "/api/file/", content: "40+2", name: "example")
       assert conn.status == 200
     end
 
     test "get overwrite documments", %{conn: conn} do
-      conn = post(conn, "/api/rol/create", name: "example")
+      conn = post(conn, "/api/file/create", type: "Rol", name: "example")
       rol_id = json_response(conn, 200)["message"]
-      conn = post(conn, "/api/rol/save", content: "40+2", id: rol_id)
+      conn = post(conn, "/api/file/save", type: "Rol", content: "40+2", id: rol_id)
       assert conn.status == 200
-      conn = get(conn, "/api/rol")
+      conn = get(conn, "/api/file")
 
       response = json_response(conn, 200)["message"]
 
@@ -46,20 +46,20 @@ defmodule CowRollWeb.RolApiTest do
 
     test "get documments succesfully", %{conn: conn} do
       conn =
-        post(conn, "/api/directory/create", name: "rol")
+        post(conn, "/api/directory/create", type: "Rol", name: "rol")
 
       rol_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/create", directoryId: rol_id, name: "example")
+        post(conn, "/api/file/create", type: "Rol", directoryId: rol_id, name: "example")
 
       rol_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/save", id: rol_id, content: "40+2")
+        post(conn, "/api/file/save", type: "Rol", id: rol_id, content: "40+2")
 
       assert conn.status == 200
-      conn = get(conn, "/api/rol")
+      conn = get(conn, "/api/file")
 
       response = json_response(conn, 200)["message"]
 
@@ -84,7 +84,7 @@ defmodule CowRollWeb.RolApiTest do
     end
 
     test "get 0 documments", %{conn: conn} do
-      conn = get(conn, "/api/rol")
+      conn = get(conn, "/api/file")
 
       response = json_response(conn, 200)["message"]
 
@@ -97,12 +97,13 @@ defmodule CowRollWeb.RolApiTest do
 
     test "creating a complex rolSystem", %{conn: conn} do
       conn =
-        post(conn, "/api/directory/create", name: "rol")
+        post(conn, "/api/directory/create", type: "Rol", name: "rol")
 
       rol_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/create",
+        post(conn, "/api/file/create",
+          type: "Rol",
           directoryId: rol_id,
           name: "example"
         )
@@ -110,7 +111,8 @@ defmodule CowRollWeb.RolApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/save",
+        post(conn, "/api/file/save",
+          type: "Rol",
           id: id,
           content: "40+2"
         )
@@ -118,12 +120,13 @@ defmodule CowRollWeb.RolApiTest do
       assert conn.status == 200
 
       conn =
-        post(conn, "/api/directory/create", name: "rol", parentId: rol_id)
+        post(conn, "/api/directory/create", type: "Rol", name: "rol", parentId: rol_id)
 
       rol2_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/create",
+        post(conn, "/api/file/create",
+          type: "Rol",
           directoryId: rol2_id,
           name: "example2"
         )
@@ -131,18 +134,20 @@ defmodule CowRollWeb.RolApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/save",
+        post(conn, "/api/file/save",
+          type: "Rol",
           id: id,
           content: "'hola ' ++ 'mundo'"
         )
 
       conn =
-        post(conn, "/api/directory/create", name: "pj")
+        post(conn, "/api/directory/create", type: "Rol", name: "pj")
 
       pj_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/create",
+        post(conn, "/api/file/create",
+          type: "Rol",
           directoryId: pj_id,
           name: "createPj"
         )
@@ -150,18 +155,20 @@ defmodule CowRollWeb.RolApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/save",
+        post(conn, "/api/file/save",
+          type: "Rol",
           id: id,
           name: "createPj"
         )
 
       conn =
-        post(conn, "/api/directory/create", name: "do_things", parentId: pj_id)
+        post(conn, "/api/directory/create", type: "Rol", name: "do_things", parentId: pj_id)
 
       do_things_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/create",
+        post(conn, "/api/file/create",
+          type: "Rol",
           directoryId: do_things_id,
           name: "do_things"
         )
@@ -169,14 +176,15 @@ defmodule CowRollWeb.RolApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/save",
+        post(conn, "/api/file/save",
+          type: "Rol",
           id: id,
           content: "'hola ' ++ 'mundo'"
         )
 
       assert conn.status == 200
 
-      conn = get(conn, "/api/rol")
+      conn = get(conn, "/api/file")
 
       response = json_response(conn, 200)["message"]
 
@@ -239,18 +247,19 @@ defmodule CowRollWeb.RolApiTest do
 
   describe "GET /rol/file" do
     test "try get a not existing file", %{conn: conn} do
-      conn = get(conn, "/api/rol/1")
+      conn = get(conn, "/api/file/1")
       assert conn.status == 404
     end
 
     test "try get an existing file", %{conn: conn} do
       conn =
-        post(conn, "/api/directory/create", name: "rol")
+        post(conn, "/api/directory/create", type: "Rol", name: "rol")
 
       rol_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/create",
+        post(conn, "/api/file/create",
+          type: "Rol",
           directoryId: rol_id,
           name: "example"
         )
@@ -258,12 +267,13 @@ defmodule CowRollWeb.RolApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/save",
+        post(conn, "/api/file/save",
+          type: "Rol",
           id: id,
           content: "40+2"
         )
 
-      conn = get(conn, "/api/rol/#{id}")
+      conn = get(conn, "/api/file/#{id}")
       assert conn.status == 200
 
       response = json_response(conn, 200)["message"]
@@ -279,38 +289,39 @@ defmodule CowRollWeb.RolApiTest do
 
   describe "POST /rol/create" do
     test "save rol successfully", %{conn: conn} do
-      conn = post(conn, "/api/rol/create", name: "example")
+      conn = post(conn, "/api/file/create", type: "Rol", name: "example")
       id = json_response(conn, 200)["message"]
-      conn = post(conn, "/api/rol/save", content: "40+2", id: id)
+      conn = post(conn, "/api/file/save", type: "Rol", content: "40+2", id: id)
       assert json_response(conn, 200)["message"] == content_inserted()
     end
 
     test "code rol fail beacause empty name", %{conn: conn} do
-      conn = post(conn, "/api/rol/save", content: "40+'2'")
+      conn = post(conn, "/api/file/save", type: "Rol", content: "40+'2'")
 
       assert json_response(conn, 404)["error"] == file_not_found()
     end
   end
 
-  describe "DELETE /rol/remove" do
+  describe "DELETE /rol/delete" do
     test "delete a non existing file", %{conn: conn} do
-      conn = delete(conn, "/api/rol/remove/-1")
+      conn = delete(conn, "/api/file/delete/-1")
       assert conn.status == 204
     end
 
     test "delete a existing file", %{conn: conn} do
       conn =
-        post(conn, "/api/rol/create", name: "example")
+        post(conn, "/api/file/create", type: "Rol", name: "example")
 
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/save",
+        post(conn, "/api/file/save",
+          type: "Rol",
           content: "40+2",
           id: id
         )
 
-      conn = delete(conn, "/api/rol/remove/#{id}")
+      conn = delete(conn, "/api/file/delete/#{id}")
       assert conn.status == 200
       assert json_response(conn, 200)["message"] == "FILE_DELETED"
     end
@@ -322,7 +333,7 @@ defmodule CowRollWeb.RolApiTest do
 
     test "delete a existing directory without files", %{conn: conn} do
       conn =
-        post(conn, "/api/directory/create", name: "rol")
+        post(conn, "/api/directory/create", type: "Rol", name: "rol")
 
       rol_id = json_response(conn, 200)["message"]
 
@@ -333,12 +344,13 @@ defmodule CowRollWeb.RolApiTest do
 
     test "delete a existing directory with files", %{conn: conn} do
       conn =
-        post(conn, "/api/directory/create", name: "rol")
+        post(conn, "/api/directory/create", type: "Rol", name: "rol")
 
       rol_id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/create",
+        post(conn, "/api/file/create",
+          type: "Rol",
           directoryId: rol_id,
           name: "example"
         )
@@ -346,13 +358,15 @@ defmodule CowRollWeb.RolApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/save",
+        post(conn, "/api/file/save",
+          type: "Rol",
           id: id,
           content: "40+2"
         )
 
       conn =
-        post(conn, "/api/rol/create",
+        post(conn, "/api/file/create",
+          type: "Rol",
           directoryId: rol_id,
           name: "example2"
         )
@@ -360,7 +374,8 @@ defmodule CowRollWeb.RolApiTest do
       id = json_response(conn, 200)["message"]
 
       conn =
-        post(conn, "/api/rol/save",
+        post(conn, "/api/file/save",
+          type: "Rol",
           id: id,
           content: "'hola ' ++ 'mundo'"
         )
@@ -369,7 +384,7 @@ defmodule CowRollWeb.RolApiTest do
       assert conn.status == 200
       assert json_response(conn, 200)["message"] == "DIRECTORY_DELETED"
 
-      conn = get(conn, "/api/rol")
+      conn = get(conn, "/api/file")
 
       response = json_response(conn, 200)["message"]
 
@@ -379,7 +394,7 @@ defmodule CowRollWeb.RolApiTest do
                "type" => "Directory"
              } == drop_ids(response)
 
-      conn = get(conn, "/api/rol/#{id}")
+      conn = get(conn, "/api/file/#{id}")
       assert conn.status == 404
     end
   end
