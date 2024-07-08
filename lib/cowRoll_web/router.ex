@@ -54,7 +54,7 @@ defmodule CowRollWeb.Router do
 
   scope "/test", CowRollWeb do
     pipe_through :test
-    delete "/reset", CodeController, :delete_all
+    delete "/reset", FileController, :delete_all
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
