@@ -1,4 +1,5 @@
 defmodule CowRoll.Schemas.Users.Auth do
+  import Argon2
   import CowRollWeb.ErrorCodes
   import CowRoll.Schemas.Users.Users
 
@@ -28,8 +29,7 @@ defmodule CowRoll.Schemas.Users.Auth do
         case get_user_by_username(username) do
           nil ->
             # Posiblemente esto venga haseado de la web pero mientras tanto lo hasheamos local
-            hashed_password = password
-            # |> hash_pwd_salt()
+            hashed_password = password |> hash_pwd_salt()
 
             user = %{username: username, password: hashed_password}
 
@@ -50,8 +50,7 @@ defmodule CowRoll.Schemas.Users.Auth do
     case Mongo.find(:mongo, @collection, %{username: get_username(params)}, limit: 1)
          |> Enum.to_list() do
       [%{"password" => db_password, "id" => user_id}] ->
-        if params |> get_password() do
-          # |> Argon2.verify_pass(db_password) do
+        if params |> get_password() |> Argon2.verify_pass(db_password) do
           token = generate_jwt_token(user_id)
           {:ok, token}
         else

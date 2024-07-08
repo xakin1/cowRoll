@@ -2,11 +2,7 @@ defmodule CowRollWeb.CodeController do
   alias CowRoll.Interpreter
   import Interpreter
   import CowRoll.Parser
-  import CowRoll.Code
-  import CowRoll.Directory
-  import CowRollWeb.ErrorCodes
-  import CowRollWeb.SuccesCodes
-  import CowRollWeb.Controller.HelpersControllers
+
   use CowRollWeb, :controller
   require Logger
 
