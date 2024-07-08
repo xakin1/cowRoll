@@ -1,5 +1,7 @@
 defmodule CowRoll.Sheet do
-  use CowRoll.File
+  @file_type "Sheet"
+
+  use CowRoll.File, @file_type
 
   @file_type "Sheet"
   @directory_id "directory_id"

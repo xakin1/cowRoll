@@ -54,6 +54,18 @@ defmodule CowRollWeb.Router do
     delete "/remove/:sheetId", SheetController, :remove_sheet
   end
 
+  scope "/api/rol", CowRollWeb do
+    pipe_through [:api, :authenticated]
+
+    get "/", RolController, :get_roles
+    get "/:rolId", RolController, :get_rol_by_id
+
+    post "/save", RolController, :save_rol
+    post "/create", RolController, :create_rol
+
+    delete "/remove/:rolId", RolController, :remove_rol
+  end
+
   # Users
   scope "/api", CowRollWeb do
     pipe_through :api

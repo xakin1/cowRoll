@@ -17,6 +17,7 @@ defmodule CowRoll.File do
   @code_type "Code"
   @type_key "type"
   @sheet_type "Sheet"
+  @rol_type "Rol"
   @content "content"
   @mongo_id "_id"
 
@@ -54,6 +55,7 @@ defmodule CowRoll.File do
     }
   end
 
+  @spec get_id(nil | maybe_improper_list() | map()) :: any()
   def get_id(params) do
     params[@id]
   end
@@ -195,6 +197,7 @@ defmodule CowRoll.File do
     case type do
       @code_type -> CowRoll.Code.file_to_json(file)
       @sheet_type -> CowRoll.Sheet.file_to_json(file)
+      @rol_type -> CowRoll.Rol.file_to_json(file)
       _ -> %{}
     end
   end

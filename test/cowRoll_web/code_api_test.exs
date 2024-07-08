@@ -100,7 +100,23 @@ defmodule CowRollWeb.CodeApiTest do
   describe "POST /create" do
     test "create a file", %{conn: conn} do
       conn = post(conn, "/api/code/create", name: "example")
-      assert conn.status == 200
+      conn = get(conn, "/api/code")
+
+      response = json_response(conn, 200)["message"]
+
+      assert %{
+               "children" => [
+                 %{
+                   "backpackSchema" => nil,
+                   "content" => nil,
+                   "contentSchema" => nil,
+                   "name" => "example",
+                   "type" => "Code"
+                 }
+               ],
+               "name" => "Root",
+               "type" => "Directory"
+             } == drop_ids(response)
     end
 
     test "create a file empty name", %{conn: conn} do

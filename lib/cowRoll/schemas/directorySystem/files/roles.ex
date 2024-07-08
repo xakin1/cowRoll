@@ -1,37 +1,29 @@
-defmodule CowRoll.Code do
-  @moduledoc """
-  Módulo base para manejar ficheros de código en MongoDB.
-  """
-  @file_type "Code"
+defmodule CowRoll.Rol do
+  @file_type "Rol"
   use CowRoll.File, @file_type
-  import CowRoll.Utils.Functions
-  import CowRoll.Schemas.Helper
-  import CowRollWeb.ErrorCodes
 
   @directory_id "directory_id"
   @name "name"
-  @content_schema "content_schema"
-  @backpack_schema "backpack_schema"
-  @id "id"
   @user_id "user_id"
   @type_key "type"
-  @file_system "file_system"
+  @description "description"
+  @image "image"
 
   def get_attributes(params) do
     base_attributes = get_base_attributes(params)
 
     Map.merge(base_attributes, %{
-      @content_schema => params["contentSchema"],
-      @backpack_schema => params["backpackSchema"]
+      @description => params["description"],
+      @image => params["image"]
     })
   end
 
-  def get_content_schema(params) do
-    params[@content_schema]
+  defp get_description(params) do
+    params[@description]
   end
 
-  def get_backpack_schema(params) do
-    params[@backpack_schema]
+  defp get_image(params) do
+    params[@image]
   end
 
   def create_file(user_id, params) do
@@ -39,13 +31,19 @@ defmodule CowRoll.Code do
       @user_id => user_id,
       @directory_id => get_directory_id(params),
       @name => get_name(params),
+      @image => get_image(params),
+      @description => get_description(params),
       @type_key => @file_type
     }
 
     insert_file(user_id, params)
   end
 
-  def get_files_with_code(params) do
+  def update_file(user_id, params) do
+    update_file(user_id, params, @file_type)
+  end
+
+  def get_files_with_sheets(params) do
     query = %{
       @type_key => @file_type
     }
@@ -54,19 +52,14 @@ defmodule CowRoll.Code do
     get_files(query)
   end
 
-  def update_file(user_id, params) do
-    update_file(user_id, params, @file_type)
-  end
-
   def file_to_json(file) do
     if(file != nil) do
       %{
         id: get_id(file),
         name: get_name(file),
         type: get_type(file),
-        content: get_content(file),
-        contentSchema: get_content_schema(file),
-        backpackSchema: get_backpack_schema(file),
+        image: get_image(file),
+        description: get_description(file),
         directoryId: get_directory_id(file)
       }
     else
