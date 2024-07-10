@@ -46,6 +46,27 @@ defmodule CowRoll.Schemas.Users.Auth do
     end
   end
 
+  def unregister_user(user_id) do
+    case delete_user(user_id) do
+      :ok ->
+        :ok
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  def get_user_id(params) do
+    case Mongo.find(:mongo, @collection, %{username: get_username(params)}, limit: 1)
+         |> Enum.to_list() do
+      [%{"password" => _db_password, "id" => user_id}] ->
+        {:ok, user_id}
+
+      [] ->
+        {:error, user_not_found()}
+    end
+  end
+
   def login_user(params) do
     case Mongo.find(:mongo, @collection, %{username: get_username(params)}, limit: 1)
          |> Enum.to_list() do

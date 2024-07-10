@@ -109,6 +109,7 @@ defmodule CowRoll.File do
               @user_id => user_id
             }
 
+            params = Enum.into(params, %{}, fn {k, v} -> {to_string(k), v} end)
             params = Map.merge(default_params, params)
             params = Map.put(params, @id, id)
 

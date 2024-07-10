@@ -1,6 +1,7 @@
 defmodule CowRollWeb.SuccesCodes do
   @file_updated "FILE_UPDATED"
   @file_deleted "FILE_DELETED"
+  @user_deleted "USER_DELETED"
   @directory_updated "DIRECTORY_UPDATED"
   @directory_deleted "DIRECTORY_DELETED"
   @content_inserted "CONTENT_INSERTED"
@@ -23,4 +24,6 @@ defmodule CowRollWeb.SuccesCodes do
 
   @spec authentication_ok() :: <<_::128>>
   def authentication_ok, do: @authentication_ok
+
+  def user_deleted, do: @user_deleted
 end

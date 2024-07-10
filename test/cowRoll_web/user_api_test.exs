@@ -69,8 +69,26 @@ defmodule CowRollWeb.UserApiTest do
     test "login successfully and execute an operation", %{conn: conn} do
       conn = post(conn, "/api/signUp", username: "sujeto1", password: "aAcs1234.")
       conn = post(conn, "/api/login", username: "sujeto1", password: "aAcs1234.")
-      conn = delete(conn, "/api/deleteFile/-1")
+      conn = delete(conn, "/api/file/delete/-1")
       assert conn.status == 204
+    end
+  end
+
+  describe "Delete /deleteUser" do
+    test "delete successfully", %{conn: conn} do
+      conn = post(conn, "/api/signUp", username: "sujeto1", password: "aAcs1234.")
+      assert json_response(conn, 200)["message"]
+      conn = post(conn, "/api/login", username: "sujeto1", password: "aAcs1234.")
+      assert json_response(conn, 200)["message"]
+      conn = delete(conn, "/api/deleteUser")
+      assert conn.status == 200
+      conn = post(conn, "/api/login", username: "sujeto1", password: "aAcs1234.")
+      assert conn.status == 404
+    end
+
+    test "delete without permissions", %{conn: conn} do
+      conn = delete(conn, "/api/deleteUser")
+      assert conn.status == 401
     end
   end
 end

@@ -27,4 +27,16 @@ defmodule CowRoll.Schemas.Users.Users do
         {:error, reason}
     end
   end
+
+  def delete_user(user_id) do
+    user = %{id: user_id}
+
+    case Mongo.delete_one(:mongo, @collection, user) do
+      {:ok, _result} ->
+        :ok
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
 end

@@ -217,6 +217,7 @@ defmodule CowRoll.Directory do
       @type_key => @directory_type
     }
 
+    params = Enum.into(params, %{}, fn {k, v} -> {to_string(k), v} end)
     params = Map.merge(default_params, params)
     params = Map.put(params, @id, id)
     name = get_name(params)

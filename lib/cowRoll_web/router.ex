@@ -52,6 +52,11 @@ defmodule CowRollWeb.Router do
     post "/login", UserController, :login_user
   end
 
+  scope "/api", CowRollWeb do
+    pipe_through [:api, :authenticated]
+    delete "/deleteUser", UserController, :unregister_user
+  end
+
   scope "/test", CowRollWeb do
     pipe_through :test
     delete "/reset", FileController, :delete_all
