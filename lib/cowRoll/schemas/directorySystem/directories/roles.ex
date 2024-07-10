@@ -1,7 +1,7 @@
 defmodule CowRoll.Rol do
-  use CowRoll.File
+  use CowRoll.Directory
 
-  @directory_id "directory_id"
+  @parent_id "directory_id"
   @name "name"
   @user_id "user_id"
   @description "description"
@@ -25,28 +25,28 @@ defmodule CowRoll.Rol do
     params[@image]
   end
 
-  def create_file(user_id, params) do
-    params = %{
+  def create_directory(user_id, params) do
+    to_insert = %{
       @user_id => user_id,
-      @directory_id => get_directory_id(params),
+      @parent_id => get_parent_id(params),
       @name => get_name(params),
       @image => get_image(params),
       @description => get_description(params),
       @type_key => get_type(params)
     }
 
-    insert_file(user_id, params)
+    insert_directory(user_id, to_insert)
   end
 
-  def file_to_json(file) do
-    if(file != nil) do
+  def directory_to_json(directory) do
+    if(directory != nil) do
       %{
-        id: get_id(file),
-        name: get_name(file),
-        type: get_type(file),
-        image: get_image(file),
-        description: get_description(file),
-        directoryId: get_directory_id(file)
+        id: get_id(directory),
+        name: get_name(directory),
+        type: get_type(directory),
+        image: get_image(directory),
+        description: get_description(directory),
+        parentId: get_parent_id(directory)
       }
     else
       %{}

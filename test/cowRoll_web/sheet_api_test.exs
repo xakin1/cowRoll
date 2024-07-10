@@ -35,7 +35,14 @@ defmodule CowRollWeb.SheetApiTest do
                  %{
                    "content" => "40+2",
                    "name" => "example",
-                   "type" => @file_type
+                   "type" => "Sheet"
+                 },
+                 %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
                  }
                ],
                "name" => "Root",
@@ -65,11 +72,18 @@ defmodule CowRollWeb.SheetApiTest do
       assert %{
                "children" => [
                  %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 },
+                 %{
                    "children" => [
                      %{
                        "content" => "40+2",
                        "name" => "example",
-                       "type" => @file_type
+                       "type" => "Sheet"
                      }
                    ],
                    "name" => "sheet",
@@ -87,7 +101,15 @@ defmodule CowRollWeb.SheetApiTest do
       response = json_response(conn, 200)["message"]
 
       assert %{
-               "children" => [],
+               "children" => [
+                 %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 }
+               ],
                "name" => "Root",
                "type" => "Directory"
              } == drop_ids(response)
@@ -189,18 +211,25 @@ defmodule CowRollWeb.SheetApiTest do
       assert %{
                "children" => [
                  %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 },
+                 %{
                    "children" => [
                      %{
                        "content" => "40+2",
                        "name" => "example",
-                       "type" => @file_type
+                       "type" => "Sheet"
                      },
                      %{
                        "children" => [
                          %{
                            "content" => "'hola ' ++ 'mundo'",
                            "name" => "example2",
-                           "type" => @file_type
+                           "type" => "Sheet"
                          }
                        ],
                        "name" => "sheet",
@@ -215,14 +244,14 @@ defmodule CowRollWeb.SheetApiTest do
                      %{
                        "content" => nil,
                        "name" => "createPj",
-                       "type" => @file_type
+                       "type" => "Sheet"
                      },
                      %{
                        "children" => [
                          %{
                            "content" => "'hola ' ++ 'mundo'",
                            "name" => "do_things",
-                           "type" => @file_type
+                           "type" => "Sheet"
                          }
                        ],
                        "name" => "do_things",
@@ -380,7 +409,15 @@ defmodule CowRollWeb.SheetApiTest do
       response = json_response(conn, 200)["message"]
 
       assert %{
-               "children" => [],
+               "children" => [
+                 %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 }
+               ],
                "name" => "Root",
                "type" => "Directory"
              } == drop_ids(response)

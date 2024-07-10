@@ -12,9 +12,9 @@ defmodule CowRollWeb.DirectoryController do
 
   def create_directory(conn, _) do
     user_id = get_user_id(conn)
-    params = CowRoll.Directory.get_attributes(conn.body_params)
+    params = CowRoll.Directory.get_base_attributes(conn.body_params)
 
-    case CowRoll.Directory.create_directory(user_id, params) do
+    case CowRoll.Directory.base_create_directory(user_id, params) do
       {:ok, directory_id} ->
         json(conn, %{message: directory_id})
 
@@ -35,7 +35,7 @@ defmodule CowRollWeb.DirectoryController do
   def edit_directory(conn, _) do
     user_id = get_user_id(conn)
     IO.puts(user_id)
-    attributes = CowRoll.Directory.get_attributes(conn.body_params)
+    attributes = CowRoll.Directory.get_base_attributes(conn.body_params)
     reason = directory_not_found()
 
     case update_directory(user_id, attributes) do
@@ -66,6 +66,7 @@ defmodule CowRollWeb.DirectoryController do
     end
   end
 
+  @spec delete_all(Plug.Conn.t(), any()) :: Plug.Conn.t()
   def delete_all(conn, _) do
     collections = ["file_system", "users"]
     Enum.map(collections, fn collection -> Mongo.delete_many(:mongo, collection, %{}) end)

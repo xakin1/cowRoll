@@ -17,15 +17,13 @@ defmodule CowRoll.File do
   @code_type "Code"
   @type_key "type"
   @sheet_type "Sheet"
-  @rol_type "Rol"
   @content "content"
   @mongo_id "_id"
   @type_key "type"
 
   @type_mappings %{
     @code_type => CowRoll.Code,
-    @sheet_type => CowRoll.Sheet,
-    @rol_type => CowRoll.Rol
+    @sheet_type => CowRoll.Sheet
   }
   defmacro __using__(_) do
     quote do

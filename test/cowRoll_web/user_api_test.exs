@@ -56,6 +56,29 @@ defmodule CowRollWeb.UserApiTest do
 
       assert json_response(conn, 403)["error"] == user_name_already_exits()
     end
+
+    test "create fileSystem correctly", %{conn: conn} do
+      conn = post(conn, "/api/signUp", username: "sujeto1", password: "aAcs1234.")
+      conn = post(conn, "/api/login", username: "sujeto1", password: "aAcs1234.")
+      assert json_response(conn, 200)["message"]
+      conn = get(conn, "/api/file")
+
+      response = json_response(conn, 200)["message"]
+
+      assert %{
+               "children" => [
+                 %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 }
+               ],
+               "name" => "Root",
+               "type" => "Directory"
+             } == drop_ids(response)
+    end
   end
 
   describe "POST /login" do

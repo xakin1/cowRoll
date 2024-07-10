@@ -5,13 +5,11 @@ defmodule CowRollWeb.UserController do
   use CowRollWeb, :controller
   import CowRollWeb.ErrorCodes
 
-  defp create_user_directory_system(params) do
-    with {:ok, user_id} <- Auth.get_user_id(params),
-         {:ok, roles_id} <- CowRoll.Directory.create_directory(user_id, %{name: "Roles"}),
-         {:ok, _sheets_id} <-
-           CowRoll.Directory.create_directory(user_id, %{name: "Sheets", parent_id: roles_id}),
-         {:ok, _codes_id} <-
-           CowRoll.Directory.create_directory(user_id, %{name: "Codes", parent_id: roles_id}) do
+  defp create_user_directory_system(user_id) do
+    IO.puts(user_id)
+
+    with {:ok, _roles_id} <-
+           CowRoll.Rol.create_directory(user_id, %{"name" => "Roles", "type" => "Rol"}) do
       :ok
     else
       {:error, error} -> {:error, error}
@@ -23,8 +21,8 @@ defmodule CowRollWeb.UserController do
     params = Auth.get_attributes(conn.body_params)
     # Aquí hay que devolver el id
     case Auth.register_user(params) do
-      {:ok, token} ->
-        case create_user_directory_system(params) do
+      {:ok, %{id: id, token: token}} ->
+        case create_user_directory_system(id) do
           :ok ->
             conn
             |> put_resp_cookie("token", token, http_only: true, secure: false, same_site: "Lax")

@@ -112,6 +112,13 @@ defmodule CowRollWeb.CodeApiTest do
                    "contentSchema" => nil,
                    "name" => "example",
                    "type" => "Code"
+                 },
+                 %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
                  }
                ],
                "name" => "Root",
@@ -175,6 +182,13 @@ defmodule CowRollWeb.CodeApiTest do
                "children" => [
                  %{
                    "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 },
+                 %{
+                   "children" => [],
                    "name" => "code",
                    "type" => "Directory"
                  }
@@ -216,6 +230,13 @@ defmodule CowRollWeb.CodeApiTest do
                "children" => [
                  %{
                    "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 },
+                 %{
+                   "children" => [],
                    "name" => "code",
                    "type" => "Directory"
                  }
@@ -233,6 +254,13 @@ defmodule CowRollWeb.CodeApiTest do
 
       assert %{
                "children" => [
+                 %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 },
                  %{
                    "children" => [
                      %{
@@ -381,6 +409,13 @@ defmodule CowRollWeb.CodeApiTest do
       assert %{
                "children" => [
                  %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 },
+                 %{
                    "children" => [
                      %{
                        "backpackSchema" => nil,
@@ -468,6 +503,13 @@ defmodule CowRollWeb.CodeApiTest do
 
       assert %{
                "children" => [
+                 %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 },
                  %{
                    "children" => [
                      %{
@@ -577,6 +619,13 @@ defmodule CowRollWeb.CodeApiTest do
                    "contentSchema" => nil,
                    "name" => "example",
                    "type" => "Code"
+                 },
+                 %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
                  }
                ],
                "name" => "Root",
@@ -606,6 +655,13 @@ defmodule CowRollWeb.CodeApiTest do
       assert %{
                "children" => [
                  %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 },
+                 %{
                    "children" => [
                      %{
                        "backpackSchema" => nil,
@@ -630,7 +686,15 @@ defmodule CowRollWeb.CodeApiTest do
       response = json_response(conn, 200)["message"]
 
       assert %{
-               "children" => [],
+               "children" => [
+                 %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 }
+               ],
                "name" => "Root",
                "type" => "Directory"
              } == drop_ids(response)
@@ -731,6 +795,13 @@ defmodule CowRollWeb.CodeApiTest do
 
       assert %{
                "children" => [
+                 %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 },
                  %{
                    "children" => [
                      %{
@@ -986,7 +1057,15 @@ defmodule CowRollWeb.CodeApiTest do
       response = json_response(conn, 200)["message"]
 
       assert %{
-               "children" => [],
+               "children" => [
+                 %{
+                   "children" => [],
+                   "description" => nil,
+                   "image" => nil,
+                   "name" => "Roles",
+                   "type" => "Rol"
+                 }
+               ],
                "name" => "Root",
                "type" => "Directory"
              } == drop_ids(response)
