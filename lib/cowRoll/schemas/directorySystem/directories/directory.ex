@@ -158,27 +158,36 @@ defmodule CowRoll.Directory do
         {:error, directory_not_found()}
 
       %{@mongo_id => existing_id} ->
-        if is_descendant?(user_id, get_id(params), get_parent_id(params)) do
-          {:error, parent_into_child()}
-        else
-          updates = get_updates(params)
+        case is_descendant?(user_id, get_id(params), get_parent_id(params)) do
+          true ->
+            {:error, parent_into_child()}
 
-          Mongo.update_one(:mongo, @file_system, %{@mongo_id => existing_id}, updates)
+          false ->
+            updates = get_updates(params)
+
+            Mongo.update_one(:mongo, @file_system, %{@mongo_id => existing_id}, updates)
+
+          {:error, error} ->
+            {:error, error}
         end
     end
   end
 
   # Verifica si el destino es un descendiente del directorio actual
   defp is_descendant?(user_id, directory_id, parent_id) do
-    {:ok, directory} = get_directory(user_id, parent_id)
+    case get_directory(user_id, parent_id) do
+      {:ok, directory} ->
+        cursor = get_descendants(get_id(directory))
 
-    cursor = get_descendants(get_id(directory))
+        Enum.any?(cursor |> Enum.to_list(), fn doc ->
+          Enum.any?(doc["descendants"], fn descendant ->
+            get_id(descendant) == directory_id
+          end)
+        end)
 
-    Enum.any?(cursor |> Enum.to_list(), fn doc ->
-      Enum.any?(doc["descendants"], fn descendant ->
-        get_id(descendant) == directory_id
-      end)
-    end)
+      {:error, error} ->
+        {:error, error}
+    end
   end
 
   defp get_descendants(directory_id) do
