@@ -39,10 +39,8 @@ defmodule CowRollWeb.SheetApiTest do
                  },
                  %{
                    "children" => [],
-                   "description" => nil,
-                   "image" => nil,
                    "name" => "Roles",
-                   "type" => "Rol"
+                   "type" => "Directory"
                  }
                ],
                "name" => "Root",
@@ -73,10 +71,8 @@ defmodule CowRollWeb.SheetApiTest do
                "children" => [
                  %{
                    "children" => [],
-                   "description" => nil,
-                   "image" => nil,
                    "name" => "Roles",
-                   "type" => "Rol"
+                   "type" => "Directory"
                  },
                  %{
                    "children" => [
@@ -104,10 +100,8 @@ defmodule CowRollWeb.SheetApiTest do
                "children" => [
                  %{
                    "children" => [],
-                   "description" => nil,
-                   "image" => nil,
                    "name" => "Roles",
-                   "type" => "Rol"
+                   "type" => "Directory"
                  }
                ],
                "name" => "Root",
@@ -212,10 +206,8 @@ defmodule CowRollWeb.SheetApiTest do
                "children" => [
                  %{
                    "children" => [],
-                   "description" => nil,
-                   "image" => nil,
                    "name" => "Roles",
-                   "type" => "Rol"
+                   "type" => "Directory"
                  },
                  %{
                    "children" => [
@@ -412,10 +404,8 @@ defmodule CowRollWeb.SheetApiTest do
                "children" => [
                  %{
                    "children" => [],
-                   "description" => nil,
-                   "image" => nil,
                    "name" => "Roles",
-                   "type" => "Rol"
+                   "type" => "Directory"
                  }
                ],
                "name" => "Root",

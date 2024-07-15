@@ -12,7 +12,7 @@ defmodule CowRollWeb.DirectoryController do
 
   def create_directory(conn, _) do
     user_id = get_user_id(conn)
-    params = CowRoll.Directory.get_base_attributes(conn.body_params)
+    params = CowRoll.Directory.base_get_attributes(conn.body_params)
 
     case CowRoll.Directory.base_create_directory(user_id, params) do
       {:ok, directory_id} ->
@@ -34,8 +34,7 @@ defmodule CowRollWeb.DirectoryController do
 
   def edit_directory(conn, _) do
     user_id = get_user_id(conn)
-    IO.puts(user_id)
-    attributes = CowRoll.Directory.get_base_attributes(conn.body_params)
+    attributes = CowRoll.Directory.base_get_attributes(conn.body_params)
     reason = directory_not_found()
 
     case update_directory(user_id, attributes) do

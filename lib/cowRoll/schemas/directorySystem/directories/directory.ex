@@ -26,7 +26,13 @@ defmodule CowRoll.Directory do
     quote do
       @behaviour CowRoll.DirectoryBehaviour
 
-      def get_base_attributes(params), do: CowRoll.Directory.get_base_attributes(params)
+      def get_base_attributes(params), do: CowRoll.Directory.get_attributes(params)
+      def get_directory_type(), do: CowRoll.Directory.get_directory_type()
+      def get_id_key(), do: CowRoll.Directory.get_id_key()
+      def get_user_id_key(), do: CowRoll.Directory.get_user_id_key()
+      def get_parent_id_key(), do: CowRoll.Directory.get_parent_id_key()
+      def get_name_key(), do: CowRoll.Directory.get_name_key()
+      def get_type_key(), do: CowRoll.Directory.get_type_key()
       def get_id(params), do: CowRoll.Directory.get_id(params)
       def get_parent_id(params), do: CowRoll.Directory.get_parent_id(params)
 
@@ -52,13 +58,37 @@ defmodule CowRoll.Directory do
     end
   end
 
-  def get_base_attributes(params) do
+  def get_attributes(params) do
     %{
       @name => params["name"],
       @parent_id => params["parentId"],
       @id => params["id"],
       @type_key => params["type"]
     }
+  end
+
+  def get_directory_type() do
+    @directory_type
+  end
+
+  def get_id_key() do
+    @id
+  end
+
+  def get_user_id_key() do
+    @user_id
+  end
+
+  def get_parent_id_key() do
+    @parent_id
+  end
+
+  def get_name_key() do
+    @name
+  end
+
+  def get_type_key() do
+    @type_key
   end
 
   def get_root(user_id) do
@@ -221,6 +251,11 @@ defmodule CowRoll.Directory do
   def base_create_directory(user_id, params) do
     type = get_type(params)
     call_function(type, :create_directory, [user_id, params])
+  end
+
+  def base_get_attributes(params) do
+    type = get_type(params)
+    call_function(type, :get_attributes, [params])
   end
 
   def get_directory_structure(user_id) do

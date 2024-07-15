@@ -9,7 +9,7 @@ defmodule CowRollWeb.UserController do
     IO.puts(user_id)
 
     with {:ok, _roles_id} <-
-           CowRoll.Rol.create_directory(user_id, %{"name" => "Roles", "type" => "Rol"}) do
+           CowRoll.Directory.base_create_directory(user_id, %{"name" => "Roles"}) do
       :ok
     else
       {:error, error} -> {:error, error}

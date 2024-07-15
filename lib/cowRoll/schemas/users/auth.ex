@@ -1,5 +1,4 @@
 defmodule CowRoll.Schemas.Users.Auth do
-  # import Argon2
   import CowRollWeb.ErrorCodes
   import CowRoll.Schemas.Users.Users
 
@@ -28,14 +27,11 @@ defmodule CowRoll.Schemas.Users.Auth do
       {:ok, []} ->
         case get_user_by_username(username) do
           nil ->
-            # Posiblemente esto venga haseado de la web pero mientras tanto lo hasheamos local
-            hashed_password = password
-            # |> hash_pwd_salt()
+            hashed_password = hash_password(password)
 
             user = %{username: username, password: hashed_password}
 
             with {:ok, id} <- insert_user(user) do
-              # Devolver un mapa con id y token
               {:ok, %{id: id, token: generate_jwt_token(id)}}
             end
 
@@ -73,8 +69,7 @@ defmodule CowRoll.Schemas.Users.Auth do
     case Mongo.find(:mongo, @collection, %{username: get_username(params)}, limit: 1)
          |> Enum.to_list() do
       [%{"password" => db_password, "id" => user_id}] ->
-        if params |> get_password() do
-          # end|> Argon2.verify_pass(db_password) do
+        if params |> get_password() |> verify_password(db_password) do
           token = generate_jwt_token(user_id)
           {:ok, token}
         else
@@ -91,7 +86,6 @@ defmodule CowRoll.Schemas.Users.Auth do
     CowRoll.Token.sign(data)
   end
 
-  # Valida todos los parametros si es que tienen una función de validación
   defp validate_params(params) do
     Enum.reduce(params, {:ok, []}, fn
       {key, value}, {:ok, _acc} ->
@@ -103,17 +97,14 @@ defmodule CowRoll.Schemas.Users.Auth do
             {:error, reason} -> {:error, reason}
           end
         else
-          # Si no existe la función de validación, pasa sin acción
           {:ok, []}
         end
 
       {_, _}, {:error, _} = error ->
-        # Propaga el primer error encontrado
         error
     end)
   end
 
-  # Las funciones de validacion tienen que ser publicas para que validate_params las "vea"
   def validate_password(password) do
     cond do
       password == "" or password == nil ->
@@ -146,6 +137,22 @@ defmodule CowRoll.Schemas.Users.Auth do
 
       true ->
         :ok
+    end
+  end
+
+  defp hash_password(password) do
+    case Mix.env() do
+      :dev -> password
+      :test -> password
+      _ -> Argon2.hash_pwd_salt(password)
+    end
+  end
+
+  defp verify_password(password, hashed_password) do
+    case Mix.env() do
+      :dev -> password == hashed_password
+      :test -> password == hashed_password
+      _ -> Argon2.verify_pass(password, hashed_password)
     end
   end
 end

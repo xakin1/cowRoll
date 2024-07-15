@@ -69,10 +69,8 @@ defmodule CowRollWeb.UserApiTest do
                "children" => [
                  %{
                    "children" => [],
-                   "description" => nil,
-                   "image" => nil,
                    "name" => "Roles",
-                   "type" => "Rol"
+                   "type" => "Directory"
                  }
                ],
                "name" => "Root",
