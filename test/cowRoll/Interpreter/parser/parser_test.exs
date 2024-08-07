@@ -1276,11 +1276,11 @@ defmodule CowRoll.ParserTest do
   describe "variables" do
     test "parse var" do
       input =
-        "x"
+        "x&b"
 
       {:ok, token} = parse(input)
 
-      assert token == {:name, "x", 1}
+      assert token == {:name, "x&b", 1}
 
       input =
         "hola"

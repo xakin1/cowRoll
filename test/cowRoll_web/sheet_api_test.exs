@@ -3,6 +3,7 @@ defmodule CowRollWeb.SheetApiTest do
   import CowRollWeb.ErrorCodes
   import CowRollWeb.SuccesCodes
   use ExUnit.Case
+
   @file_type "Sheet"
 
   # Bloque setup que solo se aplica a este módulo de pruebas
@@ -17,14 +18,29 @@ defmodule CowRollWeb.SheetApiTest do
 
   describe "GET /sheets" do
     test "get sheets succesfully", %{conn: conn} do
-      conn = get(conn, "/api/file/", content: "40+2", name: "example")
+      conn = get(conn, "/api/file/", content: "40+2", name: "example", type: "Sheet")
       assert conn.status == 200
     end
 
     test "get overwrite documments", %{conn: conn} do
-      conn = post(conn, "/api/file/create", type: "Sheet", name: "example", type: "Sheet")
+      conn = post(conn, "/api/file/create", type: "Sheet", name: "example")
       sheet_id = json_response(conn, 200)["message"]
-      conn = post(conn, "/api/file/save", content: "40+2", id: sheet_id, type: "Sheet")
+
+      conn =
+        post(conn, "/api/file/save",
+          content: "40+2",
+          id: sheet_id,
+          type: "Sheet"
+        )
+
+      conn =
+        post(conn, "/api/file/create",
+          content: "40+2",
+          name: "script1",
+          directoryId: sheet_id,
+          type: "Code"
+        )
+
       assert conn.status == 200
       conn = get(conn, "/api/file")
 
@@ -33,8 +49,47 @@ defmodule CowRollWeb.SheetApiTest do
       assert %{
                "children" => [
                  %{
+                   "codes" => [
+                     %{
+                       "backpackSchema" => nil,
+                       "content" => nil,
+                       "contentSchema" => nil,
+                       "name" => "script1",
+                       "type" => "Code"
+                     }
+                   ],
                    "content" => "40+2",
                    "name" => "example",
+                   "type" => "Sheet",
+                   "pdf" => nil
+                 },
+                 %{
+                   "children" => [],
+                   "name" => "Roles",
+                   "type" => "Directory"
+                 }
+               ],
+               "name" => "Root",
+               "type" => "Directory"
+             } == drop_ids(response)
+    end
+
+    test "create sheet", %{conn: conn} do
+      base64_pdf = "JVBERi0xLjMKJcTl8uXrp/Og0MTGCjQgMCBvYmoKPDwvTGluZWFyaXplZCAxL0wgMzEgMCBSL0..."
+      conn = post(conn, "/api/file/create", type: "Sheet", pdf: base64_pdf, name: "example")
+
+      conn = get(conn, "/api/file")
+
+      response = json_response(conn, 200)["message"]
+
+      assert %{
+               "children" => [
+                 %{
+                   "codes" => [],
+                   "content" => nil,
+                   "name" => "example",
+                   "pdf" =>
+                     "JVBERi0xLjMKJcTl8uXrp/Og0MTGCjQgMCBvYmoKPDwvTGluZWFyaXplZCAxL0wgMzEgMCBSL0...",
                    "type" => "Sheet"
                  },
                  %{
@@ -77,9 +132,11 @@ defmodule CowRollWeb.SheetApiTest do
                  %{
                    "children" => [
                      %{
+                       "codes" => [],
                        "content" => "40+2",
                        "name" => "example",
-                       "type" => "Sheet"
+                       "type" => "Sheet",
+                       "pdf" => nil
                      }
                    ],
                    "name" => "sheet",
@@ -212,16 +269,20 @@ defmodule CowRollWeb.SheetApiTest do
                  %{
                    "children" => [
                      %{
+                       "codes" => [],
                        "content" => "40+2",
                        "name" => "example",
-                       "type" => "Sheet"
+                       "type" => "Sheet",
+                       "pdf" => nil
                      },
                      %{
                        "children" => [
                          %{
+                           "codes" => [],
                            "content" => "'hola ' ++ 'mundo'",
                            "name" => "example2",
-                           "type" => "Sheet"
+                           "type" => "Sheet",
+                           "pdf" => nil
                          }
                        ],
                        "name" => "sheet",
@@ -234,16 +295,20 @@ defmodule CowRollWeb.SheetApiTest do
                  %{
                    "children" => [
                      %{
+                       "codes" => [],
                        "content" => nil,
                        "name" => "createPj",
-                       "type" => "Sheet"
+                       "type" => "Sheet",
+                       "pdf" => nil
                      },
                      %{
                        "children" => [
                          %{
+                           "codes" => [],
                            "content" => "'hola ' ++ 'mundo'",
                            "name" => "do_things",
-                           "type" => "Sheet"
+                           "type" => "Sheet",
+                           "pdf" => nil
                          }
                        ],
                        "name" => "do_things",
@@ -295,9 +360,11 @@ defmodule CowRollWeb.SheetApiTest do
       response = json_response(conn, 200)["message"]
 
       assert %{
+               "codes" => [],
                "content" => "40+2",
                "name" => "example",
-               "type" => @file_type
+               "pdf" => nil,
+               "type" => "Sheet"
              } == drop_ids(response)
     end
   end

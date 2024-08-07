@@ -21,7 +21,7 @@ defmodule CowRollWeb.CodeController do
         error_type = e.__struct__ |> Module.split() |> List.last()
         error_message = Exception.message(e)
         full_message = "#{error_type}: #{error_message}"
-        json(conn, %{error: %{error: "", errorCode: full_message, line: e.line}})
+        json(conn, %{error: %{error: "", errorCode: full_message, line: e.line || 0}})
     end
   end
 

@@ -150,7 +150,7 @@ defmodule CowRoll.Directory do
     query = %{
       @user_id => user_id,
       @id => get_id(params),
-      @type_key => @directory_type
+      @type_key => get_type(params)
     }
 
     case Mongo.find_one(:mongo, @file_system, query) do

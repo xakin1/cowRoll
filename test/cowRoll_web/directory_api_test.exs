@@ -1,9 +1,6 @@
-defmodule CowRollWeb.SheetApiTest do
+defmodule CowRollWeb.DirectoryApiTest do
   use CowRollWeb.ConnCase, async: true
-  import CowRollWeb.ErrorCodes
-  import CowRollWeb.SuccesCodes
   use ExUnit.Case
-  @file_type "Sheet"
 
   # Bloque setup que solo se aplica a este módulo de pruebas
   setup %{conn: conn} do

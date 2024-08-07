@@ -1,9 +1,8 @@
-defmodule CowRollWeb.SheetApiTest do
+defmodule CowRollWeb.CodeApiTest do
   use CowRollWeb.ConnCase, async: true
   import CowRollWeb.ErrorCodes
   import CowRollWeb.SuccesCodes
   use ExUnit.Case
-  @file_type "Sheet"
 
   # Bloque setup que solo se aplica a este módulo de pruebas
   setup %{conn: conn} do
@@ -33,8 +32,10 @@ defmodule CowRollWeb.SheetApiTest do
       assert %{
                "children" => [
                  %{
+                   "codes" => [],
                    "content" => "40+2",
                    "name" => "example",
+                   "pdf" => nil,
                    "type" => "Sheet"
                  },
                  %{
@@ -77,8 +78,10 @@ defmodule CowRollWeb.SheetApiTest do
                  %{
                    "children" => [
                      %{
+                       "codes" => [],
                        "content" => "40+2",
                        "name" => "example",
+                       "pdf" => nil,
                        "type" => "Sheet"
                      }
                    ],
@@ -212,15 +215,19 @@ defmodule CowRollWeb.SheetApiTest do
                  %{
                    "children" => [
                      %{
+                       "codes" => [],
                        "content" => "40+2",
                        "name" => "example",
+                       "pdf" => nil,
                        "type" => "Sheet"
                      },
                      %{
                        "children" => [
                          %{
+                           "codes" => [],
                            "content" => "'hola ' ++ 'mundo'",
                            "name" => "example2",
+                           "pdf" => nil,
                            "type" => "Sheet"
                          }
                        ],
@@ -234,15 +241,19 @@ defmodule CowRollWeb.SheetApiTest do
                  %{
                    "children" => [
                      %{
+                       "codes" => [],
                        "content" => nil,
                        "name" => "createPj",
+                       "pdf" => nil,
                        "type" => "Sheet"
                      },
                      %{
                        "children" => [
                          %{
+                           "codes" => [],
                            "content" => "'hola ' ++ 'mundo'",
                            "name" => "do_things",
+                           "pdf" => nil,
                            "type" => "Sheet"
                          }
                        ],
@@ -295,9 +306,11 @@ defmodule CowRollWeb.SheetApiTest do
       response = json_response(conn, 200)["message"]
 
       assert %{
+               "codes" => [],
                "content" => "40+2",
                "name" => "example",
-               "type" => @file_type
+               "pdf" => nil,
+               "type" => "Sheet"
              } == drop_ids(response)
     end
   end

@@ -41,6 +41,7 @@ defmodule CowRoll.File do
       def get_file(user_id, id), do: CowRoll.File.get_file(user_id, id)
       def get_files(params), do: CowRoll.File.get_files(params)
       def update_file(user_id, params), do: CowRoll.File.update_file(user_id, params)
+      def default_file_to_json(file), do: CowRoll.File.default_file_to_json(file)
 
       def update_directory_id(params, directory_id),
         do: CowRoll.File.update_directory_id(params, directory_id)
@@ -65,6 +66,7 @@ defmodule CowRoll.File do
     params[@id]
   end
 
+  @spec get_directory_id(nil | maybe_improper_list() | map()) :: any()
   def get_directory_id(params) do
     params[@directory_id]
   end
@@ -143,12 +145,13 @@ defmodule CowRoll.File do
   end
 
   def update_file(user_id, params) do
+    # Construye el query para buscar el documento
     query = %{
       @user_id => user_id,
-      @id => get_id(params),
-      @type_key => get_type(params)
+      @id => get_id(params)
     }
 
+    # Encuentra el documento que necesitas actualizar
     case Mongo.find_one(:mongo, @file_system, query) do
       nil ->
         {:error, file_not_found()}
@@ -156,8 +159,15 @@ defmodule CowRoll.File do
       %{@mongo_id => existing_id} ->
         updates = get_updates(params)
 
-        Mongo.update_one(:mongo, @file_system, %{@mongo_id => existing_id}, updates)
-        {:ok, file_updated()}
+        result = Mongo.update_one(:mongo, @file_system, %{@mongo_id => existing_id}, updates)
+
+        case result do
+          {:ok, _} ->
+            {:ok, file_updated()}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
     end
   end
 

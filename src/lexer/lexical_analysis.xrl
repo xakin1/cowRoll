@@ -26,7 +26,7 @@ LEFT_CURLY_BRACKET  = \{
 RIGHT_CURLY_BRACKET = \}
 LINE_COMMENT          = \#[^\n]*
 BLOCK_COMMENT         = \/\*[^*]*\*+([^/*][^*]*\*+)*\/
-NAME              = [a-zA-Z_áéíóúÁÉÍÓÚüÜñÑ]+[a-zA-Z0-9_áéíóúÁÉÍÓÚüÜñÑ]*
+NAME              = [a-zA-Z_áéíóúÁÉÍÓÚüÜñÑ]+[a-zA-Z0-9_áéíóúÁÉÍÓÚüÜñÑ&]*
 
 RANGE             = \.\.
 NUMBER            = [0-9]+
