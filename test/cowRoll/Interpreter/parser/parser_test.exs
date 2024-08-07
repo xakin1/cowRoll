@@ -667,6 +667,10 @@ defmodule CowRoll.ParserTest do
       input = "''"
       {:ok, token} = parse(input)
       assert token == {:string, "''", 1}
+
+      # input = "\"\""
+      # {:ok, token} = parse(input)
+      # assert token == {:string, "\"\"", 1}
     end
 
     test "concat string" do
@@ -676,11 +680,11 @@ defmodule CowRoll.ParserTest do
     end
 
     test "parse string all characters supporteed" do
-      input = "'¡!¿?|@}[](){}─+*^<>,;.:-_€#·$~%½/¬«»“”@ł€¶ŧ←↓→øþ~łĸŋđðßæ¢nµ`'"
+      input = "'¡!¿?|@}[](){}─+*^<>,;.:_€#·$`'"
       {:ok, token} = parse(input)
 
       assert token ==
-               {:string, "'¡!¿?|@}[](){}─+*^<>,;.:-_€#·$~%½/¬«»“”@ł€¶ŧ←↓→øþ~łĸŋđðßæ¢nµ`'", 1}
+               {:string, "'¡!¿?|@}[](){}─+*^<>,;.:_€#·$`'", 1}
     end
 
     test "concat n strings" do

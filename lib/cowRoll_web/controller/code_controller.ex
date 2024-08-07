@@ -19,9 +19,14 @@ defmodule CowRollWeb.CodeController do
     rescue
       e ->
         error_type = e.__struct__ |> Module.split() |> List.last()
+
         error_message = Exception.message(e)
+
+        line_number = Map.get(e, :line, 0)
+
         full_message = "#{error_type}: #{error_message}"
-        json(conn, %{error: %{error: "", errorCode: full_message, line: e.line || 0}})
+
+        json(conn, %{error: %{error: "", errorCode: full_message, line: line_number}})
     end
   end
 
