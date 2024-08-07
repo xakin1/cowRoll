@@ -1,6 +1,6 @@
 Definitions.
 
-CONTENT_STRING      = [a-zA-Z0-9_,\-\/\\\.\\(\)\ssáéíóúÁÉÍÓÚüÜñÑ]*
+CONTENT_STRING      = [a-zA-Z0-9_,\-\/\\.\(\)\sáéíóúÁÉÍÓÚüÜñÑ&\+\-%?¡!;·:€$#@^~|<>½¬{}\[\]=¿!*─'`,:_«»“”@ł€¶ŧ←↓→øþ~łĸŋđðßæ¢nµ]+
 STRING              = (\'\s*{CONTENT_STRING}\'|\"\s*{CONTENT_STRING}\")
 % '
 WHITESPACE          = [\n\t\s]
