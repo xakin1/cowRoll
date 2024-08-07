@@ -795,7 +795,7 @@ defmodule CowRoll.TreeNodeTest do
 
       result = get_variable_from_scope(:"-1", "x")
 
-      assert result == false
+      assert result == :not_found
     end
 
     test "get function" do

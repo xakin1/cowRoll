@@ -175,13 +175,13 @@ defmodule TreeNode do
       # Encontramos el nodo padre, agregamos la variable
       case Map.fetch(node.value, var_name) do
         {:ok, value} -> value
-        _ -> false
+        _ -> :not_found
       end
     else
       # No es el nodo buscado, continuamos buscando en los hijos
       Enum.reduce(node.children, false, fn node_child, acc ->
         case get_value_recursive(node_child, node_target_id, var_name) do
-          false ->
+          :not_found ->
             acc
 
           value ->

@@ -177,7 +177,7 @@ defmodule CowRoll.Interpreter do
 
   defp eval(scope, {:name, variable, line}) do
     case get_variable_from_scope(scope, variable) do
-      false -> runtimeError_raise_error(variable, line)
+      :not_found -> runtimeError_raise_error(variable, line)
       value -> value
     end
   end
