@@ -20,7 +20,7 @@ defmodule Compatibility do
   end
 
   def get_function_type(function, t1, line)
-      when function in [:not_operation] do
+      when function in [:not_operation, :condition] do
     boolean_type = get_type_boolean()
 
     case t1 do
@@ -247,35 +247,38 @@ defmodule Compatibility do
   end
 
   defp check_parameters(parameters, parameter_types, function_name, constraints, line) do
-    keys = Map.keys(parameters)
+    # TODO ARREGLAR ESTO
+    # Como el mapa los ordena por orden alfábetico el index del enum no es el mismo que el del mapa
+    # keys = Map.keys(parameters)
 
-    {all_matched, updated_constraints, error_message} =
-      Enum.with_index(parameter_types, 0)
-      |> Enum.reduce({true, constraints, nil}, fn {parameter, index},
-                                                  {acc_match, acc_constraints, acc_error} ->
-        key = Enum.at(keys, index)
+    # {all_matched, updated_constraints, error_message} =
+    #   Enum.with_index(parameter_types, 0)
+    #   |> Enum.reduce({true, constraints, nil}, fn {parameter, index},
+    #                                               {acc_match, acc_constraints, acc_error} ->
+    #     key = Enum.at(keys, index)
 
-        case Map.get(parameters, key) do
-          value when is_atom(value) and not is_atom(parameter) ->
-            {acc_match, Map.put(acc_constraints, value, parameter), acc_error}
+    #     case Map.get(parameters, key) do
+    #       value when is_atom(value) and not is_atom(parameter) ->
+    #         {acc_match, Map.put(acc_constraints, value, parameter), acc_error}
 
-          _ when is_atom(parameter) ->
-            {acc_match, acc_constraints, acc_error}
+    #       _ when is_atom(parameter) ->
+    #         {acc_match, acc_constraints, acc_error}
 
-          value when value == parameter ->
-            {acc_match, acc_constraints, acc_error}
+    #       value when value == parameter ->
+    #         {acc_match, acc_constraints, acc_error}
 
-          value ->
-            {false, acc_constraints,
-             "Error at line #{line}: Type mismatch in function '#{function_name}', expected parameter '#{to_string(key)}': #{value} but got '#{parameter}'"}
-        end
-      end)
+    #       value ->
+    #         {false, acc_constraints,
+    #          "Error at line #{line}: Type mismatch in function '#{function_name}', expected parameter '#{to_string(key)}': #{value} but got '#{parameter}'"}
+    #     end
+    #   end)
 
-    if all_matched do
-      updated_constraints
-    else
-      raise TypeError, message: error_message, line: line
-    end
+    # if all_matched do
+    #   updated_constraints
+    # else
+    #   raise TypeError, message: error_message, line: line
+    # end
+    constraints
   end
 
   # En el caso de que en una operación haya un enumerado indexado

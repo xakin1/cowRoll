@@ -25,7 +25,7 @@ defmodule CowRollWeb.UserController do
         case create_user_directory_system(id) do
           :ok ->
             conn
-            |> put_resp_cookie("token", token, http_only: true, secure: false, same_site: "Lax")
+            |> put_resp_cookie("token", token, http_only: false, secure: false, same_site: "Lax")
             |> json(%{message: token})
 
           {:error, reason} ->
@@ -49,7 +49,7 @@ defmodule CowRollWeb.UserController do
     case Auth.login_user(params) do
       {:ok, token} ->
         conn
-        |> put_resp_cookie("token", token, http_only: true, secure: true, same_site: "Strict")
+        |> put_resp_cookie("token", token, http_only: false, secure: false, same_site: "Strict")
         |> json(%{message: token})
 
       {:error, ^reason} ->

@@ -148,6 +148,17 @@ defmodule TreeNode do
               parameters: parameters
             }
           }
+
+        "rand_between" ->
+          %{
+            {:name, function_name} => %{
+              type: :elixir,
+              function: "rand_between",
+              module: Enum,
+              elixir_function: :random,
+              parameters: parameters
+            }
+          }
       end
 
     tree = %TreeNode{tree | value: Map.merge(tree.value, map_with_function)}
@@ -179,13 +190,15 @@ defmodule TreeNode do
       end
     else
       # No es el nodo buscado, continuamos buscando en los hijos
-      Enum.reduce(node.children, false, fn node_child, acc ->
+      Enum.reduce_while(node.children, :not_found, fn node_child, acc ->
         case get_value_recursive(node_child, node_target_id, var_name) do
           :not_found ->
-            acc
+            # Continuar la búsqueda
+            {:cont, acc}
 
           value ->
-            value
+            # Detener la búsqueda y retornar el valor encontrado
+            {:halt, value}
         end
       end)
     end
@@ -215,6 +228,17 @@ defmodule TreeNode do
        }} ->
         # TODO: Revisar si en algun caso haria falta pasar los parámetros
         {function_name, erlang_function, module, parameters, type}
+
+      {:ok,
+       %{
+         function: function_name,
+         module: module,
+         elixir_function: elixir_function,
+         parameters: parameters,
+         type: type
+       }} ->
+        # TODO: Revisar si en algun caso haria falta pasar los parámetros
+        {function_name, elixir_function, module, parameters, type}
 
       _ ->
         {false, function_name, line}

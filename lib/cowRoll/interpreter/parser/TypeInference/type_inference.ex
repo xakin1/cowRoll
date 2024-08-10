@@ -369,6 +369,8 @@ defmodule TypeInference do
            {:parameters, parameters}, {:function_code, function_code}}, next_expression},
          constraints
        ) do
+    # updated_constraints = remove_parameters_from_constraints(constraints, parameters)
+
     {_, constraints} =
       infer_expression(
         {:assignment_function, {:function_name, {:name, function_name, line}},
@@ -385,7 +387,7 @@ defmodule TypeInference do
        ) do
     # Inferir el tipo de la condición
     {condition_type, constraints} = infer_expression(condition, constraints)
-
+    condition_type = get_function_type(:condition, condition_type, line)
     boolean = get_type_boolean()
     # Verificar que la condición sea de tipo booleano
     case condition_type do
@@ -476,6 +478,19 @@ defmodule TypeInference do
   end
 
   defp infer_expression(
+         {{:call_function, {:name, function_name, line}, {:parameters, parameters}}, next_expr},
+         constraints
+       ) do
+    {_var_type, constraints} =
+      infer_expression(
+        {:call_function, {:name, function_name, line}, {:parameters, parameters}},
+        constraints
+      )
+
+    infer_expression(next_expr, constraints)
+  end
+
+  defp infer_expression(
          {:call_function, {:name, function_name, line}, {:parameters, parameters}},
          constraints
        ) do
@@ -484,12 +499,13 @@ defmodule TypeInference do
     # caso en el que no podríamos inferir el tipo -> Podríamos dar un warning o nada y dejarlo en tiempo de ejecución
     function_type = get_type_from_constraints(function_name, constraints)
 
-    # TODO: Hay que revisar que los tipos de los parámetros son correctos
     # Inferir el tipo de los parámetros
     # Lógica para determinar el tipo de retorno de la función
     parameter_types = get_parameter_types(parameters, constraints)
 
     constraints = get_parameter_type(parameter_types, constraints, function_name, line)
+
+    # La funcion puede tener un tipo genérico pero por las constraints que tenemos alomejor sabemos el tipo ya
     {substitution(function_type, constraints), constraints}
   end
 
@@ -517,24 +533,39 @@ defmodule TypeInference do
   defp get_parameter_types(parameters, constraints) do
     case get_parameter_types_aux(parameters, constraints) do
       parameter_types when is_list(parameter_types) -> parameter_types
-      parameter_types -> [parameter_types]
     end
   end
 
   defp get_parameter_types_aux(parameters, constraints) do
     case parameters do
-      # Si no hay parámetros, devolvemos un mapa vacío
+      # Si no hay parámetros, devolvemos una lista vacía
       nil ->
         []
 
       # caso genérico
       {head, _, _} when is_atom(head) ->
         {type, _} = infer_expression(parameters, constraints)
-        type
+        [type]
+
+      {{:list, expression}, tail} ->
+        {type, constraint} = infer_expression({:list, expression}, constraints)
+        [type | get_parameter_types_aux(tail, constraint)]
+
+      {:list, _} ->
+        {type, _} = infer_expression(parameters, constraints)
+        [type]
+
+      {{:map, expression}, tail} ->
+        {type, constraint} = infer_expression({:list, expression}, constraints)
+        [type | get_parameter_types_aux(tail, constraint)]
+
+      {:map, _} ->
+        {type, _} = infer_expression(parameters, constraints)
+        [type]
 
       {head, tail} ->
         {type, constraint} = infer_expression(head, constraints)
-        [type | [get_parameter_types_aux(tail, constraint)]]
+        [type | get_parameter_types_aux(tail, constraint)]
     end
   end
 
@@ -572,4 +603,20 @@ defmodule TypeInference do
         {var_type, new_constraints}
     end
   end
+
+  def remove_parameters_from_constraints(constraints, parameters) do
+    parameter_names = extract_parameter_names(parameters)
+
+    Enum.reduce(parameter_names, constraints, fn name, acc_constraints ->
+      Map.delete(acc_constraints, name)
+    end)
+  end
+
+  defp extract_parameter_names({:name, name, _}), do: [name]
+
+  defp extract_parameter_names({{:name, name, _}, rest}) do
+    [name | extract_parameter_names(rest)]
+  end
+
+  defp extract_parameter_names(nil), do: []
 end

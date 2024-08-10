@@ -59,6 +59,7 @@ defmodule CowRoll.Interpreter do
 
   defp load_modules() do
     add_function_to_scope("rand", "range")
+    add_function_to_scope("rand_between", "range")
   end
 
   # para evaluar una lista de tuplas y que te devuelva los parametros en un array
@@ -430,6 +431,25 @@ defmodule CowRoll.Interpreter do
           end
 
         apply(module, erlang_function, array_parameters)
+
+      {_, elixir_function, module, _, :elixir} ->
+        array_parameters =
+          case parameters do
+            {head, _} when is_tuple(head) ->
+              eval_parameters(scope, parameters)
+
+            nil ->
+              []
+          end
+
+        array_parameters =
+          case array_parameters do
+            # Transformar la lista en un rango
+            [start, stop] when is_integer(start) and is_integer(stop) -> [start..stop]
+            _ -> [0]
+          end
+
+        apply(module, elixir_function, array_parameters)
     end
   end
 
@@ -480,6 +500,11 @@ defmodule CowRoll.Interpreter do
 
       {nil, nil} ->
         :ok
+
+      {parameter_to_replace_head, parameter_head}
+      when is_tuple(parameter_to_replace_head) and is_tuple(parameter_head) ->
+        eval(scope, {:assignment, parameter_to_replace_head, parameter_head})
+        initialize_function(scope, {}, {})
 
       _ ->
         :error

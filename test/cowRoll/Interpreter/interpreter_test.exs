@@ -820,9 +820,7 @@ defmodule CowRoll.ScripsDndTest do
 
     test "concat n string" do
       result =
-        eval_input(
-          "\"hola \" ++  \"mundo\" ++  \", mundo \" ++  \"avanzado\" ++  \"\""
-        )
+        eval_input("\"hola \" ++  \"mundo\" ++  \", mundo \" ++  \"avanzado\" ++  \"\"")
 
       assert result == "hola mundo, mundo avanzado"
     end
@@ -1187,6 +1185,13 @@ defmodule CowRoll.ScripsDndTest do
       end
     end
 
+    test "rand_between" do
+      for _ <- 1..100 do
+        result = eval_input("rand_between(1,2)")
+        assert result >= 1 and result <= 2
+      end
+    end
+
     test "rand without params" do
       for _ <- 1..100 do
         result = eval_input("rand()")
@@ -1227,11 +1232,35 @@ defmodule CowRoll.ScripsDndTest do
       assert result == expect
     end
 
+    test "call function with list" do
+      input = "function hola_mundo (a) do
+           a
+         end
+         hola_mundo([1,2,3])
+         "
+      result = eval_input(input)
+      expect = [1, 2, 3]
+
+      assert result == expect
+    end
+
+    test "call function with map" do
+      input = "function hola_mundo (a) do
+           a
+         end
+         hola_mundo({a: 1, b:2})
+         "
+      result = eval_input(input)
+      expect = %{"a" => 1, "b" => 2}
+
+      assert result == expect
+    end
+
     test "not found" do
       input = "hola_mundo()"
 
       assert_raise(
-        Exceptions.RuntimeError ,
+        Exceptions.RuntimeError,
         "Error at line 1, Undefined function: 'hola_mundo'",
         fn ->
           eval_input(input)
@@ -1240,12 +1269,37 @@ defmodule CowRoll.ScripsDndTest do
     end
 
     test "basic call function with parameters" do
-      input = "function hola_mundo (msg, range) do
-           for participants <- 1..range do
-             msg
-           end
-         end;
-         hola_mundo('hola mundo ', 2)
+      input = "function roll_dices (number_of_dices, number_of_faces) do
+  if (number_of_dices <= 0) or (number_of_faces < 0) then
+    0
+  else
+    roll = rand_between(1,number_of_faces)
+    roll = roll + roll_dices((number_of_dices - 1), number_of_faces)
+  end
+end
+
+# Describe this function...
+function roll_ability_score () do
+  rolls = [0,0,0,0]
+  for i <- 0..3 do
+    rolls[i] = roll_dices(1, 6)
+  end
+  min_index = 0
+  for j <- 0..3 do
+    if rolls[j] < rolls[min_index] then
+      min_index = j
+    end
+  end
+  result = 0
+  for j <- 0..3 do
+    if j != min_index then
+      result = result + rolls[j]
+    end
+  end
+  result
+end
+
+roll_dices(1,6)
          "
       result = eval_input(input)
 

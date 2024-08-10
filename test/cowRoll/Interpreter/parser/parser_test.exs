@@ -1338,6 +1338,152 @@ defmodule CowRoll.ParserTest do
       assert tokens ==
                {:assignment_function, {:function_name, {:name, "hola_mundo", 1}},
                 {:parameters, nil}, {:function_code, {:string, "'hola mundo'", 2}}}
+
+      # input = "
+      #   c = [1,2,3]
+      #   x = 'string'
+      #   function hola_mundo (x,y,z,h,p,e) do
+      #     b = b+3
+      #     a = a++'a'
+      #     x = x +1
+      #     e = e or false
+      #   end
+      #     a = {a: 'b'}
+      #   hola_mundo(2,'c',[1,2,3,4,5], \"\", false, true )
+      #   x = x ++ ' sé que no va a ir pero me da igual hay que intentarlo antes de llorar'
+      # "
+
+      # {:ok, tokens} = parse(input)
+
+      # assert tokens ==
+      #          {{:assignment, {:name, "c", 2},
+      #            {:list, {{:number, 1, 2}, {{:number, 2, 2}, {:number, 3, 2}}}}},
+      #           {{:assignment, {:name, "x", 3}, {:string, "'string'", 3}},
+      #            {{:assignment_function, {:function_name, {:name, "hola_mundo", 4}},
+      #              {:parameters,
+      #               {{:name, "x", 4},
+      #                {{:name, "y", 4},
+      #                 {{:name, "z", 4}, {{:name, "h", 4}, {{:name, "p", 4}, {:name, "e", 4}}}}}}},
+      #              {:function_code,
+      #               {{:assignment, {:name, "b", 5},
+      #                 {:plus, {{:name, "b", 5}, {:number, 3, 5}}, {:+, 5}}},
+      #                {{:assignment, {:name, "a", 6},
+      #                  {:concat, {{:name, "a", 6}, {:string, "'a'", 6}}, {:++, 6}}},
+      #                 {:assignment, {:name, "x", 7},
+      #                  {:plus, {{:name, "x", 7}, {:number, 1, 7}}, {:+, 7}}}}}}},
+      #             {{:assignment, {:name, "a", 9}, {:map, {{:name, "a", 9}, {:string, "'b'", 9}}}},
+      #              {{:call_function, {:name, "hola_mundo", 10},
+      #                {:parameters,
+      #                 {{:number, 2, 10},
+      #                  {{:string, "'c'", 10},
+      #                   {{:list,
+      #                     {{:number, 1, 10},
+      #                      {{:number, 2, 10},
+      #                       {{:number, 3, 10}, {{:number, 4, 10}, {:number, 5, 10}}}}}},
+      #                    {{:string, "\"\"", 10}, {{:boolean, false, 10}, {:boolean, true, 10}}}}}}}},
+      #               {:assignment, {:name, "x", 11},
+      #                {:concat,
+      #                 {{:name, "x", 11},
+      #                  {:string,
+      #                   "' sé que no va a ir pero me da igual hay que intentarlo antes de llorar'",
+      #                   11}}, {:++, 11}}}}}}}}
+    end
+
+    test "parse basic function with types" do
+      input = "function calc_mod (stat, competencia) do
+          if competencia then
+            stat + proficiency_bonus
+          else
+            stat
+          end
+        end
+        "
+      {:ok, tokens} = parse(input)
+
+      assert tokens ==
+               {:assignment_function, {:function_name, {:name, "calc_mod", 1}},
+                {:parameters, {{:name, "stat", 1}, {:name, "competencia", 1}}},
+                {:function_code,
+                 {:if_then_else, {:name, "competencia", 2},
+                  {:plus, {{:name, "stat", 3}, {:name, "proficiency_bonus", 3}}, {:+, 3}},
+                  {:name, "stat", 5}, {:if, 2}}}}
+    end
+
+    test "parse  function with arrays" do
+      input = "function calc_mod (stat) do
+          stat
+        end
+          calc_mod(['c','b','a'])
+        "
+      {:ok, tokens} = parse(input)
+
+      assert tokens ==
+               {{:assignment_function, {:function_name, {:name, "calc_mod", 1}},
+                 {:parameters, {:name, "stat", 1}}, {:function_code, {:name, "stat", 2}}},
+                {:call_function, {:name, "calc_mod", 4},
+                 {:parameters,
+                  {:list, {{:string, "'c'", 4}, {{:string, "'b'", 4}, {:string, "'a'", 4}}}}}}}
+
+      input = "function calc_mod (stat) do
+          stat
+        end
+          calc_mod(['c',['b','a']])
+        "
+      {:ok, tokens} = parse(input)
+
+      assert tokens ==
+               {{:assignment_function, {:function_name, {:name, "calc_mod", 1}},
+                 {:parameters, {:name, "stat", 1}}, {:function_code, {:name, "stat", 2}}},
+                {:call_function, {:name, "calc_mod", 4},
+                 {:parameters,
+                  {:list,
+                   {{:string, "'c'", 4}, {:list, {{:string, "'b'", 4}, {:string, "'a'", 4}}}}}}}}
+
+      input = "function calc_mod (stat,a,b) do
+          stat
+        end
+          calc_mod(['c',['b','a']],a,b)
+        "
+      {:ok, tokens} = parse(input)
+
+      assert tokens ==
+               {{:assignment_function, {:function_name, {:name, "calc_mod", 1}},
+                 {:parameters, {{:name, "stat", 1}, {{:name, "a", 1}, {:name, "b", 1}}}},
+                 {:function_code, {:name, "stat", 2}}},
+                {:call_function, {:name, "calc_mod", 4},
+                 {:parameters,
+                  {{:list,
+                    {{:string, "'c'", 4}, {:list, {{:string, "'b'", 4}, {:string, "'a'", 4}}}}},
+                   {{:name, "a", 4}, {:name, "b", 4}}}}}}
+
+      input = "function calc_mod (stat,a) do
+          stat
+        end
+          calc_mod(['b'],['a'])
+        "
+      {:ok, tokens} = parse(input)
+
+      assert tokens ==
+               {{:assignment_function, {:function_name, {:name, "calc_mod", 1}},
+                 {:parameters, {{:name, "stat", 1}, {:name, "a", 1}}},
+                 {:function_code, {:name, "stat", 2}}},
+                {:call_function, {:name, "calc_mod", 4},
+                 {:parameters, {{:list, {:string, "'b'", 4}}, {:list, {:string, "'a'", 4}}}}}}
+    end
+
+    test "parse function with maps" do
+      input = "function calc_mod (stat) do
+          stat
+        end
+          calc_mod({a: 'b'})
+        "
+      {:ok, tokens} = parse(input)
+
+      assert tokens ==
+               {{:assignment_function, {:function_name, {:name, "calc_mod", 1}},
+                 {:parameters, {:name, "stat", 1}}, {:function_code, {:name, "stat", 2}}},
+                {:call_function, {:name, "calc_mod", 4},
+                 {:parameters, {:map, {{:name, "a", 4}, {:string, "'b'", 4}}}}}}
     end
 
     test "parse recursivity" do
@@ -1402,6 +1548,21 @@ defmodule CowRoll.ParserTest do
                  {:function_code, {:plus, {{:number, 5, 3}, {:number, 4, 3}}, {:+, 3}}}},
                 {:minus, {{:number, 1, 5}, {:call_function, {:name, "f", 5}, {:parameters, nil}}},
                  {:-, 5}}}
+    end
+
+    test "EMPTY STRINGS" do
+      {:ok, token} = parse("
+          function f(a) do
+               'a'++a
+          end
+          f(\"\")
+     ")
+
+      assert token ==
+               {{:assignment_function, {:function_name, {:name, "f", 2}},
+                 {:parameters, {:name, "a", 2}},
+                 {:function_code, {:concat, {{:string, "'a'", 3}, {:name, "a", 3}}, {:++, 3}}}},
+                {:call_function, {:name, "f", 5}, {:parameters, {:string, "\"\"", 5}}}}
     end
 
     test "parse basic call function without parameters" do
