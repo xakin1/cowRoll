@@ -7,6 +7,7 @@ defmodule CowRoll.Code do
   @directory_id "directory_id"
   @name "name"
   @content_schema "content_schema"
+  @content "content"
   @backpack_schema "backpack_schema"
   @user_id "user_id"
   @type_key "type"
@@ -16,6 +17,7 @@ defmodule CowRoll.Code do
 
     Map.merge(base_attributes, %{
       @content_schema => params["contentSchema"],
+      @content => params["content"],
       @backpack_schema => params["backpackSchema"]
     })
   end
@@ -32,6 +34,7 @@ defmodule CowRoll.Code do
     params = %{
       @user_id => user_id,
       @directory_id => get_directory_id(params),
+      @content => get_content(params),
       @name => get_name(params),
       @type_key => get_type(params)
     }
