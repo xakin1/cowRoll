@@ -36,6 +36,7 @@ defmodule CowRollWeb.CodeApiTest do
                    "content" => "40+2",
                    "name" => "example",
                    "pdf" => nil,
+                   "player" => nil,
                    "type" => "Sheet"
                  },
                  %{
@@ -82,6 +83,7 @@ defmodule CowRollWeb.CodeApiTest do
                        "content" => "40+2",
                        "name" => "example",
                        "pdf" => nil,
+                       "player" => nil,
                        "type" => "Sheet"
                      }
                    ],
@@ -219,6 +221,7 @@ defmodule CowRollWeb.CodeApiTest do
                        "content" => "40+2",
                        "name" => "example",
                        "pdf" => nil,
+                       "player" => nil,
                        "type" => "Sheet"
                      },
                      %{
@@ -228,6 +231,7 @@ defmodule CowRollWeb.CodeApiTest do
                            "content" => "'hola ' ++ 'mundo'",
                            "name" => "example2",
                            "pdf" => nil,
+                           "player" => nil,
                            "type" => "Sheet"
                          }
                        ],
@@ -245,6 +249,7 @@ defmodule CowRollWeb.CodeApiTest do
                        "content" => nil,
                        "name" => "createPj",
                        "pdf" => nil,
+                       "player" => nil,
                        "type" => "Sheet"
                      },
                      %{
@@ -254,6 +259,7 @@ defmodule CowRollWeb.CodeApiTest do
                            "content" => "'hola ' ++ 'mundo'",
                            "name" => "do_things",
                            "pdf" => nil,
+                           "player" => nil,
                            "type" => "Sheet"
                          }
                        ],
@@ -310,6 +316,7 @@ defmodule CowRollWeb.CodeApiTest do
                "content" => "40+2",
                "name" => "example",
                "pdf" => nil,
+               "player" => nil,
                "type" => "Sheet"
              } == drop_ids(response)
     end

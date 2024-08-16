@@ -52,7 +52,7 @@ defmodule CowRollWeb.SheetApiTest do
                    "codes" => [
                      %{
                        "backpackSchema" => nil,
-                       "content" => nil,
+                       "content" => "40+2",
                        "contentSchema" => nil,
                        "name" => "script1",
                        "type" => "Code"
@@ -60,8 +60,9 @@ defmodule CowRollWeb.SheetApiTest do
                    ],
                    "content" => "40+2",
                    "name" => "example",
-                   "type" => "Sheet",
-                   "pdf" => nil
+                   "pdf" => nil,
+                   "player" => nil,
+                   "type" => "Sheet"
                  },
                  %{
                    "children" => [],
@@ -90,7 +91,8 @@ defmodule CowRollWeb.SheetApiTest do
                    "name" => "example",
                    "pdf" =>
                      "JVBERi0xLjMKJcTl8uXrp/Og0MTGCjQgMCBvYmoKPDwvTGluZWFyaXplZCAxL0wgMzEgMCBSL0...",
-                   "type" => "Sheet"
+                   "type" => "Sheet",
+                   "player" => nil
                  },
                  %{
                    "children" => [],
@@ -136,6 +138,10 @@ defmodule CowRollWeb.SheetApiTest do
                        "content" => "40+2",
                        "name" => "example",
                        "type" => "Sheet",
+                       "player" => nil,
+                       "player" => nil,
+                       "player" => nil,
+                       "player" => nil,
                        "pdf" => nil
                      }
                    ],
@@ -273,6 +279,10 @@ defmodule CowRollWeb.SheetApiTest do
                        "content" => "40+2",
                        "name" => "example",
                        "type" => "Sheet",
+                       "player" => nil,
+                       "player" => nil,
+                       "player" => nil,
+                       "player" => nil,
                        "pdf" => nil
                      },
                      %{
@@ -282,6 +292,10 @@ defmodule CowRollWeb.SheetApiTest do
                            "content" => "'hola ' ++ 'mundo'",
                            "name" => "example2",
                            "type" => "Sheet",
+                           "player" => nil,
+                           "player" => nil,
+                           "player" => nil,
+                           "player" => nil,
                            "pdf" => nil
                          }
                        ],
@@ -299,6 +313,10 @@ defmodule CowRollWeb.SheetApiTest do
                        "content" => nil,
                        "name" => "createPj",
                        "type" => "Sheet",
+                       "player" => nil,
+                       "player" => nil,
+                       "player" => nil,
+                       "player" => nil,
                        "pdf" => nil
                      },
                      %{
@@ -308,6 +326,10 @@ defmodule CowRollWeb.SheetApiTest do
                            "content" => "'hola ' ++ 'mundo'",
                            "name" => "do_things",
                            "type" => "Sheet",
+                           "player" => nil,
+                           "player" => nil,
+                           "player" => nil,
+                           "player" => nil,
                            "pdf" => nil
                          }
                        ],
@@ -364,7 +386,8 @@ defmodule CowRollWeb.SheetApiTest do
                "content" => "40+2",
                "name" => "example",
                "pdf" => nil,
-               "type" => "Sheet"
+               "type" => "Sheet",
+               "player" => nil
              } == drop_ids(response)
     end
   end
