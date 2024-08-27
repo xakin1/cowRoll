@@ -11,43 +11,43 @@ Rootsymbol
 
 %precedences
     Left 1 'or'.
-    Left 1 'and'.
+    Left 2 'and'.
     
-    Left 2 '=='.
-    Left 2 '!='.
+    Left 3 '=='.
+    Left 3 '!='.
     
-    Left 3 '<'.
-    Left 3 '>'.
-    Left 3 '<='.
-    Left 3 '>='.
+    Left 4 '<'.
+    Left 4 '>'.
+    Left 4 '<='.
+    Left 4 '>='.
     
-    Left 4 '++'.
-    Left 4 '--'.
+    Left 5 '++'.
+    Left 5 '--'.
     
-    Left 5 '-'.
-    Left 5 '+'.
+    Left 6 '-'.
+    Left 6 '+'.
     
-    Left 6 '*'.
-    Left 6 '/'.
-    Left 6 '//'.
-    Left 6 '%'.
+    Left 7 '*'.
+    Left 7 '/'.
+    Left 7 '//'.
+    Left 7 '%'.
   
-    Right 7 '^'.
+    Right 8 '^'.
 
-    Unary 8 uminus.
-    Unary 8 uninot.
-    Unary 10 name '('arguments')'.
-    Unary 9 variable.
+    Unary 9 uminus.
+    Unary 9 uninot.
+    Unary 11 name '('arguments')'.
+    Unary 10 variable.
 
-    Unary 10 list.
-    Unary 10 map.
-    Unary 11 VAR.
-    Unary 12 index.
+    Unary 11 list.
+    Unary 11 map.
+    Unary 12 VAR.
+    Unary 13 index.
 
 
-    Unary 13 string.
-    Unary 13 number.
-    Unary 13 boolean.
+    Unary 14 string.
+    Unary 14 number.
+    Unary 14 boolean.
 
 
 grammar -> code : '$1'.
